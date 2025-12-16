@@ -141,7 +141,7 @@ export default function Index() {
                         <div>
                           <p className="text-sm text-muted-foreground uppercase tracking-wider mb-1">Jackpot Prize</p>
                           <p className="text-4xl md:text-5xl lg:text-6xl font-display font-black gradient-jackpot animate-pulse-glow">
-                            ${currentDraw.jackpot.toLocaleString()}
+                            {currentDraw.jackpot.toLocaleString('en-US').replace(/,/g, ' ')} CLT
                           </p>
                         </div>
 
