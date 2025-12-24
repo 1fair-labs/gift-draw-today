@@ -93,7 +93,18 @@ export default function Index() {
     if (win.web3?.currentProvider) return win.web3.currentProvider;
     if (win.web3?.ethereum) return win.web3.ethereum;
     
+    // Дополнительные проверки для мобильных
+    if (win.__metamask) return win.__metamask;
+    
     return null;
+  };
+
+  // Проверка, открыт ли сайт в браузере MetaMask
+  const isInMetaMaskBrowser = () => {
+    if (typeof navigator === 'undefined') return false;
+    const userAgent = navigator.userAgent.toLowerCase();
+    // Проверяем user agent браузера MetaMask
+    return userAgent.includes('metamask') || userAgent.includes('mmsdk');
   };
 
   // Функция для получения или создания пользователя
@@ -292,6 +303,8 @@ export default function Index() {
   const handleConnectWallet = async () => {
     // Определение мобильного устройства
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
     
     // Пытаемся получить провайдер
     let ethereum = getEthereumProvider();
@@ -300,31 +313,89 @@ export default function Index() {
     if (!ethereum && isMobile) {
       setLoading(true);
       // Ждем немного и проверяем снова (только на мобильных)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      ethereum = getEthereumProvider();
+      // Пробуем несколько раз с увеличивающейся задержкой
+      for (let i = 0; i < 3 && !ethereum; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        ethereum = getEthereumProvider();
+      }
+      setLoading(false);
     }
     
     if (!ethereum) {
       if (isMobile) {
-        const installMessage = 
-          'MetaMask не обнаружен.\n\n' +
-          'Для подключения:\n' +
-          '1. Убедитесь, что MetaMask Mobile установлен\n' +
-          '2. Откройте сайт в браузере внутри приложения MetaMask (вкладка "Browser")\n' +
-          '3. Или обновите страницу\n\n' +
-          'Хотите открыть страницу установки MetaMask?';
+        const siteUrl = window.location.href;
+        const isInMetaMask = isInMetaMaskBrowser();
         
-        if (window.confirm(installMessage)) {
-          if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            window.open('https://apps.apple.com/app/metamask/id1438144202', '_blank');
+        let message = '';
+        if (isIOS) {
+          if (isInMetaMask) {
+            message = 
+              'MetaMask не обнаружен в браузере.\n\n' +
+              'Попробуйте:\n' +
+              '1. Обновите страницу (потяните вниз)\n' +
+              '2. Убедитесь, что MetaMask открыт и активен\n' +
+              '3. Перезапустите приложение MetaMask\n\n' +
+              'Если проблема сохраняется, скопируйте адрес сайта и откройте его заново в браузере MetaMask.';
           } else {
-            window.open('https://play.google.com/store/apps/details?id=io.metamask', '_blank');
+            message = 
+              '⚠️ На iOS подключение работает только в браузере MetaMask!\n\n' +
+              'Как подключиться:\n\n' +
+              '1. Откройте приложение MetaMask Mobile\n' +
+              '2. Нажмите на вкладку "Браузер" (Browser) внизу экрана\n' +
+              '3. Введите адрес сайта в адресной строке\n' +
+              '4. Нажмите "Connect Wallet" на сайте\n\n' +
+              'Хотите скопировать адрес сайта?';
+          }
+        } else if (isAndroid) {
+          if (isInMetaMask) {
+            message = 
+              'MetaMask не обнаружен.\n\n' +
+              'Попробуйте:\n' +
+              '1. Обновите страницу\n' +
+              '2. Убедитесь, что MetaMask открыт и активен\n' +
+              '3. Перезапустите приложение MetaMask';
+          } else {
+            message = 
+              'MetaMask не обнаружен в этом браузере.\n\n' +
+              'Для подключения:\n' +
+              '1. Откройте приложение MetaMask Mobile\n' +
+              '2. Нажмите на вкладку "Браузер" (Browser)\n' +
+              '3. Введите адрес сайта\n' +
+              '4. Или обновите страницу, если MetaMask установлен\n\n' +
+              'Хотите скопировать адрес сайта?';
+          }
+        } else {
+          message = 
+            'MetaMask не обнаружен.\n\n' +
+            'Для подключения:\n' +
+            '1. Убедитесь, что MetaMask Mobile установлен\n' +
+            '2. Откройте сайт в браузере внутри приложения MetaMask\n' +
+            '3. Или обновите страницу';
+        }
+        
+        const shouldCopy = window.confirm(message);
+        
+        if (shouldCopy && (isIOS || (isAndroid && !isInMetaMask))) {
+          try {
+            await navigator.clipboard.writeText(siteUrl);
+            alert('✅ Адрес скопирован!\n\nТеперь:\n1. Откройте MetaMask\n2. Перейдите в "Браузер"\n3. Вставьте адрес и откройте сайт');
+          } catch (err) {
+            // Если не удалось скопировать, показываем адрес
+            alert(`Адрес сайта:\n${siteUrl}\n\nСкопируйте его вручную и откройте в браузере MetaMask.`);
+          }
+        } else if (shouldCopy && !isInMetaMask) {
+          // Если пользователь нажал OK, но не в MetaMask браузере, предлагаем установку
+          if (window.confirm('Хотите открыть страницу установки MetaMask?')) {
+            if (isIOS) {
+              window.open('https://apps.apple.com/app/metamask/id1438144202', '_blank');
+            } else {
+              window.open('https://play.google.com/store/apps/details?id=io.metamask', '_blank');
+            }
           }
         }
       } else {
         alert('MetaMask is not installed. Please install MetaMask to connect your wallet.');
       }
-      setLoading(false);
       return;
     }
 
@@ -759,6 +830,17 @@ export default function Index() {
                 <Card className="glass-card p-12 text-center">
                   <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
                   <p className="text-base md:text-lg font-display text-muted-foreground/80 mb-4">Connect your wallet to view tickets</p>
+                  {typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !isInMetaMaskBrowser() && (
+                    <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-lg text-left">
+                      <p className="text-sm font-semibold text-primary mb-2">📱 Подключение на мобильном:</p>
+                      <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                        <li>Откройте приложение MetaMask Mobile</li>
+                        <li>Нажмите на вкладку "Браузер" (Browser)</li>
+                        <li>Введите адрес сайта в адресной строке</li>
+                        <li>Нажмите "Connect Wallet"</li>
+                      </ol>
+                    </div>
+                  )}
                 </Card>
               ) : tickets.length === 0 ? (
                 <Card className="glass-card p-12 text-center">
