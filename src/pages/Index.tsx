@@ -272,8 +272,9 @@ export default function Index() {
   }, []);
 
   const handleConnectWallet = async () => {
-    // Определение мобильного устройства
+    // Определение мобильного устройства и iOS
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
     
     // Функция для получения провайдера (проверяем несколько способов)
     const getProvider = () => {
@@ -296,12 +297,42 @@ export default function Index() {
     // Пытаемся получить провайдер
     let provider = getProvider();
     
-    // На мобильных устройствах иногда провайдер появляется с задержкой
+    // На iOS провайдер не может быть инжектирован в обычные браузеры
+    // Это техническое ограничение iOS - нужно открыть сайт в браузере MetaMask
+    if (!provider && isIOS) {
+      setLoading(false);
+      const currentUrl = window.location.href;
+      const siteUrl = window.location.hostname;
+      
+      const message = 
+        'На iOS подключение работает только в браузере MetaMask.\n\n' +
+        'Как подключиться:\n\n' +
+        '1. Откройте приложение MetaMask Mobile\n' +
+        '2. Нажмите на вкладку "Браузер" (Browser) внизу экрана\n' +
+        '3. Введите в адресной строке:\n' +
+        siteUrl + '\n' +
+        '4. Нажмите "Connect Wallet" на сайте\n' +
+        '5. Выберите аккаунт в появившемся окне\n\n' +
+        'Хотите скопировать адрес сайта?';
+      
+      if (window.confirm(message)) {
+        // Копируем адрес в буфер обмена
+        navigator.clipboard.writeText(siteUrl).then(() => {
+          alert('Адрес скопирован! Теперь вставьте его в браузер MetaMask.');
+        }).catch(() => {
+          // Если не удалось скопировать, просто показываем адрес
+          alert('Адрес сайта: ' + siteUrl);
+        });
+      }
+      return;
+    }
+    
+    // На Android и других мобильных устройствах иногда провайдер появляется с задержкой
     // Пытаемся подождать немного и проверить снова
     if (!provider && isMobile) {
       setLoading(true);
       // Ждем немного и проверяем снова
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       provider = getProvider();
       
       // Если все еще нет провайдера, показываем инструкцию
@@ -309,14 +340,13 @@ export default function Index() {
         setLoading(false);
         alert(
           'MetaMask не обнаружен в браузере.\n\n' +
-          'Убедитесь, что:\n' +
-          '1. MetaMask Mobile установлен\n' +
-          '2. Приложение MetaMask открыто\n' +
-          '3. Разрешения для браузера предоставлены\n\n' +
-          'Или откройте сайт в браузере MetaMask:\n' +
-          '1. Откройте приложение MetaMask\n' +
-          '2. Нажмите "Браузер" (Browser)\n' +
-          '3. Введите адрес сайта'
+          'Попробуйте:\n' +
+          '1. Убедитесь, что MetaMask Mobile установлен и открыт\n' +
+          '2. Обновите страницу\n' +
+          '3. Или откройте сайт в браузере MetaMask:\n' +
+          '   - Откройте приложение MetaMask\n' +
+          '   - Нажмите "Браузер" (Browser)\n' +
+          '   - Введите адрес сайта'
         );
         return;
       }
