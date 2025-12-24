@@ -151,74 +151,108 @@ export default function Index() {
         return;
       }
       
-      // Запоминаем время начала проверки
+      // Запоминаем время начала проверки и состояние страницы
       const startTime = Date.now();
+      const wasVisible = document.visibilityState === 'visible';
       let appOpened = false;
+      let resolved = false;
       
-      // Слушаем событие возврата на страницу (blur означает, что приложение открылось)
-      const handleBlur = () => {
-        appOpened = true;
-      };
-      
-      const handleFocus = () => {
-        // Если вернулись на страницу быстро, значит приложение не установлено
-        const elapsed = Date.now() - startTime;
-        if (elapsed < 2000 && !appOpened) {
+      const resolveOnce = (value: boolean) => {
+        if (!resolved) {
+          resolved = true;
           window.removeEventListener('blur', handleBlur);
           window.removeEventListener('focus', handleFocus);
-          resolve(false);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          resolve(value);
+        }
+      };
+      
+      // Слушаем событие blur (страница потеряла фокус - приложение открылось)
+      const handleBlur = () => {
+        appOpened = true;
+        // Если приложение открылось, значит оно установлено
+        setTimeout(() => {
+          resolveOnce(true);
+        }, 300);
+      };
+      
+      // Слушаем событие focus (вернулись на страницу)
+      const handleFocus = () => {
+        const elapsed = Date.now() - startTime;
+        // Если вернулись очень быстро (< 500ms), значит приложение не установлено
+        // Если вернулись после открытия приложения (> 500ms), значит оно было установлено
+        if (elapsed < 500 && !appOpened) {
+          resolveOnce(false);
+        }
+      };
+      
+      // Слушаем изменение видимости страницы (более надежно на мобильных)
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          appOpened = true;
+          setTimeout(() => {
+            resolveOnce(true);
+          }, 300);
+        } else if (document.visibilityState === 'visible') {
+          const elapsed = Date.now() - startTime;
+          if (elapsed < 500 && !appOpened) {
+            resolveOnce(false);
+          }
         }
       };
       
       window.addEventListener('blur', handleBlur);
       window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
       
       // Пытаемся открыть приложение
       try {
         if (isIOS) {
+          // Для iOS используем iframe метод (более надежно)
           const iframe = document.createElement('iframe');
           iframe.style.display = 'none';
           iframe.src = 'metamask://';
           document.body.appendChild(iframe);
           
+          // Удаляем iframe через короткое время
           setTimeout(() => {
             if (document.body.contains(iframe)) {
               document.body.removeChild(iframe);
             }
-            // Если через 1.5 секунды не открылось, считаем что приложения нет
-            setTimeout(() => {
-              if (!appOpened) {
-                window.removeEventListener('blur', handleBlur);
-                window.removeEventListener('focus', handleFocus);
-                resolve(false);
-              }
-            }, 1500);
           }, 100);
-        } else if (isAndroid) {
-          window.location.href = 'metamask://';
-          // Если через 1.5 секунды не открылось, считаем что приложения нет
+          
+          // Также пробуем через window.location
           setTimeout(() => {
-            if (!appOpened) {
-              window.removeEventListener('blur', handleBlur);
-              window.removeEventListener('focus', handleFocus);
-              resolve(false);
+            try {
+              window.location.href = 'metamask://';
+            } catch (e) {
+              // Игнорируем ошибки
             }
-          }, 1500);
+          }, 50);
+        } else if (isAndroid) {
+          // Для Android пробуем через intent сначала
+          try {
+            const intentUrl = 'intent://#Intent;scheme=metamask;package=io.metamask;end';
+            window.location.href = intentUrl;
+          } catch (e) {
+            // Если intent не сработал, пробуем прямую схему
+            try {
+              window.location.href = 'metamask://';
+            } catch (e2) {
+              // Игнорируем ошибки
+            }
+          }
         }
+        
+        // Таймаут: если через 2 секунды ничего не произошло, считаем что приложения нет
+        setTimeout(() => {
+          if (!appOpened) {
+            resolveOnce(false);
+          }
+        }, 2000);
       } catch (e) {
-        window.removeEventListener('blur', handleBlur);
-        window.removeEventListener('focus', handleFocus);
-        resolve(false);
+        resolveOnce(false);
       }
-      
-      // Если приложение открылось, очищаем слушатели через 2 секунды
-      setTimeout(() => {
-        window.removeEventListener('blur', handleBlur);
-        window.removeEventListener('focus', handleFocus);
-        if (appOpened) {
-          resolve(true);
-        }
-      }, 2000);
     });
   };
 
