@@ -76,6 +76,26 @@ export default function Index() {
   const cltPrice = 0.041; // CLT/USDT
   const usdBalance = (cltBalance * cltPrice).toFixed(2);
 
+  // Функция для получения провайдера MetaMask (поддержка мобильных устройств)
+  const getEthereumProvider = () => {
+    if (typeof window === 'undefined') return null;
+    
+    // Основной способ - window.ethereum
+    if (window.ethereum) {
+      return window.ethereum;
+    }
+    
+    // Альтернативные способы для мобильных устройств
+    const win = window as any;
+    
+    // Проверяем различные варианты инжекции провайдера
+    if (win.ethereum) return win.ethereum;
+    if (win.web3?.currentProvider) return win.web3.currentProvider;
+    if (win.web3?.ethereum) return win.web3.ethereum;
+    
+    return null;
+  };
+
   // Функция для получения или создания пользователя
   const getOrCreateUser = async (address: string): Promise<User | null> => {
     if (!supabase) {
@@ -85,7 +105,7 @@ export default function Index() {
     
     try {
       const normalizedAddress = address.toLowerCase();
-      console.log('Getting or creating user with address:', normalizedAddress);
+      console.log('getOrCreateUser: Checking for user with address:', normalizedAddress);
       
       // Проверяем, существует ли пользователь (триггер автоматически приведет к нижнему регистру)
       // Но для совместимости со старыми данными ищем без учета регистра
@@ -95,7 +115,12 @@ export default function Index() {
         .ilike('wallet_address', normalizedAddress)
         .maybeSingle();
 
+      if (fetchError) {
+        console.error('Error fetching user:', fetchError);
+      }
+
       if (existingUser) {
+        console.log('getOrCreateUser: User found:', existingUser.id);
         // Если адрес в базе в другом регистре, обновляем его (триггер приведет к нижнему)
         if (existingUser.wallet_address !== normalizedAddress) {
           const { data: updatedUser, error: updateError } = await supabase
@@ -117,6 +142,7 @@ export default function Index() {
       }
 
       // Пользователь не существует, создаем нового (триггер автоматически приведет к нижнему регистру)
+      console.log('getOrCreateUser: User not found, creating new user with address:', normalizedAddress);
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
@@ -127,22 +153,31 @@ export default function Index() {
         .single();
 
       if (insertError) {
+        console.error('Error creating user:', insertError);
         // Если ошибка из-за дубликата (уникальное ограничение), пытаемся найти существующего
         if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
-          const { data: foundUser } = await supabase
+          console.log('getOrCreateUser: Duplicate detected, fetching existing user');
+          const { data: foundUser, error: fetchError2 } = await supabase
             .from('users')
             .select('*')
             .ilike('wallet_address', normalizedAddress)
             .maybeSingle();
           
+          if (fetchError2) {
+            console.error('Error fetching user after duplicate error:', fetchError2);
+          }
+          
           if (foundUser) {
+            console.log('getOrCreateUser: Found existing user after duplicate error:', foundUser.id);
             return foundUser as User;
           }
         }
-        console.error('Error creating user:', insertError);
         return null;
       }
 
+      if (newUser) {
+        console.log('getOrCreateUser: New user created successfully:', newUser.id);
+      }
       return newUser as User;
     } catch (error) {
       console.error('Error in getOrCreateUser:', error);
@@ -180,16 +215,17 @@ export default function Index() {
   // Функция для загрузки данных пользователя
   const loadUserData = async (address: string) => {
     try {
-      console.log('Loading user data for address:', address);
+      console.log('loadUserData: Starting for address:', address);
       const user = await getOrCreateUser(address);
-      console.log('User data:', user);
       if (user) {
+        console.log('loadUserData: User data loaded, balance:', user.balance);
         setCltBalance(Number(user.balance));
       } else {
-        console.warn('User not found or created');
+        console.warn('loadUserData: User not found or created');
       }
 
       await loadUserTickets(address);
+      console.log('loadUserData: Completed successfully');
     } catch (error) {
       console.error('Error loading user data:', error);
     }
@@ -197,34 +233,16 @@ export default function Index() {
 
   // Проверка подключения при загрузке
   useEffect(() => {
-    const getProvider = () => {
-      if (typeof window === 'undefined') return null;
-      if (window.ethereum) return window.ethereum;
-      const win = window as any;
-      if (win.web3?.currentProvider) return win.web3.currentProvider;
-      return null;
-    };
-
     const checkConnection = async () => {
       // Если пользователь явно отключился, не подключаем автоматически
       if (wasDisconnected()) {
         return;
       }
 
-      // На мобильных устройствах провайдер может появиться с задержкой
-      let provider = getProvider();
-      if (!provider) {
-        // Ждем немного и проверяем снова (только на мобильных)
-        const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          provider = getProvider();
-        }
-      }
-
-      if (provider) {
+      const ethereum = getEthereumProvider();
+      if (ethereum) {
         try {
-          const accounts = await provider.request({ method: 'eth_accounts' });
+          const accounts = await ethereum.request({ method: 'eth_accounts' });
           if (accounts.length > 0) {
             const address = accounts[0];
             setWalletAddress(address);
@@ -240,8 +258,8 @@ export default function Index() {
     checkConnection();
 
     // Слушаем изменения аккаунтов
-    const provider = getProvider();
-    if (provider) {
+    const ethereum = getEthereumProvider();
+    if (ethereum) {
       const handleAccountsChanged = async (accounts: string[]) => {
         if (accounts.length === 0) {
           setIsConnected(false);
@@ -261,116 +279,54 @@ export default function Index() {
         }
       };
 
-      provider.on('accountsChanged', handleAccountsChanged);
+      ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        if (provider) {
-          provider.removeListener('accountsChanged', handleAccountsChanged);
+        if (ethereum) {
+          ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
       };
     }
   }, []);
 
   const handleConnectWallet = async () => {
-    // Определение мобильного устройства и iOS
+    // Определение мобильного устройства
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    // Функция для получения провайдера (проверяем несколько способов)
-    const getProvider = () => {
-      if (typeof window === 'undefined') return null;
-      
-      // Основной способ - window.ethereum
-      if (window.ethereum) {
-        return window.ethereum;
-      }
-      
-      // Альтернативные способы обнаружения провайдера
-      const win = window as any;
-      if (win.web3?.currentProvider) {
-        return win.web3.currentProvider;
-      }
-      
-      return null;
-    };
     
     // Пытаемся получить провайдер
-    let provider = getProvider();
+    let ethereum = getEthereumProvider();
     
-    // На iOS провайдер не может быть инжектирован в обычные браузеры
-    // Это техническое ограничение iOS - нужно открыть сайт в браузере MetaMask
-    if (!provider && isIOS) {
-      setLoading(false);
-      const currentUrl = window.location.href;
-      const siteUrl = window.location.hostname;
-      
-      const message = 
-        'На iOS подключение работает только в браузере MetaMask.\n\n' +
-        'Как подключиться:\n\n' +
-        '1. Откройте приложение MetaMask Mobile\n' +
-        '2. Нажмите на вкладку "Браузер" (Browser) внизу экрана\n' +
-        '3. Введите в адресной строке:\n' +
-        siteUrl + '\n' +
-        '4. Нажмите "Connect Wallet" на сайте\n' +
-        '5. Выберите аккаунт в появившемся окне\n\n' +
-        'Хотите скопировать адрес сайта?';
-      
-      if (window.confirm(message)) {
-        // Копируем адрес в буфер обмена
-        navigator.clipboard.writeText(siteUrl).then(() => {
-          alert('Адрес скопирован! Теперь вставьте его в браузер MetaMask.');
-        }).catch(() => {
-          // Если не удалось скопировать, просто показываем адрес
-          alert('Адрес сайта: ' + siteUrl);
-        });
-      }
-      return;
-    }
-    
-    // На Android и других мобильных устройствах иногда провайдер появляется с задержкой
-    // Пытаемся подождать немного и проверить снова
-    if (!provider && isMobile) {
+    // На мобильных устройствах провайдер может появиться с задержкой
+    if (!ethereum && isMobile) {
       setLoading(true);
-      // Ждем немного и проверяем снова
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      provider = getProvider();
-      
-      // Если все еще нет провайдера, показываем инструкцию
-      if (!provider) {
-        setLoading(false);
-        alert(
-          'MetaMask не обнаружен в браузере.\n\n' +
-          'Попробуйте:\n' +
-          '1. Убедитесь, что MetaMask Mobile установлен и открыт\n' +
-          '2. Обновите страницу\n' +
-          '3. Или откройте сайт в браузере MetaMask:\n' +
-          '   - Откройте приложение MetaMask\n' +
-          '   - Нажмите "Браузер" (Browser)\n' +
-          '   - Введите адрес сайта'
-        );
-        return;
-      }
-      setLoading(false);
+      // Ждем немного и проверяем снова (только на мобильных)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      ethereum = getEthereumProvider();
     }
     
-    // Если провайдер все еще не найден
-    if (!provider) {
+    if (!ethereum) {
       if (isMobile) {
-        alert(
+        const installMessage = 
           'MetaMask не обнаружен.\n\n' +
-          'Попробуйте:\n' +
-          '1. Убедитесь, что MetaMask Mobile установлен и открыт\n' +
-          '2. Обновите страницу\n' +
-          '3. Или откройте сайт в браузере MetaMask'
-        );
+          'Для подключения:\n' +
+          '1. Убедитесь, что MetaMask Mobile установлен\n' +
+          '2. Откройте сайт в браузере внутри приложения MetaMask (вкладка "Browser")\n' +
+          '3. Или обновите страницу\n\n' +
+          'Хотите открыть страницу установки MetaMask?';
+        
+        if (window.confirm(installMessage)) {
+          if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.open('https://apps.apple.com/app/metamask/id1438144202', '_blank');
+          } else {
+            window.open('https://play.google.com/store/apps/details?id=io.metamask', '_blank');
+          }
+        }
       } else {
         alert('MetaMask is not installed. Please install MetaMask to connect your wallet.');
       }
+      setLoading(false);
       return;
     }
-    
-    // Используем найденный провайдер
-    const ethereum = provider;
 
     try {
       setLoading(true);
@@ -415,9 +371,9 @@ export default function Index() {
         setIsConnected(true);
         
         // Загружаем данные пользователя из Supabase
-        console.log('Loading user data...');
+        console.log('Loading user data for address:', address);
         await loadUserData(address);
-        console.log('User data loaded');
+        console.log('User data loaded successfully');
       } else {
         // Если аккаунты не получены
         setDisconnected(true);
@@ -520,8 +476,8 @@ export default function Index() {
             <div className="max-w-4xl mx-auto py-2 sm:py-4 flex justify-between items-center gap-2">
             <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-shrink">
               <div className="relative flex-shrink-0">
-                <div className="w-9 h-9 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
-                  <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-background" />
+                <div className="w-9 h-9 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
+                  <Sparkles className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 text-background" />
                 </div>
               </div>
               <h1 className="text-base sm:text-base md:text-lg lg:text-xl font-display font-bold gradient-text leading-tight truncate">
