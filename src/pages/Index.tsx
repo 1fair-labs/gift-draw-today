@@ -677,16 +677,9 @@ export default function Index() {
               </div>
 
               {!isConnected ? (
-                <Card className="glass-card p-8 md:p-12 text-center border border-border/30 hover:border-primary/30 transition-all duration-300">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 flex items-center justify-center mb-2">
-                      <Wallet className="w-10 h-10 md:w-12 md:h-12 text-primary/60" />
-                    </div>
-                    <div>
-                      <p className="text-base md:text-lg font-medium text-foreground/90 mb-2">Connect your wallet to view tickets</p>
-                      <p className="text-sm md:text-base text-muted-foreground/70">Connect MetaMask to see your NFT lottery tickets</p>
-                    </div>
-                  </div>
+                <Card className="glass-card p-12 text-center">
+                  <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                  <p className="text-base md:text-lg font-display text-muted-foreground/80 mb-4">Connect your wallet to view tickets</p>
                 </Card>
               ) : tickets.length === 0 ? (
                 <Card className="glass-card p-12 text-center">
