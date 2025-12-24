@@ -78,6 +78,11 @@ export default function Index() {
 
   // Функция для получения или создания пользователя
   const getOrCreateUser = async (address: string): Promise<User | null> => {
+    if (!supabase) {
+      console.error('Supabase is not configured');
+      return null;
+    }
+    
     try {
       const normalizedAddress = address.toLowerCase();
       
@@ -146,6 +151,11 @@ export default function Index() {
 
   // Функция для загрузки билетов пользователя
   const loadUserTickets = async (address: string) => {
+    if (!supabase) {
+      console.error('Supabase is not configured');
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('tickets')

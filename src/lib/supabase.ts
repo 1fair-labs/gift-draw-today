@@ -1,13 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+// Создаем клиент только если переменные окружения есть
+// В противном случае возвращаем null и обрабатываем это в компонентах
+export const supabase: SupabaseClient | null = 
+  supabaseUrl && supabaseAnonKey 
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Проверка для предупреждения в консоли (только в development)
+if (import.meta.env.DEV && !supabase) {
+  console.warn('⚠️ Supabase environment variables are missing. Some features may not work.');
+}
 
 // Типы для таблиц
 export interface User {
