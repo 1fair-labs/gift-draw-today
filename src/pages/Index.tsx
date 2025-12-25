@@ -505,6 +505,45 @@ export default function Index() {
     }
   };
 
+  // Получаем данные пользователя Telegram при загрузке
+  useEffect(() => {
+    if (USE_TELEGRAM_WALLET && typeof window !== 'undefined' && window.telegram?.WebApp) {
+      const tg = window.telegram.WebApp;
+      tg.ready();
+      tg.expand();
+      
+      // Пробуем получить данные пользователя
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        console.log('Telegram user data:', user);
+        console.log('User photo_url:', user.photo_url);
+        setTelegramUser(user);
+      } else {
+        console.log('Telegram user data not available in initDataUnsafe');
+        // Пробуем получить через другие методы
+        const initData = tg.initData;
+        if (initData) {
+          console.log('Init data available, trying to parse...');
+          // Можно попробовать парсить initData, но обычно user доступен в initDataUnsafe
+        }
+      }
+    } else {
+      console.log('Telegram WebApp not available');
+    }
+  }, []);
+  
+  // Обновляем данные пользователя при подключении кошелька
+  useEffect(() => {
+    if (isConnected && USE_TELEGRAM_WALLET && typeof window !== 'undefined' && window.telegram?.WebApp) {
+      const tg = window.telegram.WebApp;
+      const user = tg.initDataUnsafe?.user;
+      if (user && !telegramUser) {
+        console.log('Updating Telegram user data on connection:', user);
+        setTelegramUser(user);
+      }
+    }
+  }, [isConnected, telegramUser]);
+
   // Проверка подключения при загрузке
   useEffect(() => {
     if (USE_TELEGRAM_WALLET && tonConnect) {
