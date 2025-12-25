@@ -574,11 +574,23 @@ export default function Index() {
       
       // Слушаем события подключения/отключения
       const handleConnect = (walletInfo: any) => {
+        console.log('TON Connect: Wallet connected:', walletInfo);
         setTonWallet(walletInfo);
         const address = walletInfo.account.address;
         setDisconnected(false);
         setWalletAddress(address);
         setIsConnected(true);
+        
+        // Обновляем данные пользователя Telegram при подключении
+        if (typeof window !== 'undefined' && window.telegram?.WebApp) {
+          const tg = window.telegram.WebApp;
+          const user = tg.initDataUnsafe?.user;
+          if (user) {
+            console.log('Updating Telegram user on connect:', user);
+            setTelegramUser(user);
+          }
+        }
+        
         loadUserData(address);
       };
       
