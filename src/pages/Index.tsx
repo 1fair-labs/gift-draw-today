@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase, type User, type Ticket as TicketType } from '@/lib/supabase';
 import { TonConnect } from '@tonconnect/sdk';
+import { TonConnectUI } from '@tonconnect/ui';
 
 // Mock data for demonstration
 const mockDraw = {
@@ -73,6 +74,27 @@ export default function Index() {
       return instance;
     } catch (error) {
       console.error('Error creating TON Connect instance:', error);
+      return null;
+    }
+  });
+  
+  // TON Connect UI instance для показа модального окна
+  const [tonConnectUI] = useState(() => {
+    if (typeof window === 'undefined' || !USE_TELEGRAM_WALLET) {
+      return null;
+    }
+    const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
+    try {
+      const ui = new TonConnectUI({
+        manifestUrl,
+        actionsConfiguration: {
+          twaReturnUrl: window.location.href
+        }
+      });
+      console.log('TON Connect UI instance created successfully');
+      return ui;
+    } catch (error) {
+      console.error('Error creating TON Connect UI instance:', error);
       return null;
     }
   });
@@ -641,28 +663,31 @@ export default function Index() {
         return;
       }
 
-      // TON Connect автоматически определит окружение:
-      // - В Telegram WebApp: покажет встроенное модальное окно
-      // - В обычном браузере (десктоп): покажет QR-код для сканирования
-      // - В обычном браузере (мобильный): попытается открыть кошелек через deep link
-      console.log('Connecting to wallet...');
-      console.log('Wallets list:', walletsList.map(w => ({ name: w.name, appName: w.appName, bridgeUrl: w.bridgeUrl })));
+      // Используем TON Connect UI для показа модального окна с выбором кошелька
+      // UI автоматически определит окружение и покажет соответствующий интерфейс
+      console.log('Opening TON Connect UI...');
       
-      // Используем метод connect с массивом кошельков
-      // Метод connect() возвращает connection string, а не промис
-      // Подключение обрабатывается через событие onStatusChange в useEffect
-      try {
-        const connectionString = tonConnect.connect(walletsList);
-        console.log('Connection string generated:', connectionString);
-        
-        // Не ждем результат - подключение обработается через onStatusChange
-        // Просто сбрасываем loading, чтобы пользователь мог видеть, что процесс начался
-        // Состояние обновится автоматически через useEffect, который слушает tonConnect.onStatusChange
+      if (tonConnectUI) {
+        // Используем UI компонент для показа модального окна
+        console.log('Using TON Connect UI to show modal');
+        tonConnectUI.openModal();
+        // UI автоматически обработает подключение и вызовет onStatusChange
         setLoading(false);
-      } catch (connectError: any) {
-        // Если ошибка при создании connection string
-        console.error('Error creating connection string:', connectError);
-        throw connectError;
+      } else {
+        // Fallback: используем прямой метод connect
+        console.log('TON Connect UI not available, using direct connect method');
+        console.log('Wallets list:', walletsList.map(w => ({ name: w.name, appName: w.appName, bridgeUrl: w.bridgeUrl })));
+        
+        try {
+          const connectionString = tonConnect.connect(walletsList);
+          console.log('Connection string generated:', connectionString);
+          
+          // Подключение обработается через событие onStatusChange в useEffect
+          setLoading(false);
+        } catch (connectError: any) {
+          console.error('Error creating connection string:', connectError);
+          throw connectError;
+        }
       }
       
     } catch (error: any) {
