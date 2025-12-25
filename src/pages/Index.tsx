@@ -649,12 +649,21 @@ export default function Index() {
       console.log('Wallets list:', walletsList.map(w => ({ name: w.name, appName: w.appName, bridgeUrl: w.bridgeUrl })));
       
       // Используем метод connect с массивом кошельков
-      // TON Connect SDK автоматически покажет UI для выбора кошелька
-      const connectionResult = await tonConnect.connect(walletsList);
-      console.log('Connection result:', connectionResult);
-      
-      // После успешного подключения состояние обновится через useEffect
-      // который слушает события tonConnect.onStatusChange
+      // Метод connect() возвращает connection string, а не промис
+      // Подключение обрабатывается через событие onStatusChange в useEffect
+      try {
+        const connectionString = tonConnect.connect(walletsList);
+        console.log('Connection string generated:', connectionString);
+        
+        // Не ждем результат - подключение обработается через onStatusChange
+        // Просто сбрасываем loading, чтобы пользователь мог видеть, что процесс начался
+        // Состояние обновится автоматически через useEffect, который слушает tonConnect.onStatusChange
+        setLoading(false);
+      } catch (connectError: any) {
+        // Если ошибка при создании connection string
+        console.error('Error creating connection string:', connectError);
+        throw connectError;
+      }
       
     } catch (error: any) {
       console.error('Error connecting Telegram wallet:', error);
