@@ -566,6 +566,17 @@ export default function Index() {
             setWalletAddress(address);
             setIsConnected(true);
             setLoading(false); // Сбрасываем loading при успешном подключении
+            
+            // Обновляем данные пользователя Telegram при подключении
+            if (typeof window !== 'undefined' && window.telegram?.WebApp) {
+              const tg = window.telegram.WebApp;
+              const user = tg.initDataUnsafe?.user;
+              if (user) {
+                console.log('Updating Telegram user on UI connect:', user);
+                setTelegramUser(user);
+              }
+            }
+            
             loadUserData(address);
           } else {
             console.log('TON Connect UI: Wallet disconnected');
@@ -1019,22 +1030,42 @@ export default function Index() {
       e.stopPropagation();
     }
     
-    if (USE_TELEGRAM_WALLET && tonConnect) {
-      // Отключаем TON Connect кошелек
-      try {
-        await tonConnect.disconnect();
-      } catch (error) {
-        console.error('Error disconnecting TON wallet:', error);
+    console.log('Disconnecting wallet...');
+    
+    if (USE_TELEGRAM_WALLET) {
+      // Отключаем TON Connect кошелек через UI, если доступен
+      if (tonConnectUI) {
+        try {
+          console.log('Disconnecting via TON Connect UI');
+          await tonConnectUI.disconnect();
+          console.log('Disconnected via UI successfully');
+        } catch (error) {
+          console.error('Error disconnecting via UI:', error);
+        }
+      }
+      
+      // Также отключаем через SDK
+      if (tonConnect) {
+        try {
+          console.log('Disconnecting via TON Connect SDK');
+          await tonConnect.disconnect();
+          console.log('Disconnected via SDK successfully');
+        } catch (error) {
+          console.error('Error disconnecting via SDK:', error);
+        }
       }
     }
     
     // Помечаем, что пользователь явно отключился, сохраняя адрес
-    setDisconnected(true, walletAddress);
+    const addressToSave = walletAddress;
+    setDisconnected(true, addressToSave);
     setIsConnected(false);
     setWalletAddress('');
     setTickets([]);
     setCltBalance(0);
     setTonWallet(null);
+    
+    console.log('Wallet disconnected, state cleared');
   };
 
   const handleCopyAddress = async () => {
