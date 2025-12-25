@@ -90,6 +90,12 @@ export default function Index() {
         manifestUrl,
         actionsConfiguration: {
           twaReturnUrl: window.location.href
+        },
+        // Настраиваем список кошельков - только Telegram Wallet
+        // Это будет применено при открытии модального окна
+        walletsListConfiguration: {
+          // includeWallets добавляет кошельки, но не фильтрует
+          // Поэтому мы будем фильтровать при открытии модального окна
         }
       });
       console.log('TON Connect UI instance created successfully');
@@ -688,13 +694,25 @@ export default function Index() {
       console.log('All available wallets:', allWallets);
       
       // Фильтруем только Telegram Wallet
-      // Telegram Wallet обычно имеет название "Wallet" или содержит "telegram" в имени
-      const telegramWallet = allWallets.find(wallet => 
-        wallet.name.toLowerCase().includes('wallet') && 
-        (wallet.name.toLowerCase().includes('telegram') || 
-         wallet.appName?.toLowerCase().includes('telegram') ||
-         wallet.name === 'Wallet')
-      );
+      // Telegram Wallet обычно имеет название "Wallet in Telegram" или "Wallet" с appName содержащим "telegram"
+      const telegramWallet = allWallets.find(wallet => {
+        const name = wallet.name.toLowerCase();
+        const appName = wallet.appName?.toLowerCase() || '';
+        // Проверяем различные варианты названия Telegram Wallet
+        return (
+          (name.includes('wallet') && (name.includes('telegram') || appName.includes('telegram'))) ||
+          name === 'wallet in telegram' ||
+          name === 'wallet' ||
+          appName === 'wallet' ||
+          wallet.bridgeUrl?.includes('telegram')
+        );
+      });
+      
+      console.log('All wallets for debugging:', allWallets.map(w => ({
+        name: w.name,
+        appName: w.appName,
+        bridgeUrl: w.bridgeUrl
+      })));
       
       if (!telegramWallet) {
         console.error('Telegram Wallet not found');
@@ -714,15 +732,16 @@ export default function Index() {
         // Используем UI компонент для показа модального окна
         // Настраиваем список кошельков только с Telegram Wallet
         console.log('Using TON Connect UI to show modal with Telegram Wallet only');
+        console.log('Telegram Wallet to show:', telegramWallet);
         try {
-          // Устанавливаем список кошельков перед открытием модального окна
-          // TON Connect UI автоматически покажет только выбранные кошельки
+          // Передаем только Telegram Wallet в список кошельков
+          // Используем walletsListConfiguration для ограничения списка
           await tonConnectUI.openModal({
             walletsListConfiguration: {
-              includeWallets: walletsList.map(w => w.appName || w.name)
+              includeWallets: walletsList // Передаем только Telegram Wallet
             }
           });
-          console.log('Modal opened successfully');
+          console.log('Modal opened successfully with Telegram Wallet only');
           // UI автоматически обработает подключение и вызовет onStatusChange
           // Не сбрасываем loading сразу - пусть onStatusChange это сделает
         } catch (modalError: any) {
