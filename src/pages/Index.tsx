@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Ticket, Trophy, Users, Clock, Sparkles, Zap, ChevronRight, Wallet, Copy, LogOut, Eye, EyeOff, TrendingUp } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -101,6 +102,9 @@ export default function Index() {
   
   // Состояние подключения TON кошелька
   const [tonWallet, setTonWallet] = useState<any>(null);
+  
+  // Данные пользователя Telegram (для аватара и имени)
+  const [telegramUser, setTelegramUser] = useState<any>(null);
 
   // Проверяем, был ли пользователь явно отключен
   const wasDisconnected = () => {
@@ -651,17 +655,29 @@ export default function Index() {
         // Кошелек не подключен, продолжаем подключение
       }
 
-      // Получаем список доступных кошельков
+      // Получаем список доступных кошельков и фильтруем только Telegram Wallet
       console.log('Fetching wallets list...');
-      const walletsList = await tonConnect.getWallets();
-      console.log('Available wallets:', walletsList);
+      const allWallets = await tonConnect.getWallets();
+      console.log('All available wallets:', allWallets);
       
-      if (walletsList.length === 0) {
-        console.error('No wallets found');
-        alert('No TON wallets found. Please install a TON wallet (Tonkeeper, TON Wallet, etc.)');
+      // Фильтруем только Telegram Wallet
+      // Telegram Wallet обычно имеет название "Wallet" или содержит "telegram" в имени
+      const telegramWallet = allWallets.find(wallet => 
+        wallet.name.toLowerCase().includes('wallet') && 
+        (wallet.name.toLowerCase().includes('telegram') || 
+         wallet.appName?.toLowerCase().includes('telegram') ||
+         wallet.name === 'Wallet')
+      );
+      
+      if (!telegramWallet) {
+        console.error('Telegram Wallet not found');
+        alert('Telegram Wallet not found. Please make sure you are using Telegram and have Wallet enabled.');
         setLoading(false);
         return;
       }
+      
+      console.log('Found Telegram Wallet:', telegramWallet);
+      const walletsList = [telegramWallet];
 
       // Используем TON Connect UI для показа модального окна с выбором кошелька
       // UI автоматически определит окружение и покажет соответствующий интерфейс
@@ -669,18 +685,26 @@ export default function Index() {
       
       if (tonConnectUI) {
         // Используем UI компонент для показа модального окна
-        console.log('Using TON Connect UI to show modal');
+        // Настраиваем список кошельков только с Telegram Wallet
+        console.log('Using TON Connect UI to show modal with Telegram Wallet only');
         try {
-          await tonConnectUI.openModal();
+          // Устанавливаем список кошельков перед открытием модального окна
+          // TON Connect UI автоматически покажет только выбранные кошельки
+          await tonConnectUI.openModal({
+            walletsListConfiguration: {
+              includeWallets: walletsList.map(w => w.appName || w.name)
+            }
+          });
           console.log('Modal opened successfully');
           // UI автоматически обработает подключение и вызовет onStatusChange
+          // Не сбрасываем loading сразу - пусть onStatusChange это сделает
         } catch (modalError: any) {
           console.error('Error opening modal:', modalError);
+          setLoading(false);
           if (modalError.code !== 300) { // 300 = пользователь отменил
             throw modalError;
           }
         }
-        setLoading(false);
       } else {
         // Fallback: используем прямой метод connect
         console.log('TON Connect UI not available, using direct connect method');
@@ -1047,6 +1071,15 @@ export default function Index() {
                     className="neon-border bg-card/50 hover:bg-card border border-primary/30 font-medium gap-1.5 sm:gap-2 px-3 sm:px-3 h-10 sm:h-10 flex-shrink-0"
                   >
                     <div className="flex items-center gap-1.5 sm:gap-2">
+                      {/* Аватар пользователя Telegram */}
+                      {telegramUser?.photo_url && (
+                        <Avatar className="h-6 w-6 sm:h-7 sm:w-7">
+                          <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                          <AvatarFallback className="text-xs">
+                            {telegramUser.first_name?.[0] || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className="text-xs sm:text-xs font-semibold text-neon-gold leading-tight whitespace-nowrap">
                         {isBalanceVisible 
                           ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
@@ -1060,6 +1093,31 @@ export default function Index() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 bg-card border-border/50">
+                  {/* Информация о пользователе */}
+                  {telegramUser && (
+                    <div className="px-2 py-2 border-b border-border/50">
+                      <div className="flex items-center gap-2">
+                        {telegramUser.photo_url && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                            <AvatarFallback>
+                              {telegramUser.first_name?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate">
+                            {telegramUser.first_name} {telegramUser.last_name || ''}
+                          </div>
+                          {telegramUser.username && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              @{telegramUser.username}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between px-2 py-1.5">
                     <DropdownMenuLabel className="text-sm text-muted-foreground tracking-wider p-0">Balance</DropdownMenuLabel>
                     <Button
