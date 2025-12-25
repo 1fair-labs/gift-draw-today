@@ -547,8 +547,35 @@ export default function Index() {
       
       tonConnect.onStatusChange(handleConnect, handleDisconnectEvent);
       
+      // Также слушаем события через UI, если доступен
+      let uiUnsubscribe: (() => void) | null = null;
+      if (tonConnectUI) {
+        const handleUIStatusChange = (walletInfo: any) => {
+          console.log('TON Connect UI: Wallet status changed:', walletInfo);
+          if (walletInfo) {
+            console.log('TON Connect UI: Connecting wallet:', walletInfo);
+            setTonWallet(walletInfo);
+            const address = walletInfo.account.address;
+            setDisconnected(false);
+            setWalletAddress(address);
+            setIsConnected(true);
+            setLoading(false); // Сбрасываем loading при успешном подключении
+            loadUserData(address);
+          } else {
+            console.log('TON Connect UI: Wallet disconnected');
+            handleDisconnectEvent();
+            setLoading(false);
+          }
+        };
+        
+        uiUnsubscribe = tonConnectUI.onStatusChange(handleUIStatusChange);
+      }
+      
       return () => {
         tonConnect.offStatusChange(handleConnect, handleDisconnectEvent);
+        if (uiUnsubscribe) {
+          uiUnsubscribe();
+        }
       };
     }
 
