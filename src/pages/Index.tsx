@@ -726,19 +726,53 @@ export default function Index() {
   };
 
   // Функция подключения кошелька (только Telegram)
-  const handleConnectWallet = async () => {
-    console.log('handleConnectWallet called');
+  const handleConnectWallet = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
-    // Если не в Telegram WebApp, редиректим в мини-приложение
-    if (!isInTelegramWebApp()) {
-      const miniAppUrl = 'https://t.me/cryptolotterytoday_bot/enjoy';
-      console.log('Redirecting to Telegram Mini App:', miniAppUrl);
-      window.location.href = miniAppUrl;
+    console.log('handleConnectWallet called');
+    console.log('isInTelegramWebApp:', isInTelegramWebApp());
+    console.log('loading:', loading);
+    
+    // Если кнопка заблокирована, не делаем ничего
+    if (loading) {
+      console.log('Button is disabled (loading)');
       return;
     }
     
-    // В Telegram WebApp инициируем подключение кошелька
-    await handleConnectTelegramWallet();
+    try {
+      // Если не в Telegram WebApp, редиректим в мини-приложение
+      if (!isInTelegramWebApp()) {
+        const miniAppUrl = 'https://t.me/cryptolotterytoday_bot/enjoy';
+        console.log('Not in Telegram WebApp, redirecting to:', miniAppUrl);
+        
+        // Пробуем несколько способов редиректа
+        try {
+          // Способ 1: прямой редирект
+          window.location.href = miniAppUrl;
+        } catch (error) {
+          console.error('Error with window.location.href:', error);
+          try {
+            // Способ 2: через window.open
+            window.open(miniAppUrl, '_blank');
+          } catch (error2) {
+            console.error('Error with window.open:', error2);
+            // Способ 3: через location.assign
+            window.location.assign(miniAppUrl);
+          }
+        }
+        return;
+      }
+      
+      // В Telegram WebApp инициируем подключение кошелька
+      console.log('In Telegram WebApp, initiating wallet connection...');
+      await handleConnectTelegramWallet();
+    } catch (error) {
+      console.error('Error in handleConnectWallet:', error);
+      alert('Failed to connect wallet. Please try again.');
+    }
   };
 
   const handleDisconnect = async (e?: React.MouseEvent) => {
@@ -1072,7 +1106,10 @@ export default function Index() {
               </DropdownMenu>
             ) : (
               <Button 
-                onClick={handleConnectWallet}
+                onClick={(e) => {
+                  console.log('Button clicked!');
+                  handleConnectWallet(e);
+                }}
                 disabled={loading}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-primary-foreground font-display font-semibold text-xs sm:text-xs md:text-sm glow-purple px-3 sm:px-3 h-10 sm:h-10 flex-shrink-0"
               >
