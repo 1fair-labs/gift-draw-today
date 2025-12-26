@@ -552,7 +552,7 @@ export default function Index() {
   // Проверка подключения при загрузке (новая архитектура через Telegram ID)
   // Подключение теперь происходит автоматически при загрузке, если пользователь в Telegram WebApp
   // Старая логика TON Connect оставлена для обратной совместимости, но не используется
-
+  useEffect(() => {
     // MetaMask connection check (только если не используется Telegram Wallet)
     if (!USE_TELEGRAM_WALLET) {
       const checkConnection = async () => {
