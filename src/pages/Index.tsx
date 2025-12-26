@@ -487,6 +487,44 @@ export default function Index() {
   useEffect(() => {
     if (!tonConnect) return;
 
+    // Восстанавливаем подключение при загрузке, если кошелек уже был подключен
+    const restoreConnection = async () => {
+      try {
+        const wallet = tonConnect.wallet;
+        if (wallet) {
+          console.log('Restoring wallet connection:', wallet);
+          const address = wallet.account.address;
+          setTonWallet(wallet);
+          setDisconnected(false);
+          setWalletAddress(address);
+          setIsConnected(true);
+          
+          // Сохраняем telegram_id в БД если есть
+          if (telegramId && supabase) {
+            getOrCreateUserByTelegramId(telegramId).then((user) => {
+              if (user && supabase) {
+                supabase
+                  .from('users')
+                  .update({ wallet_address: address.toLowerCase() })
+                  .eq('telegram_id', telegramId);
+              }
+            });
+          }
+          
+          // Загружаем данные
+          if (telegramId) {
+            loadUserData(telegramId, true);
+          } else {
+            loadUserData(address);
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring connection:', error);
+      }
+    };
+
+    restoreConnection();
+
     const unsubscribe = tonConnect.onStatusChange((walletInfo) => {
       console.log('Wallet status changed:', walletInfo);
       
@@ -570,43 +608,40 @@ export default function Index() {
 
       console.log('TON Connect instance found');
 
-      // Если кошелек уже подключен, просто обновляем данные
-      try {
-        const walletInfo = await tonConnect.getWallet();
-        console.log('Current wallet info:', walletInfo);
-        if (walletInfo) {
-          const address = walletInfo.account.address;
-          console.log('Wallet already connected:', address);
-          setTonWallet(walletInfo);
-          setDisconnected(false);
-          setWalletAddress(address);
-          setIsConnected(true);
-          
-          // Сохраняем telegram_id в БД если есть
-          if (telegramId && supabase) {
-            await getOrCreateUserByTelegramId(telegramId).then((user) => {
-              if (user && supabase) {
-                supabase
-                  .from('users')
-                  .update({ wallet_address: address.toLowerCase() })
-                  .eq('telegram_id', telegramId);
-              }
-            });
-          }
-          
-          // Загружаем данные по telegram_id если есть, иначе по адресу
-          if (telegramId) {
-            await loadUserData(telegramId, true);
-          } else {
-            await loadUserData(address);
-          }
-          setLoading(false);
-          return;
+      // Проверяем, подключен ли кошелек через свойство wallet
+      const currentWallet = tonConnect.wallet;
+      if (currentWallet) {
+        console.log('Wallet already connected:', currentWallet);
+        const address = currentWallet.account.address;
+        console.log('Wallet address:', address);
+        setTonWallet(currentWallet);
+        setDisconnected(false);
+        setWalletAddress(address);
+        setIsConnected(true);
+        setLoading(false);
+        
+        // Сохраняем telegram_id в БД если есть
+        if (telegramId && supabase) {
+          getOrCreateUserByTelegramId(telegramId).then((user) => {
+            if (user && supabase) {
+              supabase
+                .from('users')
+                .update({ wallet_address: address.toLowerCase() })
+                .eq('telegram_id', telegramId);
+            }
+          });
         }
-      } catch (e) {
-        console.log('No wallet connected yet:', e);
-        // Кошелек не подключен, продолжаем подключение
+        
+        // Загружаем данные по telegram_id если есть, иначе по адресу
+        if (telegramId) {
+          loadUserData(telegramId, true);
+        } else {
+          loadUserData(address);
+        }
+        return;
       }
+      
+      console.log('No wallet connected yet, initiating connection...');
 
       // Получаем список доступных кошельков и фильтруем только Telegram Wallet
       console.log('Fetching wallets list...');
@@ -681,16 +716,17 @@ export default function Index() {
       if (!tonConnectUI) {
         // Fallback: используем прямой метод connect
         console.log('TON Connect UI not available, using direct connect method');
-        console.log('Wallets list:', walletsList.map(w => ({ name: w.name, appName: w.appName, bridgeUrl: w.bridgeUrl })));
+        console.log('Wallets list:', walletsList.map(w => ({ name: w.name, appName: w.appName })));
         
         try {
           const connectionString = tonConnect.connect(walletsList);
           console.log('Connection string generated:', connectionString);
           
           // Подключение обработается через событие onStatusChange в useEffect
-          setLoading(false);
+          // НЕ сбрасываем loading здесь - пусть onStatusChange это сделает
         } catch (connectError: any) {
           console.error('Error creating connection string:', connectError);
+          setLoading(false);
           throw connectError;
         }
       }
