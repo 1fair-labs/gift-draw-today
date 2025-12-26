@@ -1208,7 +1208,7 @@ export default function Index() {
                   <Sparkles className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 text-background" />
                 </div>
               </div>
-              <h1 className="text-base sm:text-base md:text-lg lg:text-xl font-display font-bold gradient-text leading-tight truncate">
+              <h1 className={`${isInTelegramWebApp() ? 'text-sm' : 'text-base sm:text-base md:text-lg lg:text-xl'} font-display font-bold gradient-text leading-tight truncate`}>
                 <span>CryptoLottery.today</span>
               </h1>
             </div>
