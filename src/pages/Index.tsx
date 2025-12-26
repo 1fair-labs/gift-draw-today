@@ -307,8 +307,11 @@ export default function Index() {
   // Базовая инициализация Telegram WebApp (expand, disableVerticalSwipes и т.д.) 
   // теперь выполняется в App.tsx для глобальной работы
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.telegram?.WebApp) {
-      const tg = window.telegram.WebApp;
+    if (typeof window === 'undefined') return;
+    
+    // Проверяем оба варианта: Telegram и telegram
+    const tg = (window as any).Telegram?.WebApp || (window as any).telegram?.WebApp;
+    if (tg) {
       
       // Получаем данные пользователя Telegram
       const user = tg.initDataUnsafe?.user;
@@ -337,7 +340,7 @@ export default function Index() {
   // Проверка, открыт ли сайт в Telegram WebApp
   const isInTelegramWebApp = () => {
     if (typeof window === 'undefined') return false;
-    return !!(window.telegram?.WebApp);
+    return !!((window as any).Telegram?.WebApp || (window as any).telegram?.WebApp);
   };
 
   // ========== TELEGRAM WALLET CONNECTION (TON Connect) ==========
