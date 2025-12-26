@@ -554,17 +554,6 @@ export default function Index() {
 
     // Асинхронная функция для подключения пользователя
     const connectUser = async () => {
-      // Используем showAlert для отладки в Telegram (так как консоль недоступна)
-      const debugAlert = (message: string) => {
-        if (tg.showAlert) {
-          try {
-            tg.showAlert(message);
-          } catch (e) {
-            console.error('Error showing alert:', e);
-          }
-        }
-      };
-      
       // Проверяем наличие данных пользователя
       let user = tg.initDataUnsafe?.user;
       
@@ -598,46 +587,15 @@ export default function Index() {
         try {
           const savedUser = await getOrCreateUserByTelegramId(user.id);
           if (savedUser) {
-            debugAlert(`✅ Connected!\nTelegram ID: ${savedUser.telegram_id}`);
             // Автоматически подключаем пользователя
             if (!wasDisconnected()) {
               setIsConnected(true);
               setDisconnected(false);
               await loadUserData(user.id, true);
             }
-          } else {
-            debugAlert('❌ Failed to save user');
           }
         } catch (err: any) {
-          const errorMsg = err.message || err.toString() || 'Unknown error';
-          // Показываем детальную ошибку
-          debugAlert(`❌ Error: ${errorMsg}`);
-          
-          // Если это ошибка RLS или миграции, показываем инструкции
-          if (errorMsg.includes('RLS') || errorMsg.includes('policy')) {
-            setTimeout(() => {
-              if (tg.showAlert) {
-                tg.showAlert('Fix: Enable INSERT policy\nin Supabase RLS settings');
-              }
-            }, 2000);
-          } else if (errorMsg.includes('column') || errorMsg.includes('telegram_id')) {
-            setTimeout(() => {
-              if (tg.showAlert) {
-                tg.showAlert('Fix: Run migration\ndatabase_telegram_migration.sql');
-              }
-            }, 2000);
-          }
-        }
-      } else {
-        // Данные пользователя недоступны
-        const debugInfo = `User data not available\nPlatform: ${tg.platform || 'unknown'}\nVersion: ${tg.version || 'unknown'}\nHas initData: ${!!tg.initData}\nHas initDataUnsafe: ${!!tg.initDataUnsafe}`;
-        debugAlert(debugInfo);
-        
-        // Показываем инструкции
-        if (tg.showAlert) {
-          setTimeout(() => {
-            tg.showAlert('⚠️ Bot needs to be configured in BotFather to request user data.\n\nPlease check bot settings.');
-          }, 2000);
+          console.error('Error saving user:', err);
         }
       }
     };

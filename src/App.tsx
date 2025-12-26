@@ -68,32 +68,30 @@ const App = () => {
         
         // КРИТИЧЕСКИ ВАЖНО: expand() должен быть вызван СРАЗУ после ready()
         // Это разворачивает приложение на весь экран
-        // Для Telegram Desktop вызываем expand() несколько раз для надежности
+        // Для Telegram Desktop версии 6.0 expand() может не работать, но пробуем
         const expandApp = () => {
           if (tg.expand) {
             try {
               tg.expand();
+              console.log('expand() called');
             } catch (e) {
               console.error('Error expanding:', e);
             }
+          } else {
+            console.warn('tg.expand() is not available');
           }
         };
         
-        // Вызываем expand сразу
+        // Вызываем expand сразу после ready()
         expandApp();
         
-        // Для десктопной версии вызываем expand более агрессивно
+        // Для десктопной версии вызываем expand очень агрессивно
+        // Telegram Desktop версии 6.0 может требовать множественных вызовов
         if (!tg.platform || tg.platform === 'unknown' || tg.platform === 'tdesktop' || tg.platform === 'desktop') {
-          // Множественные вызовы для десктопной версии
-          setTimeout(expandApp, 50);
-          setTimeout(expandApp, 100);
-          setTimeout(expandApp, 200);
-          setTimeout(expandApp, 300);
-          setTimeout(expandApp, 500);
-          setTimeout(expandApp, 800);
-          setTimeout(expandApp, 1000);
-          setTimeout(expandApp, 1500);
-          setTimeout(expandApp, 2000);
+          // Очень частые вызовы для десктопной версии
+          for (let i = 0; i < 20; i++) {
+            setTimeout(() => expandApp(), i * 100);
+          }
         } else {
           // Для мобильных версий
           setTimeout(expandApp, 100);
