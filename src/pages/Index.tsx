@@ -520,29 +520,71 @@ export default function Index() {
       // Инициализация WebApp
       tg.ready();
       
-      // Принудительно разворачиваем в полноэкранный режим
-      // Всегда вызываем expand() без проверок - Telegram сам решит, нужно ли разворачивать
+      // Проверяем платформу - expand() работает только на мобильных устройствах
+      const platform = (tg as any).platform || '';
+      const isMobile = ['ios', 'android'].includes(platform);
+      console.log('Telegram WebApp platform:', platform, 'isMobile:', isMobile);
+      
+      // Настраиваем внешний вид для Telegram WebApp ПЕРЕД expand()
+      tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
+      tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
+      tg.enableClosingConfirmation(); // Подтверждение закрытия
+      
+      // Отключаем возможность закрытия свайпом вниз
+      // Это предотвращает случайное закрытие приложения
+      // Пробуем разные возможные методы API
+      if (typeof (tg as any).disableVerticalSwipes === 'function') {
+        (tg as any).disableVerticalSwipes();
+        console.log('Vertical swipes disabled via disableVerticalSwipes()');
+      }
+      if (typeof (tg as any).disableSwipeGesture === 'function') {
+        (tg as any).disableSwipeGesture();
+        console.log('Swipe gesture disabled via disableSwipeGesture()');
+      }
+      if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
+        (tg as any).setSwipeGestureEnabled(false);
+        console.log('Swipe gesture disabled via setSwipeGestureEnabled(false)');
+      }
+      
+      // Устанавливаем, что приложение должно быть закрыто только через кнопку
+      // Это важно для полноэкранного режима
+      if (typeof (tg as any).setCloseConfirmationEnabled === 'function') {
+        (tg as any).setCloseConfirmationEnabled(true);
+      }
+      
+      // Принудительно разворачиваем в полноэкранный режим только на мобильных
       const forceExpand = () => {
+        if (!isMobile) {
+          console.log('Skipping expand() - not on mobile platform');
+          return;
+        }
         try {
           console.log('Calling tg.expand()...');
           tg.expand();
-          console.log('tg.expand() called, isExpanded:', (tg as any).isExpanded);
+          const isExpanded = (tg as any).isExpanded;
+          const viewportHeight = (tg as any).viewportHeight;
+          const viewportStableHeight = (tg as any).viewportStableHeight;
+          console.log('After expand() - isExpanded:', isExpanded, 'viewportHeight:', viewportHeight, 'viewportStableHeight:', viewportStableHeight);
         } catch (e) {
           console.warn('Error calling expand():', e);
         }
       };
       
-      console.log('Telegram WebApp initialized, forcing expand...');
-      // Вызываем сразу и многократно для гарантии
-      forceExpand();
-      setTimeout(() => forceExpand(), 10);
-      setTimeout(() => forceExpand(), 50);
-      setTimeout(() => forceExpand(), 100);
-      setTimeout(() => forceExpand(), 200);
-      setTimeout(() => forceExpand(), 300);
-      setTimeout(() => forceExpand(), 500);
-      setTimeout(() => forceExpand(), 1000);
-      setTimeout(() => forceExpand(), 2000);
+      // Вызываем expand() ПОСЛЕ всех настроек
+      console.log('Telegram WebApp initialized, forcing expand after settings...');
+      if (isMobile) {
+        // Небольшая задержка после ready() для применения всех настроек
+        setTimeout(() => {
+          forceExpand();
+          // Множественные вызовы для гарантии
+          setTimeout(() => forceExpand(), 50);
+          setTimeout(() => forceExpand(), 100);
+          setTimeout(() => forceExpand(), 200);
+          setTimeout(() => forceExpand(), 300);
+          setTimeout(() => forceExpand(), 500);
+          setTimeout(() => forceExpand(), 1000);
+        }, 50);
+      }
       
       // Также вызываем при изменении viewport
       const handleViewportChanged = () => {
@@ -574,11 +616,6 @@ export default function Index() {
       
       // Также обновляем при изменении viewport
       tg.onEvent('viewportChanged', updateSafeArea);
-      
-      // Настраиваем внешний вид для Telegram WebApp
-      tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
-      tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
-      tg.enableClosingConfirmation(); // Подтверждение закрытия
       
       // Возвращаем функцию очистки для удаления обработчика событий
       return () => {
