@@ -734,29 +734,36 @@ export default function Index() {
   // Функция подключения через Telegram
   const handleConnectWallet = async () => {
     console.log('handleConnectWallet called');
-    console.log('isInTelegramWebApp:', isInTelegramWebApp());
     
-    // Если не в Telegram WebApp, редиректим в мини-приложение
-    if (!isInTelegramWebApp()) {
+    // Строгая проверка: находимся ли мы в Telegram WebApp
+    const tg = (window as any).Telegram?.WebApp || window.telegram?.WebApp;
+    const isInTelegram = !!tg && !!tg.initDataUnsafe;
+    
+    console.log('isInTelegramWebApp:', isInTelegram);
+    
+    // Если НЕ в Telegram WebApp, редиректим в мини-приложение
+    if (!isInTelegram) {
       const miniAppUrl = 'https://t.me/cryptolotterytoday_bot/enjoy';
       console.log('Not in Telegram WebApp, redirecting to:', miniAppUrl);
       
       // Пробуем несколько способов редиректа
       try {
-        // Способ 1: прямой редирект
+        // Способ 1: прямой редирект (самый надежный)
         window.location.href = miniAppUrl;
+        // Если редирект не сработал сразу, пробуем другие способы
+        setTimeout(() => {
+          try {
+            window.location.assign(miniAppUrl);
+          } catch (e) {
+            window.open(miniAppUrl, '_blank');
+          }
+        }, 100);
       } catch (error) {
-        console.error('Error with window.location.href:', error);
-        try {
-          // Способ 2: через window.open
-          window.open(miniAppUrl, '_blank');
-        } catch (error2) {
-          console.error('Error with window.open:', error2);
-          // Способ 3: через location.assign
-          window.location.assign(miniAppUrl);
-        }
+        console.error('Error with redirect:', error);
+        // Fallback: открываем в новой вкладке
+        window.open(miniAppUrl, '_blank');
       }
-      return;
+      return; // ВАЖНО: сразу выходим, не продолжаем выполнение
     }
     
     // В Telegram WebApp - если уже подключен, ничего не делаем
@@ -770,8 +777,8 @@ export default function Index() {
     setLoading(true);
     
     try {
-      const tg = (window as any).Telegram?.WebApp || window.telegram?.WebApp;
       if (!tg) {
+        console.error('Telegram WebApp object not found');
         alert('Telegram WebApp is not available');
         setLoading(false);
         return;
@@ -800,6 +807,7 @@ export default function Index() {
         
         console.log('Successfully connected via Telegram ID');
       } else {
+        console.error('Telegram user data not available:', { user, initDataUnsafe: tg.initDataUnsafe });
         alert('Telegram user data not available. Please try again.');
       }
     } catch (error: any) {
