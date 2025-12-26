@@ -31,23 +31,14 @@ const mockTickets = [
   { id: 1003, type: 'bronze', status: 'available', image: '' },
 ];
 
-// Типы для window.ethereum
+// Типы для window.telegram
 declare global {
   interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      on: (event: string, handler: (...args: any[]) => void) => void;
-      removeListener: (event: string, handler: (...args: any[]) => void) => void;
-    };
     telegram?: {
       WebApp?: any;
     };
   }
 }
-
-// Переключатель типа кошелька: true = Telegram, false = MetaMask
-const USE_TELEGRAM_WALLET = true; // Измените на false, чтобы вернуться к MetaMask
 
 export default function Index() {
   const [isConnected, setIsConnected] = useState(false);
@@ -64,8 +55,8 @@ export default function Index() {
   
   // TON Connect instance
   const [tonConnect] = useState(() => {
-    if (typeof window === 'undefined' || !USE_TELEGRAM_WALLET) {
-      console.log('TON Connect not initialized: window undefined or USE_TELEGRAM_WALLET is false');
+    if (typeof window === 'undefined') {
+      console.log('TON Connect not initialized: window undefined');
       return null;
     }
     const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
@@ -82,7 +73,7 @@ export default function Index() {
   
   // TON Connect UI instance для показа модального окна
   const [tonConnectUI] = useState(() => {
-    if (typeof window === 'undefined' || !USE_TELEGRAM_WALLET) {
+    if (typeof window === 'undefined') {
       return null;
     }
     const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
@@ -137,39 +128,6 @@ export default function Index() {
   const cltPrice = 0.041; // CLT/USDT
   const usdBalance = (cltBalance * cltPrice).toFixed(2);
 
-  // ========== METAMASK WALLET CODE (скрыто, когда USE_TELEGRAM_WALLET = true) ==========
-  // Функция для получения провайдера MetaMask (поддержка мобильных устройств)
-  const getEthereumProvider = () => {
-    if (USE_TELEGRAM_WALLET) return null; // Скрываем MetaMask код
-    if (typeof window === 'undefined') return null;
-    
-    // Основной способ - window.ethereum
-    if (window.ethereum) {
-      return window.ethereum;
-    }
-    
-    // Альтернативные способы для мобильных устройств
-    const win = window as any;
-    
-    // Проверяем различные варианты инжекции провайдера
-    if (win.ethereum) return win.ethereum;
-    if (win.web3?.currentProvider) return win.web3.currentProvider;
-    if (win.web3?.ethereum) return win.web3.ethereum;
-    
-    // Дополнительные проверки для мобильных
-    if (win.__metamask) return win.__metamask;
-    
-    return null;
-  };
-
-  // Проверка, открыт ли сайт в браузере MetaMask
-  const isInMetaMaskBrowser = () => {
-    if (USE_TELEGRAM_WALLET) return false; // Скрываем MetaMask код
-    if (typeof navigator === 'undefined') return false;
-    const userAgent = navigator.userAgent.toLowerCase();
-    // Проверяем user agent браузера MetaMask
-    return userAgent.includes('metamask') || userAgent.includes('mmsdk');
-  };
 
   // Функция для копирования текста в буфер обмена (с fallback для iOS)
   const copyToClipboard = async (text: string): Promise<boolean> => {
@@ -204,172 +162,6 @@ export default function Index() {
     }
   };
 
-  // Функция для проверки наличия приложения MetaMask
-  const checkMetaMaskInstalled = (): Promise<boolean> => {
-    if (USE_TELEGRAM_WALLET) return Promise.resolve(false); // Скрываем MetaMask код
-    return new Promise((resolve) => {
-      const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
-      
-      if (!isIOS && !isAndroid) {
-        resolve(false);
-        return;
-      }
-      
-      // Запоминаем время начала проверки и состояние страницы
-      const startTime = Date.now();
-      const wasVisible = document.visibilityState === 'visible';
-      let appOpened = false;
-      let resolved = false;
-      
-      const resolveOnce = (value: boolean) => {
-        if (!resolved) {
-          resolved = true;
-          window.removeEventListener('blur', handleBlur);
-          window.removeEventListener('focus', handleFocus);
-          document.removeEventListener('visibilitychange', handleVisibilityChange);
-          resolve(value);
-        }
-      };
-      
-      // Слушаем событие blur (страница потеряла фокус - приложение открылось)
-      const handleBlur = () => {
-        appOpened = true;
-        // Если приложение открылось, значит оно установлено
-        setTimeout(() => {
-          resolveOnce(true);
-        }, 300);
-      };
-      
-      // Слушаем событие focus (вернулись на страницу)
-      const handleFocus = () => {
-        const elapsed = Date.now() - startTime;
-        // Если вернулись очень быстро (< 500ms), значит приложение не установлено
-        // Если вернулись после открытия приложения (> 500ms), значит оно было установлено
-        if (elapsed < 500 && !appOpened) {
-          resolveOnce(false);
-        }
-      };
-      
-      // Слушаем изменение видимости страницы (более надежно на мобильных)
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'hidden') {
-          appOpened = true;
-          setTimeout(() => {
-            resolveOnce(true);
-          }, 300);
-        } else if (document.visibilityState === 'visible') {
-          const elapsed = Date.now() - startTime;
-          if (elapsed < 500 && !appOpened) {
-            resolveOnce(false);
-          }
-        }
-      };
-      
-      window.addEventListener('blur', handleBlur);
-      window.addEventListener('focus', handleFocus);
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      
-      // Пытаемся открыть приложение
-      try {
-        if (isIOS) {
-          // Для iOS используем iframe метод (более надежно)
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = 'metamask://';
-          document.body.appendChild(iframe);
-          
-          // Удаляем iframe через короткое время
-          setTimeout(() => {
-            if (document.body.contains(iframe)) {
-              document.body.removeChild(iframe);
-            }
-          }, 100);
-          
-          // Также пробуем через window.location
-          setTimeout(() => {
-            try {
-              window.location.href = 'metamask://';
-            } catch (e) {
-              // Игнорируем ошибки
-            }
-          }, 50);
-        } else if (isAndroid) {
-          // Для Android пробуем через intent сначала
-          try {
-            const intentUrl = 'intent://#Intent;scheme=metamask;package=io.metamask;end';
-            window.location.href = intentUrl;
-          } catch (e) {
-            // Если intent не сработал, пробуем прямую схему
-            try {
-              window.location.href = 'metamask://';
-            } catch (e2) {
-              // Игнорируем ошибки
-            }
-          }
-        }
-        
-        // Таймаут: если через 2 секунды ничего не произошло, считаем что приложения нет
-        setTimeout(() => {
-          if (!appOpened) {
-            resolveOnce(false);
-          }
-        }, 2000);
-      } catch (e) {
-        resolveOnce(false);
-      }
-    });
-  };
-
-  // Функция для открытия приложения MetaMask (просто открывает приложение, без браузера)
-  const openMetaMaskApp = () => {
-    if (USE_TELEGRAM_WALLET) return; // Скрываем MetaMask код
-    try {
-      // Определяем платформу
-      const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
-      
-      if (isIOS) {
-        // Для iOS пробуем открыть приложение MetaMask напрямую
-        // Схема: metamask://
-        const metamaskScheme = 'metamask://';
-        
-        // Пробуем открыть через iframe (более надежно на iOS)
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = metamaskScheme;
-        document.body.appendChild(iframe);
-        
-        // Удаляем iframe через короткое время
-        setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        }, 1000);
-        
-        // Также пробуем через window.location (fallback)
-        setTimeout(() => {
-          try {
-            window.location.href = metamaskScheme;
-          } catch (e) {
-            console.log('Could not open MetaMask via direct scheme');
-          }
-        }, 100);
-      } else if (isAndroid) {
-        // Для Android просто открываем приложение через прямую схему
-        // НЕ используем intent с browser, чтобы не было ошибок
-        const directScheme = 'metamask://';
-        
-        try {
-          window.location.href = directScheme;
-        } catch (e) {
-          console.log('Could not open MetaMask');
-        }
-      }
-    } catch (error) {
-      console.error('Error opening MetaMask:', error);
-    }
-  };
 
   // Функция для получения или создания пользователя
   const getOrCreateUser = async (address: string): Promise<User | null> => {
@@ -515,7 +307,7 @@ export default function Index() {
   // Базовая инициализация Telegram WebApp (expand, disableVerticalSwipes и т.д.) 
   // теперь выполняется в App.tsx для глобальной работы
   useEffect(() => {
-    if (USE_TELEGRAM_WALLET && typeof window !== 'undefined' && window.telegram?.WebApp) {
+    if (typeof window !== 'undefined' && window.telegram?.WebApp) {
       const tg = window.telegram.WebApp;
       
       // Получаем данные пользователя Telegram
@@ -541,68 +333,6 @@ export default function Index() {
     }
   }, []);
 
-  // Проверка подключения при загрузке (новая архитектура через Telegram ID)
-  // Подключение теперь происходит автоматически при загрузке, если пользователь в Telegram WebApp
-  // Старая логика TON Connect оставлена для обратной совместимости, но не используется
-  useEffect(() => {
-    // MetaMask connection check (только если не используется Telegram Wallet)
-    if (!USE_TELEGRAM_WALLET) {
-      const checkConnection = async () => {
-        // Если пользователь явно отключился, не подключаем автоматически
-        if (wasDisconnected()) {
-          return;
-        }
-
-        const ethereum = getEthereumProvider();
-        if (ethereum) {
-          try {
-            const accounts = await ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0) {
-              const address = accounts[0];
-              setWalletAddress(address);
-              setIsConnected(true);
-              await loadUserData(address);
-            }
-          } catch (error) {
-            console.error('Error checking connection:', error);
-          }
-        }
-      };
-
-      checkConnection();
-
-      // Слушаем изменения аккаунтов
-      const ethereum = getEthereumProvider();
-      if (ethereum) {
-        const handleAccountsChanged = async (accounts: string[]) => {
-          if (accounts.length === 0) {
-            setIsConnected(false);
-            setWalletAddress('');
-            setTickets([]);
-            setCltBalance(0);
-            setDisconnected(true);
-          } else {
-            // Если пользователь был отключен, но изменил аккаунт в MetaMask, не подключаем автоматически
-            if (wasDisconnected()) {
-              return;
-            }
-            const address = accounts[0];
-            setWalletAddress(address);
-            setIsConnected(true);
-            await loadUserData(address);
-          }
-        };
-
-        ethereum.on('accountsChanged', handleAccountsChanged);
-
-        return () => {
-          if (ethereum) {
-            ethereum.removeListener('accountsChanged', handleAccountsChanged);
-          }
-        };
-      }
-    }
-  }, [tonConnect]);
 
   // Проверка, открыт ли сайт в Telegram WebApp
   const isInTelegramWebApp = () => {
@@ -765,212 +495,10 @@ export default function Index() {
     }
   };
 
-  // ========== METAMASK WALLET CONNECTION (скрыто) ==========
-  const handleConnectMetaMaskWallet = async () => {
-    // Определение мобильного устройства
-    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
-    
-    // Пытаемся получить провайдер
-    let ethereum = getEthereumProvider();
-    
-    // На мобильных устройствах провайдер может появиться с задержкой
-    if (!ethereum && isMobile) {
-      setLoading(true);
-      // Ждем немного и проверяем снова (только на мобильных)
-      // Пробуем несколько раз с увеличивающейся задержкой
-      for (let i = 0; i < 3 && !ethereum; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        ethereum = getEthereumProvider();
-      }
-      setLoading(false);
-    }
-    
-    if (!ethereum) {
-      if (isMobile) {
-        const siteUrl = window.location.href;
-        const isInMetaMask = isInMetaMaskBrowser();
-        
-        let message = '';
-        if (isIOS) {
-          if (isInMetaMask) {
-            message = 
-              'MetaMask not detected in browser.\n\n' +
-              'Try:\n' +
-              '1. Refresh the page (pull down)\n' +
-              '2. Make sure MetaMask is open and active\n' +
-              '3. Restart the MetaMask app\n\n' +
-              'If the problem persists, copy the site address and open it again in MetaMask browser.';
-          } else {
-            message = 
-              '⚠️ On iOS, connection only works in MetaMask browser!\n\n' +
-              'I will copy the site address so you can open it in MetaMask browser.\n\n' +
-              'Continue?';
-          }
-        } else if (isAndroid) {
-          if (isInMetaMask) {
-            message = 
-              'MetaMask not detected.\n\n' +
-              'Try:\n' +
-              '1. Refresh the page\n' +
-              '2. Make sure MetaMask is open and active\n' +
-              '3. Restart the MetaMask app';
-          } else {
-            message = 
-              'MetaMask not detected in this browser.\n\n' +
-              'I will copy the site address so you can open it in MetaMask browser.\n\n' +
-              'Continue?';
-          }
-        } else {
-          message = 
-            'MetaMask not detected.\n\n' +
-            'To connect:\n' +
-            '1. Make sure MetaMask Mobile is installed\n' +
-            '2. Open the site in MetaMask app browser\n' +
-            '3. Or refresh the page';
-        }
-        
-        const shouldOpen = window.confirm(message);
-        
-        if (shouldOpen && (isIOS || (isAndroid && !isInMetaMask))) {
-          // Проверяем наличие приложения MetaMask
-          setLoading(true);
-          const isInstalled = await checkMetaMaskInstalled();
-          setLoading(false);
-          
-          if (!isInstalled) {
-            // Если приложение не установлено, предлагаем установку
-            const installMessage = isIOS
-              ? 'MetaMask app is not installed.\n\nWould you like to open the App Store to install it?'
-              : 'MetaMask app is not installed.\n\nWould you like to open Google Play to install it?';
-            
-            if (window.confirm(installMessage)) {
-              if (isIOS) {
-                window.open('https://apps.apple.com/app/metamask/id1438144202', '_blank');
-              } else {
-                window.open('https://play.google.com/store/apps/details?id=io.metamask', '_blank');
-              }
-            }
-            return;
-          }
-          
-          // Копируем адрес в буфер обмена (с fallback для iOS)
-          const siteDomain = window.location.hostname;
-          const fullUrl = `https://${siteDomain}`;
-          const copySuccess = await copyToClipboard(fullUrl);
-          
-          // Открываем приложение MetaMask
-          openMetaMaskApp();
-          
-          // Показываем инструкции с небольшой задержкой
-          setTimeout(() => {
-            if (copySuccess) {
-              alert('✅ Address copied!\n\nOpening MetaMask...\n\nIf MetaMask opened:\n1. Tap the "Browser" tab at the bottom\n2. Paste the address in the address bar (it\'s already in clipboard)\n3. Tap "Connect Wallet" on the site');
-            } else {
-              // Если не удалось скопировать, показываем адрес
-              alert(`Opening MetaMask...\n\nSite address (copy manually):\n${fullUrl}\n\nAfter opening MetaMask:\n1. Tap the "Browser" tab\n2. Paste the address\n3. Tap "Connect Wallet"`);
-            }
-          }, 500);
-        } else if (shouldOpen && !isInMetaMask) {
-          // Если пользователь нажал OK, но не в MetaMask браузере, проверяем наличие приложения
-          setLoading(true);
-          const isInstalled = await checkMetaMaskInstalled();
-          setLoading(false);
-          
-          if (!isInstalled) {
-            const installMessage = isIOS
-              ? 'MetaMask app is not installed.\n\nWould you like to open the App Store to install it?'
-              : 'MetaMask app is not installed.\n\nWould you like to open Google Play to install it?';
-            
-            if (window.confirm(installMessage)) {
-              if (isIOS) {
-                window.open('https://apps.apple.com/app/metamask/id1438144202', '_blank');
-              } else {
-                window.open('https://play.google.com/store/apps/details?id=io.metamask', '_blank');
-              }
-            }
-          }
-        }
-      } else {
-        alert('MetaMask is not installed. Please install MetaMask to connect your wallet.');
-      }
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      // Всегда используем wallet_requestPermissions для явного запроса разрешений
-      // Это гарантирует показ диалога выбора аккаунта
-      let accounts: string[] = [];
-      
-      try {
-        // Сначала пытаемся запросить разрешения явно
-        const permissions = await ethereum.request({
-          method: 'wallet_requestPermissions',
-          params: [{ eth_accounts: {} }],
-        });
-        
-        if (permissions && permissions.length > 0) {
-          accounts = await ethereum.request({
-            method: 'eth_requestAccounts',
-          });
-        }
-      } catch (permError: any) {
-        // Если wallet_requestPermissions не поддерживается или отклонен, используем eth_requestAccounts
-        if (permError.code === 4001) {
-          setDisconnected(true);
-          setLoading(false);
-          alert('Please connect to MetaMask.');
-          return;
-        }
-        
-        accounts = await ethereum.request({
-          method: 'eth_requestAccounts',
-        });
-      }
-      
-      if (accounts.length > 0) {
-        const address = accounts[0];
-        console.log('Connected wallet address:', address);
-        
-        // Подключаем кошелек (пользователь явно нажал Connect Wallet)
-        setDisconnected(false);
-        setWalletAddress(address);
-        setIsConnected(true);
-        
-        // Загружаем данные пользователя из Supabase
-        console.log('Loading user data for address:', address);
-        await loadUserData(address);
-        console.log('User data loaded successfully');
-      } else {
-        // Если аккаунты не получены
-        setDisconnected(true);
-        alert('No accounts found. Please connect your wallet in MetaMask.');
-      }
-    } catch (error: any) {
-      console.error('Error connecting wallet:', error);
-      if (error.code === 4001) {
-        // Пользователь отклонил запрос, помечаем как отключенного
-        setDisconnected(true);
-        alert('Please connect to MetaMask.');
-      } else {
-        alert('Failed to connect wallet. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Общая функция подключения кошелька (выбирает между Telegram и MetaMask)
+  // Функция подключения кошелька (только Telegram)
   const handleConnectWallet = async () => {
-    console.log('handleConnectWallet called, USE_TELEGRAM_WALLET:', USE_TELEGRAM_WALLET);
-    if (USE_TELEGRAM_WALLET) {
-      await handleConnectTelegramWallet();
-    } else {
-      await handleConnectMetaMaskWallet();
-    }
+    console.log('handleConnectWallet called');
+    await handleConnectTelegramWallet();
   };
 
   const handleDisconnect = async (e?: React.MouseEvent) => {
@@ -981,29 +509,11 @@ export default function Index() {
     
     console.log('Disconnecting wallet...');
     
-    if (USE_TELEGRAM_WALLET) {
-      // В новой архитектуре просто очищаем состояние
-      // Telegram ID остается, но помечаем как отключенного
-      const idToSave = telegramId;
-      if (idToSave) {
-        setDisconnected(true, `telegram_${idToSave}`);
-      }
-    } else {
-      // Старая логика для MetaMask
-      if (tonConnectUI) {
-        try {
-          await tonConnectUI.disconnect();
-        } catch (error) {
-          console.error('Error disconnecting via UI:', error);
-        }
-      }
-      if (tonConnect) {
-        try {
-          await tonConnect.disconnect();
-        } catch (error) {
-          console.error('Error disconnecting via SDK:', error);
-        }
-      }
+    // Очищаем состояние
+    // Telegram ID остается, но помечаем как отключенного
+    const idToSave = telegramId;
+    if (idToSave) {
+      setDisconnected(true, `telegram_${idToSave}`);
     }
     
     // Очищаем состояние
@@ -1515,53 +1025,39 @@ export default function Index() {
                 <Card className="glass-card p-12 text-center">
                   <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
                   <p className="text-base md:text-lg font-display text-muted-foreground/80 mb-4">Connect your wallet to view tickets</p>
-                  {USE_TELEGRAM_WALLET ? (
-                    (() => {
-                      const isInTelegram = isInTelegramWebApp();
-                      const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                      
-                      return (
-                        <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-lg text-left">
-                          <p className="text-sm font-semibold text-primary mb-2">
-                            {isInTelegram ? '📱 Telegram Wallet Connection:' : '🔗 TON Wallet Connection:'}
-                          </p>
-                          {isInTelegram ? (
-                            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                              <li>Tap "Connect Wallet" button</li>
-                              <li>Select your TON wallet (Tonkeeper, TON Wallet, etc.)</li>
-                              <li>Approve the connection in your wallet</li>
-                            </ol>
-                          ) : isMobile ? (
-                            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                              <li>Tap "Connect Wallet" button</li>
-                              <li>Select your TON wallet from the list</li>
-                              <li>Your wallet app will open automatically</li>
-                              <li>Approve the connection in your wallet</li>
-                            </ol>
-                          ) : (
-                            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                              <li>Tap "Connect Wallet" button</li>
-                              <li>A QR code will appear</li>
-                              <li>Scan the QR code with your TON wallet app (Tonkeeper, TON Wallet, etc.)</li>
-                              <li>Approve the connection in your wallet</li>
-                            </ol>
-                          )}
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !isInMetaMaskBrowser() && (
+                  {(() => {
+                    const isInTelegram = isInTelegramWebApp();
+                    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    
+                    return (
                       <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-lg text-left">
-                        <p className="text-sm font-semibold text-primary mb-2">📱 Mobile Connection:</p>
-                        <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                          <li>Open MetaMask Mobile app</li>
-                          <li>Tap the "Browser" tab at the bottom</li>
-                          <li>Enter the site address in the address bar</li>
-                          <li>Tap "Connect Wallet"</li>
-                        </ol>
+                        <p className="text-sm font-semibold text-primary mb-2">
+                          {isInTelegram ? '📱 Telegram Wallet Connection:' : '🔗 TON Wallet Connection:'}
+                        </p>
+                        {isInTelegram ? (
+                          <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                            <li>Tap "Connect Wallet" button</li>
+                            <li>Select your TON wallet (Tonkeeper, TON Wallet, etc.)</li>
+                            <li>Approve the connection in your wallet</li>
+                          </ol>
+                        ) : isMobile ? (
+                          <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                            <li>Tap "Connect Wallet" button</li>
+                            <li>Select your TON wallet from the list</li>
+                            <li>Your wallet app will open automatically</li>
+                            <li>Approve the connection in your wallet</li>
+                          </ol>
+                        ) : (
+                          <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                            <li>Tap "Connect Wallet" button</li>
+                            <li>A QR code will appear</li>
+                            <li>Scan the QR code with your TON wallet app (Tonkeeper, TON Wallet, etc.)</li>
+                            <li>Approve the connection in your wallet</li>
+                          </ol>
+                        )}
                       </div>
-                    )
-                  )}
+                    );
+                  })()}
                 </Card>
               ) : tickets.length === 0 ? (
                 <Card className="glass-card p-12 text-center">
