@@ -75,3 +75,4 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 - Все временные метки автоматически обновляются
 
 
+

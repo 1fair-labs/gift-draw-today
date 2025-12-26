@@ -63,3 +63,4 @@ CREATE POLICY "Tickets can be updated by anyone" ON tickets
   FOR UPDATE USING (true);
 
 
+

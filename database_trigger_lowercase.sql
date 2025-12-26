@@ -33,3 +33,4 @@ CREATE TRIGGER trigger_normalize_tickets_owner
   EXECUTE FUNCTION normalize_ticket_owner();
 
 
+

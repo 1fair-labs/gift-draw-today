@@ -518,6 +518,14 @@ export default function Index() {
       tg.ready();
       tg.expand();
       
+      // Настраиваем внешний вид для Telegram WebApp
+      tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
+      tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
+      tg.enableClosingConfirmation(); // Подтверждение закрытия
+      
+      // Скрываем стандартную кнопку "Back" если нужно, или настраиваем её
+      // tg.BackButton.hide(); // Раскомментируйте, если хотите скрыть кнопку "Back"
+      
       // Получаем данные пользователя Telegram
       const user = tg.initDataUnsafe?.user;
       if (user && user.id) {
@@ -1191,9 +1199,9 @@ export default function Index() {
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky top-0 z-50">
+        <header className={`border-b border-border/50 backdrop-blur-xl bg-background/50 sticky top-0 z-50 ${isInTelegramWebApp() ? 'pt-safe' : ''}`}>
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto py-2 sm:py-4 flex justify-between items-center gap-2">
+            <div className={`max-w-4xl mx-auto ${isInTelegramWebApp() ? 'py-3' : 'py-2 sm:py-4'} flex justify-between items-center gap-2`}>
             <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-shrink">
               <div className="relative flex-shrink-0">
                 <div className="w-9 h-9 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
@@ -1210,27 +1218,29 @@ export default function Index() {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="neon-border bg-card/50 hover:bg-card border border-primary/30 font-medium gap-1.5 sm:gap-2 px-3 sm:px-3 h-10 sm:h-10 flex-shrink-0"
+                    className={`neon-border bg-card/50 hover:bg-card border border-primary/30 font-medium gap-1.5 sm:gap-2 px-2 sm:px-3 ${isInTelegramWebApp() ? 'h-9 text-xs' : 'h-10 sm:h-10'} flex-shrink-0`}
                   >
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       {/* Аватар пользователя Telegram */}
                       {telegramUser?.photo_url && (
-                        <Avatar className="h-6 w-6 sm:h-7 sm:w-7">
+                        <Avatar className={`${isInTelegramWebApp() ? 'h-5 w-5' : 'h-6 w-6 sm:h-7 sm:w-7'}`}>
                           <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
                           <AvatarFallback className="text-xs">
                             {telegramUser.first_name?.[0] || 'U'}
                           </AvatarFallback>
                         </Avatar>
                       )}
-                      <div className="text-xs sm:text-xs font-semibold text-neon-gold leading-tight whitespace-nowrap">
+                      <div className={`${isInTelegramWebApp() ? 'text-[10px]' : 'text-xs sm:text-xs'} font-semibold text-neon-gold leading-tight whitespace-nowrap`}>
                         {isBalanceVisible 
                           ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
                           : '•••••• CLT'}
                       </div>
-                      <div className="flex items-center gap-1.5 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-border/50">
-                        <div className="w-2 h-2 sm:w-2 sm:h-2 rounded-full bg-neon-green animate-blink"></div>
-                        <span className="text-xs sm:text-xs font-mono hidden sm:inline">{walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''}</span>
-                      </div>
+                      {!isInTelegramWebApp() && (
+                        <div className="flex items-center gap-1.5 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-border/50">
+                          <div className="w-2 h-2 sm:w-2 sm:h-2 rounded-full bg-neon-green animate-blink"></div>
+                          <span className="text-xs sm:text-xs font-mono hidden sm:inline">{walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''}</span>
+                        </div>
+                      )}
                     </div>
                   </Button>
                 </DropdownMenuTrigger>

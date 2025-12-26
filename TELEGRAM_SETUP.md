@@ -121,3 +121,4 @@ await tonConnect.sendTransaction(transaction);
 5. ⚠️ Добавить выбор количества билетов при покупке
 6. ⚠️ Добавить выбор типа билета (gold/silver/bronze)
 
+

@@ -17,3 +17,4 @@ CREATE INDEX idx_tickets_owner_lower ON tickets(LOWER(owner));
 -- В этом случае можно использовать триггер для автоматического приведения к нижнему регистру
 
 
+

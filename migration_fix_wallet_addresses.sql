@@ -29,3 +29,4 @@ WHERE owner != LOWER(owner);
 -- CREATE UNIQUE INDEX idx_users_wallet_address ON users(LOWER(wallet_address));
 
 
+
