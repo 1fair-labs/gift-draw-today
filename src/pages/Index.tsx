@@ -520,13 +520,14 @@ export default function Index() {
         }
       }
       
-      if (tg.enableClosingConfirmation) {
-        try {
-          tg.enableClosingConfirmation(); // Подтверждение закрытия
-        } catch (e) {
-          console.warn('enableClosingConfirmation not supported:', e);
-        }
-      }
+      // Отключаем подтверждение закрытия - оно мешает пользователю
+      // if (tg.enableClosingConfirmation) {
+      //   try {
+      //     tg.enableClosingConfirmation(); // Подтверждение закрытия
+      //   } catch (e) {
+      //     console.warn('enableClosingConfirmation not supported:', e);
+      //   }
+      // }
       
       // Обработчик изменения размера окна для поддержания полноэкранного режима
       const resizeHandler = () => {

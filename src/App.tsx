@@ -73,7 +73,7 @@ const App = () => {
           if (tg.expand) {
             try {
               tg.expand();
-              console.log('Telegram WebApp expanded');
+              console.log('Telegram WebApp expanded, isExpanded:', tg.isExpanded);
             } catch (e) {
               console.error('Error expanding:', e);
             }
@@ -83,11 +83,24 @@ const App = () => {
         // Вызываем expand сразу
         expandApp();
         
-        // Вызываем expand с задержками для десктопной версии Telegram
-        setTimeout(expandApp, 100);
-        setTimeout(expandApp, 300);
-        setTimeout(expandApp, 500);
-        setTimeout(expandApp, 1000);
+        // Для десктопной версии вызываем expand более агрессивно
+        if (tg.platform === 'tdesktop' || tg.platform === 'desktop' || !tg.platform || tg.platform === 'unknown') {
+          // Множественные вызовы с разными задержками для десктопной версии
+          setTimeout(expandApp, 50);
+          setTimeout(expandApp, 100);
+          setTimeout(expandApp, 200);
+          setTimeout(expandApp, 300);
+          setTimeout(expandApp, 500);
+          setTimeout(expandApp, 800);
+          setTimeout(expandApp, 1000);
+          setTimeout(expandApp, 1500);
+          setTimeout(expandApp, 2000);
+        } else {
+          // Для мобильных версий достаточно меньше вызовов
+          setTimeout(expandApp, 100);
+          setTimeout(expandApp, 300);
+          setTimeout(expandApp, 500);
+        }
         
         console.log('Viewport height:', tg.viewportHeight);
         console.log('Viewport stable height:', tg.viewportStableHeight);
@@ -120,13 +133,14 @@ const App = () => {
           }
         }
         
-        if (tg.enableClosingConfirmation) {
-          try {
-            tg.enableClosingConfirmation();
-          } catch (e) {
-            console.warn('enableClosingConfirmation not supported:', e);
-          }
-        }
+        // Отключаем подтверждение закрытия - оно мешает пользователю
+        // if (tg.enableClosingConfirmation) {
+        //   try {
+        //     tg.enableClosingConfirmation();
+        //   } catch (e) {
+        //     console.warn('enableClosingConfirmation not supported:', e);
+        //   }
+        // }
         
         console.log('Telegram WebApp appearance configured');
         
@@ -162,15 +176,20 @@ const App = () => {
         
         // Периодически проверяем и расширяем (для десктопной версии)
         const expandInterval = setInterval(() => {
-          if (tg.viewportHeight && tg.viewportHeight < window.innerHeight * 0.9) {
+          // Проверяем, развернуто ли приложение
+          const isExpanded = tg.isExpanded !== false; // isExpanded может быть undefined, true или false
+          const viewportTooSmall = tg.viewportHeight && tg.viewportHeight < window.innerHeight * 0.9;
+          
+          if (!isExpanded || viewportTooSmall) {
+            console.log('App not fully expanded, expanding...', { isExpanded, viewportHeight: tg.viewportHeight, windowHeight: window.innerHeight });
             expandApp();
           }
-        }, 2000);
+        }, 1000); // Проверяем каждую секунду
         
-        // Очищаем интервал через 10 секунд
+        // Очищаем интервал через 30 секунд (увеличено для десктопной версии)
         setTimeout(() => {
           clearInterval(expandInterval);
-        }, 10000);
+        }, 30000);
         
         return true;
       } catch (error) {
