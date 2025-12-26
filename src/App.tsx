@@ -68,38 +68,11 @@ const App = () => {
         // ВАЖНО: ready() должен быть вызван первым
         tg.ready();
         
-        // Настраиваем полноэкранный режим - вызываем несколько раз для надежности
-        const expandApp = () => {
-          if (tg.expand) {
-            try {
-              tg.expand();
-              console.log('Telegram WebApp expanded, isExpanded:', tg.isExpanded);
-            } catch (e) {
-              console.error('Error expanding:', e);
-            }
-          }
-        };
-        
-        // Вызываем expand сразу
-        expandApp();
-        
-        // Для десктопной версии вызываем expand более агрессивно
-        if (tg.platform === 'tdesktop' || tg.platform === 'desktop' || !tg.platform || tg.platform === 'unknown') {
-          // Множественные вызовы с разными задержками для десктопной версии
-          setTimeout(expandApp, 50);
-          setTimeout(expandApp, 100);
-          setTimeout(expandApp, 200);
-          setTimeout(expandApp, 300);
-          setTimeout(expandApp, 500);
-          setTimeout(expandApp, 800);
-          setTimeout(expandApp, 1000);
-          setTimeout(expandApp, 1500);
-          setTimeout(expandApp, 2000);
-        } else {
-          // Для мобильных версий достаточно меньше вызовов
-          setTimeout(expandApp, 100);
-          setTimeout(expandApp, 300);
-          setTimeout(expandApp, 500);
+        // КРИТИЧЕСКИ ВАЖНО: expand() должен быть вызван СРАЗУ после ready()
+        // Это разворачивает приложение на весь экран
+        if (tg.expand) {
+          tg.expand();
+          console.log('Telegram WebApp expanded (first call)');
         }
         
         console.log('Viewport height:', tg.viewportHeight);
@@ -133,21 +106,15 @@ const App = () => {
           }
         }
         
-        // Отключаем подтверждение закрытия - оно мешает пользователю
-        // if (tg.enableClosingConfirmation) {
-        //   try {
-        //     tg.enableClosingConfirmation();
-        //   } catch (e) {
-        //     console.warn('enableClosingConfirmation not supported:', e);
-        //   }
-        // }
-        
         console.log('Telegram WebApp appearance configured');
         
         // Обработчик изменения viewport для поддержания полноэкранного режима
         viewportHandler = () => {
           console.log('Viewport changed, expanding...');
-          expandApp();
+          if (tg.expand) {
+            tg.expand();
+            console.log('Telegram WebApp expanded (viewport changed)');
+          }
         };
         
         if (tg.onEvent && viewportHandler) {
@@ -161,35 +128,35 @@ const App = () => {
         // Также обрабатываем событие изменения размера окна
         resizeHandler = () => {
           setTimeout(() => {
-            expandApp();
+            if (tg.expand) {
+              tg.expand();
+              console.log('Telegram WebApp expanded (resize)');
+            }
           }, 100);
         };
         window.addEventListener('resize', resizeHandler);
         
-        // Для десктопной версии также слушаем события фокуса
-        const focusHandler = () => {
-          setTimeout(() => {
-            expandApp();
-          }, 200);
-        };
-        window.addEventListener('focus', focusHandler);
-        
-        // Периодически проверяем и расширяем (для десктопной версии)
-        const expandInterval = setInterval(() => {
-          // Проверяем, развернуто ли приложение
-          const isExpanded = tg.isExpanded !== false; // isExpanded может быть undefined, true или false
-          const viewportTooSmall = tg.viewportHeight && tg.viewportHeight < window.innerHeight * 0.9;
-          
-          if (!isExpanded || viewportTooSmall) {
-            console.log('App not fully expanded, expanding...', { isExpanded, viewportHeight: tg.viewportHeight, windowHeight: window.innerHeight });
-            expandApp();
-          }
-        }, 1000); // Проверяем каждую секунду
-        
-        // Очищаем интервал через 30 секунд (увеличено для десктопной версии)
+        // Дополнительные вызовы expand() для надежности (особенно для десктопной версии)
         setTimeout(() => {
-          clearInterval(expandInterval);
-        }, 30000);
+          if (tg.expand) {
+            tg.expand();
+            console.log('Telegram WebApp expanded (second call)');
+          }
+        }, 100);
+        
+        setTimeout(() => {
+          if (tg.expand) {
+            tg.expand();
+            console.log('Telegram WebApp expanded (third call)');
+          }
+        }, 500);
+        
+        setTimeout(() => {
+          if (tg.expand) {
+            tg.expand();
+            console.log('Telegram WebApp expanded (fourth call)');
+          }
+        }, 1000);
         
         return true;
       } catch (error) {
