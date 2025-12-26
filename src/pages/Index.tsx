@@ -525,16 +525,31 @@ export default function Index() {
       tg.setBackgroundColor('#0a0a0a');
       tg.enableClosingConfirmation();
       
-      // Отключаем возможность закрытия свайпом вниз
+      // ОТКЛЮЧАЕМ возможность закрытия свайпом вниз - ВСЕМИ ВОЗМОЖНЫМИ СПОСОБАМИ
       try {
+        // Метод 1
         if (typeof (tg as any).disableVerticalSwipes === 'function') {
           (tg as any).disableVerticalSwipes();
         }
+        // Метод 2
         if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
           (tg as any).setSwipeGestureEnabled(false);
         }
+        // Метод 3
+        if (typeof (tg as any).disableSwipeGesture === 'function') {
+          (tg as any).disableSwipeGesture();
+        }
+        // Метод 4 - через CSS переменную
+        if (typeof document !== 'undefined') {
+          document.documentElement.style.setProperty('--tg-viewport-stable-height', '100vh');
+        }
+        // Метод 5 - устанавливаем viewportStableHeight равным viewportHeight
+        const vh = (tg as any).viewportHeight;
+        if (vh && typeof (tg as any).setViewportStableHeight === 'function') {
+          (tg as any).setViewportStableHeight(vh);
+        }
       } catch (e) {
-        // Игнорируем ошибки
+        console.error('Error disabling swipe:', e);
       }
       
       // Разворачиваем в полноэкранный режим - вызываем несколько раз с задержками
@@ -557,8 +572,8 @@ export default function Index() {
         const viewportHeight = (tg as any).viewportHeight || 0;
         const viewportStableHeight = (tg as any).viewportStableHeight || 0;
         
-        // Минимум 120px для мобильных (динамик/камера + кнопка закрытия)
-        let minTop = 120;
+        // УВЕЛИЧИВАЕМ отступ до 180px для надежности (динамик/камера ~50px + кнопка закрытия ~60px + запас ~70px)
+        let minTop = 180;
         
         // Если есть viewportStableHeight, используем его
         if (viewportStableHeight > 0 && viewportHeight > 0) {
@@ -1308,8 +1323,11 @@ export default function Index() {
   return (
     <div 
       className="min-h-screen" 
+      data-telegram-webapp={isInTelegramWebApp() ? 'true' : undefined}
       style={isInTelegramWebApp() ? { 
-        paddingTop: `max(${safeAreaTop}px, env(safe-area-inset-top, ${safeAreaTop}px))`
+        paddingTop: `max(${safeAreaTop}px, env(safe-area-inset-top, ${safeAreaTop}px))`,
+        overscrollBehaviorY: 'none',
+        touchAction: 'pan-y'
       } : {}}
     >
       {/* Animated background elements */}
@@ -1321,7 +1339,14 @@ export default function Index() {
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky z-50" style={isInTelegramWebApp() && safeAreaTop > 0 ? { top: `${safeAreaTop}px` } : { top: '0' }}>
+        <header 
+          className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky z-50" 
+          style={isInTelegramWebApp() && safeAreaTop > 0 ? { 
+            top: `${safeAreaTop}px`,
+            marginTop: '0',
+            paddingTop: '0'
+          } : { top: '0' }}
+        >
           <div className="container mx-auto px-4">
             <div className={`max-w-4xl mx-auto ${isInTelegramWebApp() ? 'py-3' : 'py-2 sm:py-4'} flex justify-between items-center gap-2`}>
             <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-shrink">
