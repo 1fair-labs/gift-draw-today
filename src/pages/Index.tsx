@@ -702,7 +702,7 @@ export default function Index() {
         <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-accent/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className={`relative z-10 ${isInTelegramWebApp() ? 'pt-16' : ''}`}>
+      <div className={`relative z-10 ${isInTelegramWebApp() ? 'pt-24' : ''}`}>
         {/* Header */}
         <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky top-0 z-50">
           <div className="container mx-auto px-4">

@@ -17,6 +17,7 @@ const App = () => {
     let timeoutId: NodeJS.Timeout | null = null;
     let resizeHandler: (() => void) | null = null;
     let viewportHandler: (() => void) | null = null;
+    let readyHandler: (() => void) | null = null;
     let retryCount = 0;
     const MAX_RETRIES = 50; // Максимум 50 попыток (5 секунд)
     
@@ -64,29 +65,56 @@ const App = () => {
       }
       
       try {
-        // ВАЖНО: ready() должен быть вызван первым
-        tg.ready();
-        
         // 🔑 Критически важные вызовы - должны быть вызваны в правильном порядке
         
         // 1. ВАЖНО: ready() должен быть вызван первым
         tg.ready();
         
-        // 2. Разворачиваем приложение на весь экран
-        tg.expand();
-        console.log('Telegram WebApp expanded');
-        console.log('Viewport height:', tg.viewportHeight);
-        console.log('Viewport stable height:', tg.viewportStableHeight);
-        
-        // 3. Отключаем сворачивание приложения свайпом вниз
-        tg.disableVerticalSwipes();
-        console.log('Vertical swipes disabled');
-        
-        // 4. Настраиваем внешний вид для Telegram WebApp
+        // 2. Настраиваем внешний вид для Telegram WebApp (до expand)
         tg.setHeaderColor('transparent'); // Прозрачная шапка, чтобы не перекрывалась вырезом
         tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
         tg.enableClosingConfirmation(); // Подтверждение закрытия
+        
+        // 3. Разворачиваем приложение на весь экран (вызываем несколько раз для надежности)
+        tg.expand();
+        console.log('Telegram WebApp expanded (first call)');
+        
+        // Вызываем expand() еще раз с небольшой задержкой для надежности
+        setTimeout(() => {
+          if (tg.expand) {
+            tg.expand();
+            console.log('Telegram WebApp expanded (second call)');
+          }
+        }, 100);
+        
+        // Еще один вызов через 300ms для случаев, когда приложение открывается из кнопки бота
+        setTimeout(() => {
+          if (tg.expand) {
+            tg.expand();
+            console.log('Telegram WebApp expanded (third call)');
+          }
+        }, 300);
+        
+        console.log('Viewport height:', tg.viewportHeight);
+        console.log('Viewport stable height:', tg.viewportStableHeight);
+        
+        // 4. Отключаем сворачивание приложения свайпом вниз
+        tg.disableVerticalSwipes();
+        console.log('Vertical swipes disabled');
+        
         console.log('Telegram WebApp appearance configured');
+        
+        // Обработчик события ready для дополнительного вызова expand()
+        readyHandler = () => {
+          console.log('Telegram WebApp ready event fired, expanding...');
+          if (tg.expand) {
+            tg.expand();
+          }
+        };
+        
+        if (tg.onEvent && readyHandler) {
+          tg.onEvent('ready', readyHandler);
+        }
         
         // Обработчик изменения viewport для поддержания полноэкранного режима
         viewportHandler = () => {
@@ -151,6 +179,12 @@ const App = () => {
         const tg = (window as any).Telegram?.WebApp || (window as any).telegram?.WebApp;
         if (tg?.offEvent) {
           tg.offEvent('viewportChanged', viewportHandler);
+        }
+      }
+      if (readyHandler) {
+        const tg = (window as any).Telegram?.WebApp || (window as any).telegram?.WebApp;
+        if (tg?.offEvent) {
+          tg.offEvent('ready', readyHandler);
         }
       }
       window.removeEventListener('DOMContentLoaded', domContentLoadedHandler);
