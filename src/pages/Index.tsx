@@ -862,9 +862,18 @@ export default function Index() {
     
     // Строгая проверка: находимся ли мы в Telegram WebApp
     const tg = (window as any).Telegram?.WebApp || window.telegram?.WebApp;
-    const isInTelegram = !!tg && !!tg.initDataUnsafe;
     
-    console.log('isInTelegramWebApp:', isInTelegram);
+    // Проверяем несколько признаков того, что мы в Telegram WebApp:
+    // 1. Объект tg должен существовать
+    // 2. Должен быть initDataUnsafe
+    // 3. Должен быть user внутри initDataUnsafe (или platform не должен быть 'unknown')
+    const hasTgObject = !!tg;
+    const hasInitData = !!tg?.initDataUnsafe;
+    const hasUser = !!tg?.initDataUnsafe?.user;
+    const platform = tg?.platform;
+    const isInTelegram = hasTgObject && hasInitData && (hasUser || (platform && platform !== 'unknown'));
+    
+    console.log('Telegram WebApp check:', { hasTgObject, hasInitData, hasUser, platform, isInTelegram });
     
     // Если НЕ в Telegram WebApp, редиректим в мини-приложение
     if (!isInTelegram) {
@@ -983,7 +992,8 @@ export default function Index() {
           }
         }
       } else {
-        // Данные пользователя недоступны
+        // Данные пользователя недоступны, но мы в Telegram WebApp
+        // Это может быть проблема с настройками бота
         const debugInfo = `User data not available\nPlatform: ${tg.platform || 'unknown'}\nVersion: ${tg.version || 'unknown'}`;
         debugAlert(debugInfo);
         
@@ -994,7 +1004,15 @@ export default function Index() {
           }
         }, 2000);
         
-        alert('Telegram user data is not available. Please check bot settings in BotFather.');
+        // Показываем alert только если мы действительно в Telegram WebApp
+        if (tg.showAlert) {
+          // В Telegram WebApp используем showAlert
+          tg.showAlert('Telegram user data is not available. Please check bot settings in BotFather.');
+        } else {
+          // Если showAlert недоступен, значит мы не в Telegram WebApp - редиректим
+          const miniAppUrl = 'https://t.me/cryptolotterytoday_bot/enjoy';
+          window.location.href = miniAppUrl;
+        }
       }
     } catch (error: any) {
       console.error('Error connecting via Telegram:', error);
