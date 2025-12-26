@@ -677,56 +677,40 @@ export default function Index() {
       }
       
       console.log('Found Telegram Wallet:', telegramWallet);
-      const walletsList = [telegramWallet];
 
-      // Используем TON Connect UI для показа модального окна с выбором кошелька
+      // В Telegram WebApp используем TON Connect UI для подключения
       // UI автоматически определит окружение и покажет соответствующий интерфейс
-      console.log('Opening TON Connect UI...');
-      
-      // Используем прямое подключение к Telegram Wallet через SDK
-      // Это позволит подключиться напрямую без показа модального окна с другими кошельками
-      console.log('Attempting direct connection to Telegram Wallet:', telegramWallet);
-      try {
-        const connectionString = tonConnect.connect([telegramWallet]);
-        console.log('Direct connection initiated, connection string:', connectionString);
-        // Подключение обработается через onStatusChange в useEffect
-        // Не сбрасываем loading сразу - пусть onStatusChange это сделает
-      } catch (connectError: any) {
-        console.error('Error connecting directly to Telegram Wallet:', connectError);
-        // Если прямое подключение не сработало, пробуем через UI
-        if (tonConnectUI) {
-          console.log('Falling back to UI modal');
-          try {
-            await tonConnectUI.openModal();
-            console.log('Modal opened as fallback');
-          } catch (modalError: any) {
-            console.error('Error opening modal:', modalError);
-            setLoading(false);
-            if (modalError.code !== 300) {
-              throw modalError;
-            }
-          }
-        } else {
+      if (tonConnectUI) {
+        console.log('Opening TON Connect UI modal...');
+        try {
+          // Открываем модальное окно TON Connect UI
+          // В Telegram WebApp это автоматически откроет Telegram Wallet
+          await tonConnectUI.openModal();
+          console.log('TON Connect UI modal opened');
+          // Подключение обработается через onStatusChange в useEffect
+          // Не сбрасываем loading сразу - пусть onStatusChange это сделает
+        } catch (modalError: any) {
+          console.error('Error opening TON Connect UI modal:', modalError);
           setLoading(false);
-          throw connectError;
+          if (modalError.code !== 300) { // 300 = пользователь отменил
+            alert('Failed to open wallet connection. Please try again.');
+            throw modalError;
+          }
         }
-      }
-      
-      // Если используем fallback через UI, не делаем ничего здесь
-      if (!tonConnectUI) {
+      } else {
         // Fallback: используем прямой метод connect
         console.log('TON Connect UI not available, using direct connect method');
-        console.log('Wallets list:', walletsList.map(w => ({ name: w.name, appName: w.appName })));
-        
         try {
-          const connectionString = tonConnect.connect(walletsList);
+          const connectionString = tonConnect.connect([telegramWallet]);
           console.log('Connection string generated:', connectionString);
           
+          // В Telegram WebApp connection string должен автоматически открыть Telegram Wallet
           // Подключение обработается через событие onStatusChange в useEffect
-          // НЕ сбрасываем loading здесь - пусть onStatusChange это сделает
+          // Не сбрасываем loading сразу - пусть onStatusChange это сделает
         } catch (connectError: any) {
           console.error('Error creating connection string:', connectError);
           setLoading(false);
+          alert('Failed to connect wallet. Please try again.');
           throw connectError;
         }
       }
