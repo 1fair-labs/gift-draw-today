@@ -521,24 +521,51 @@ export default function Index() {
       tg.ready();
       
       // Принудительно разворачиваем в полноэкранный режим
-      // Вызываем несколько раз для надежности
-      tg.expand();
+      // Используем агрессивный подход с множественными вызовами
+      const forceExpand = () => {
+        // Проверяем, развернуто ли уже приложение
+        const isExpanded = (tg as any).isExpanded !== false;
+        if (!isExpanded) {
+          tg.expand();
+        }
+      };
       
-      // Дополнительный вызов expand с небольшой задержкой для гарантии
-      setTimeout(() => {
-        tg.expand();
-      }, 100);
+      // Вызываем сразу
+      forceExpand();
+      
+      // Вызываем с разными задержками для гарантии
+      setTimeout(() => forceExpand(), 50);
+      setTimeout(() => forceExpand(), 100);
+      setTimeout(() => forceExpand(), 200);
+      setTimeout(() => forceExpand(), 500);
       
       // Также вызываем при изменении viewport
       const handleViewportChanged = () => {
-        tg.expand();
+        forceExpand();
       };
       tg.onEvent('viewportChanged', handleViewportChanged);
       
+      // Вызываем при изменении состояния расширения
+      const handleExpand = () => {
+        forceExpand();
+      };
+      if ((tg as any).onEvent) {
+        (tg as any).onEvent('expand', handleExpand);
+      }
+      
       // Получаем safe area insets для правильного позиционирования контента
       const safeArea = (tg as any).safeAreaInsets || { top: 0, bottom: 0, left: 0, right: 0 };
-      // Кнопка закрытия Telegram обычно занимает около 50-60px, добавляем еще немного для визуального разделения
-      setSafeAreaTop(Math.max(safeArea.top || 0, 70)); // Минимум 70px для кнопки закрытия
+      // Учитываем динамик/камеру (обычно 44-50px) + кнопка закрытия Telegram (50-60px) + отступ для визуального разделения
+      // Минимум 120px для безопасного отображения контента ниже всех элементов
+      const calculatedTop = safeArea.top || 0;
+      setSafeAreaTop(Math.max(calculatedTop, 120)); // Минимум 120px для динамика/камеры + кнопки закрытия
+      
+      // Также обновляем при изменении viewport
+      const updateSafeArea = () => {
+        const updatedSafeArea = (tg as any).safeAreaInsets || { top: 0 };
+        setSafeAreaTop(Math.max(updatedSafeArea.top || 0, 120));
+      };
+      tg.onEvent('viewportChanged', updateSafeArea);
       
       // Настраиваем внешний вид для Telegram WebApp
       tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
@@ -548,6 +575,10 @@ export default function Index() {
       // Возвращаем функцию очистки для удаления обработчика событий
       return () => {
         tg.offEvent('viewportChanged', handleViewportChanged);
+        tg.offEvent('viewportChanged', updateSafeArea);
+        if ((tg as any).offEvent) {
+          (tg as any).offEvent('expand', handleExpand);
+        }
       };
       
       // Скрываем стандартную кнопку "Back" если нужно, или настраиваем её
@@ -581,14 +612,26 @@ export default function Index() {
     if (USE_TELEGRAM_WALLET && typeof window !== 'undefined' && window.telegram?.WebApp) {
       const tg = window.telegram.WebApp;
       
+      const forceExpand = () => {
+        const isExpanded = (tg as any).isExpanded !== false;
+        if (!isExpanded) {
+          tg.expand();
+        }
+      };
+      
       // Вызываем expand при полной загрузке страницы
       const handleLoad = () => {
-        tg.expand();
+        forceExpand();
+        // Дополнительные вызовы после загрузки
+        setTimeout(() => forceExpand(), 100);
+        setTimeout(() => forceExpand(), 300);
       };
       
       // Вызываем сразу, если страница уже загружена
       if (document.readyState === 'complete') {
-        tg.expand();
+        forceExpand();
+        setTimeout(() => forceExpand(), 100);
+        setTimeout(() => forceExpand(), 300);
       } else {
         window.addEventListener('load', handleLoad);
       }
@@ -596,14 +639,21 @@ export default function Index() {
       // Также вызываем при видимости страницы
       const handleVisibilityChange = () => {
         if (!document.hidden) {
-          tg.expand();
+          forceExpand();
         }
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
       
+      // Вызываем при фокусе окна
+      const handleFocus = () => {
+        forceExpand();
+      };
+      window.addEventListener('focus', handleFocus);
+      
       return () => {
         window.removeEventListener('load', handleLoad);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
       };
     }
   }, []);
@@ -1258,7 +1308,7 @@ export default function Index() {
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky top-0 z-50">
+        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky z-50" style={isInTelegramWebApp() && safeAreaTop > 0 ? { top: `${safeAreaTop}px` } : { top: '0' }}>
           <div className="container mx-auto px-4">
             <div className={`max-w-4xl mx-auto ${isInTelegramWebApp() ? 'py-3' : 'py-2 sm:py-4'} flex justify-between items-center gap-2`}>
             <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-shrink">
