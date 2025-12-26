@@ -61,7 +61,7 @@ export default function Index() {
     return saved !== null ? saved === 'true' : true;
   });
   const [cltBalance, setCltBalance] = useState<number>(0);
-  const [safeAreaTop, setSafeAreaTop] = useState<number>(120); // Начальное значение 120px для Telegram WebApp
+  const [safeAreaTop, setSafeAreaTop] = useState<number>(180); // Начальное значение 180px для Telegram WebApp
   
   // TON Connect instance
   const [tonConnect] = useState(() => {
@@ -526,31 +526,40 @@ export default function Index() {
       tg.enableClosingConfirmation();
       
       // ОТКЛЮЧАЕМ возможность закрытия свайпом вниз - ВСЕМИ ВОЗМОЖНЫМИ СПОСОБАМИ
-      try {
-        // Метод 1
-        if (typeof (tg as any).disableVerticalSwipes === 'function') {
-          (tg as any).disableVerticalSwipes();
+      const disableSwipe = () => {
+        try {
+          // Метод 1
+          if (typeof (tg as any).disableVerticalSwipes === 'function') {
+            (tg as any).disableVerticalSwipes();
+          }
+          // Метод 2
+          if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
+            (tg as any).setSwipeGestureEnabled(false);
+          }
+          // Метод 3
+          if (typeof (tg as any).disableSwipeGesture === 'function') {
+            (tg as any).disableSwipeGesture();
+          }
+          // Метод 4 - устанавливаем viewportStableHeight равным viewportHeight
+          const vh = (tg as any).viewportHeight;
+          if (vh && typeof (tg as any).setViewportStableHeight === 'function') {
+            (tg as any).setViewportStableHeight(vh);
+          }
+          // Метод 5 - через CSS переменную
+          if (typeof document !== 'undefined') {
+            document.documentElement.style.setProperty('--tg-viewport-stable-height', `${vh}px`);
+            document.body.style.setProperty('overscroll-behavior-y', 'none');
+            document.body.style.setProperty('touch-action', 'pan-y');
+          }
+        } catch (e) {
+          console.error('Error disabling swipe:', e);
         }
-        // Метод 2
-        if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
-          (tg as any).setSwipeGestureEnabled(false);
-        }
-        // Метод 3
-        if (typeof (tg as any).disableSwipeGesture === 'function') {
-          (tg as any).disableSwipeGesture();
-        }
-        // Метод 4 - через CSS переменную
-        if (typeof document !== 'undefined') {
-          document.documentElement.style.setProperty('--tg-viewport-stable-height', '100vh');
-        }
-        // Метод 5 - устанавливаем viewportStableHeight равным viewportHeight
-        const vh = (tg as any).viewportHeight;
-        if (vh && typeof (tg as any).setViewportStableHeight === 'function') {
-          (tg as any).setViewportStableHeight(vh);
-        }
-      } catch (e) {
-        console.error('Error disabling swipe:', e);
-      }
+      };
+      
+      // Вызываем сразу и после expand()
+      disableSwipe();
+      setTimeout(disableSwipe, 100);
+      setTimeout(disableSwipe, 300);
       
       // Разворачиваем в полноэкранный режим - вызываем несколько раз с задержками
       const expandApp = () => {
@@ -572,26 +581,40 @@ export default function Index() {
         const viewportHeight = (tg as any).viewportHeight || 0;
         const viewportStableHeight = (tg as any).viewportStableHeight || 0;
         
-        // УВЕЛИЧИВАЕМ отступ до 180px для надежности (динамик/камера ~50px + кнопка закрытия ~60px + запас ~70px)
-        let minTop = 180;
+        // МИНИМУМ 200px для гарантии видимости шапки (динамик/камера ~50px + кнопка закрытия ~60px + большой запас ~90px)
+        let minTop = 200;
         
-        // Если есть viewportStableHeight, используем его
+        // Если есть viewportStableHeight, используем его для расчета
         if (viewportStableHeight > 0 && viewportHeight > 0) {
           const diff = viewportHeight - viewportStableHeight;
           if (diff > 0) {
-            minTop = Math.max(minTop, diff + 20);
+            // Используем разницу + большой запас
+            minTop = Math.max(minTop, diff + 50);
           }
         }
         
+        // Если safeArea.top больше, используем его
         const calculatedTop = safeArea.top || 0;
         const finalTop = Math.max(calculatedTop, minTop);
+        
+        // Устанавливаем viewportStableHeight для предотвращения изменения высоты
+        if (viewportHeight > 0 && typeof (tg as any).setViewportStableHeight === 'function') {
+          try {
+            (tg as any).setViewportStableHeight(viewportHeight);
+          } catch (e) {
+            // Игнорируем ошибки
+          }
+        }
+        
         setSafeAreaTop(finalTop);
+        console.log('Safe area updated:', { finalTop, calculatedTop, minTop, viewportHeight, viewportStableHeight });
       };
       
       // Обновляем safe area сразу и после expand()
       updateSafeArea();
-      setTimeout(updateSafeArea, 200);
-      setTimeout(updateSafeArea, 500);
+      setTimeout(updateSafeArea, 100);
+      setTimeout(updateSafeArea, 300);
+      setTimeout(updateSafeArea, 600);
       
       // Обновляем при изменении viewport
       tg.onEvent('viewportChanged', updateSafeArea);
@@ -1341,10 +1364,12 @@ export default function Index() {
         {/* Header */}
         <header 
           className="border-b border-border/50 backdrop-blur-xl bg-background/50 sticky z-50" 
-          style={isInTelegramWebApp() && safeAreaTop > 0 ? { 
+          style={isInTelegramWebApp() ? { 
             top: `${safeAreaTop}px`,
+            position: 'sticky',
             marginTop: '0',
-            paddingTop: '0'
+            paddingTop: '0',
+            zIndex: 50
           } : { top: '0' }}
         >
           <div className="container mx-auto px-4">
