@@ -164,6 +164,51 @@ export default function Index() {
 
 
   // Функция для получения или создания пользователя по Telegram ID
+  // Функция для получения детальной информации об ошибке
+  const getDetailedError = async (telegramId: number): Promise<string> => {
+    if (!supabase) {
+      return 'Supabase not configured';
+    }
+    
+    // Проверяем, может ли быть проблема с RLS
+    const { data: testData, error: testError } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1);
+    
+    if (testError) {
+      if (testError.code === 'PGRST301' || testError.message?.includes('permission denied') || testError.message?.includes('RLS')) {
+        return 'RLS policy blocking\nCheck Supabase RLS settings';
+      }
+      return `Error: ${testError.message || testError.code || 'Unknown'}`;
+    }
+    
+    // Пробуем вставить тестовые данные
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert({
+        telegram_id: telegramId,
+        balance: 0,
+      })
+      .select()
+      .single();
+    
+    if (insertError) {
+      if (insertError.code === 'PGRST301' || insertError.message?.includes('permission denied') || insertError.message?.includes('RLS')) {
+        return 'RLS policy blocking insert\nEnable INSERT policy in Supabase';
+      }
+      if (insertError.code === '42703' || insertError.message?.includes('column') || insertError.message?.includes('telegram_id')) {
+        return 'Column telegram_id missing\nRun database migration';
+      }
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
+        return 'User already exists\nTrying to fetch...';
+      }
+      return `Insert error: ${insertError.message || insertError.code || 'Unknown'}`;
+    }
+    
+    return 'Unknown error';
+  };
+
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
     if (!supabase) {
       console.error('Supabase is not configured');
@@ -182,6 +227,10 @@ export default function Index() {
 
       if (fetchError) {
         console.error('Error fetching user:', fetchError);
+        // Если ошибка из-за RLS, возвращаем null с информацией
+        if (fetchError.code === 'PGRST301' || fetchError.message?.includes('permission denied') || fetchError.message?.includes('RLS')) {
+          throw new Error('RLS policy is blocking SELECT. Please check Supabase RLS policies.');
+        }
       }
 
       if (existingUser) {
@@ -209,6 +258,16 @@ export default function Index() {
         console.error('Error details:', insertError.details);
         console.error('Error hint:', insertError.hint);
         
+        // Если ошибка из-за RLS
+        if (insertError.code === 'PGRST301' || insertError.message?.includes('permission denied') || insertError.message?.includes('RLS')) {
+          throw new Error('RLS policy is blocking INSERT. Please enable INSERT policy for users table in Supabase.');
+        }
+        
+        // Если ошибка из-за отсутствия колонки
+        if (insertError.code === '42703' || insertError.message?.includes('column') || insertError.message?.includes('telegram_id')) {
+          throw new Error('Column telegram_id does not exist. Please run database_telegram_migration.sql in Supabase.');
+        }
+        
         // Если ошибка из-за дубликата, пытаемся найти существующего
         if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
           console.log('getOrCreateUserByTelegramId: Duplicate detected, fetching existing user');
@@ -220,6 +279,7 @@ export default function Index() {
           
           if (fetchError2) {
             console.error('Error fetching user after duplicate error:', fetchError2);
+            throw new Error(`Duplicate user exists but cannot fetch: ${fetchError2.message}`);
           }
           
           if (foundUser) {
@@ -227,7 +287,8 @@ export default function Index() {
             return foundUser as User;
           }
         }
-        return null;
+        
+        throw new Error(`Failed to create user: ${insertError.message || insertError.code || 'Unknown error'}`);
       }
 
       if (newUser) {
@@ -235,11 +296,12 @@ export default function Index() {
         console.log('Created user data:', JSON.stringify(newUser, null, 2));
       } else {
         console.error('❌ getOrCreateUserByTelegramId: User creation returned null');
+        throw new Error('User creation returned null');
       }
       return newUser as User;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in getOrCreateUserByTelegramId:', error);
-      return null;
+      throw error; // Пробрасываем ошибку дальше для обработки
     }
   };
 
@@ -469,19 +531,21 @@ export default function Index() {
         try {
           const savedUser = await getOrCreateUserByTelegramId(user.id);
           if (savedUser) {
-            debugAlert(`✅ User connected!\nID: ${savedUser.id}\nTelegram ID: ${savedUser.telegram_id}`);
+            debugAlert(`✅ Connected!\nTelegram ID: ${savedUser.telegram_id}`);
+            // Автоматически подключаем пользователя
+            if (!wasDisconnected()) {
+              setIsConnected(true);
+              setDisconnected(false);
+              await loadUserData(user.id, true);
+            }
           } else {
-            debugAlert('❌ Failed to save user to database');
+            // Получаем детальную информацию об ошибке
+            const errorDetails = await getDetailedError(user.id);
+            debugAlert(`❌ Failed to save\n${errorDetails}`);
           }
         } catch (err: any) {
-          debugAlert(`❌ Error saving user: ${err.message || 'Unknown error'}`);
-        }
-        
-        // Автоматически подключаем пользователя
-        if (!wasDisconnected()) {
-          setIsConnected(true);
-          setDisconnected(false);
-          await loadUserData(user.id, true);
+          const errorMsg = err.message || err.toString() || 'Unknown error';
+          debugAlert(`❌ Error: ${errorMsg}`);
         }
       } else {
         // Данные пользователя недоступны
@@ -875,19 +939,34 @@ export default function Index() {
           const savedUser = await getOrCreateUserByTelegramId(user.id);
           if (savedUser) {
             debugAlert(`✅ Connected!\nTelegram ID: ${savedUser.telegram_id}`);
+            // Подключаем пользователя
+            setIsConnected(true);
+            setDisconnected(false);
+            // Загружаем данные пользователя
+            await loadUserData(user.id, true);
           } else {
-            debugAlert('❌ Failed to save to database');
+            debugAlert('❌ Failed to save user');
           }
         } catch (err: any) {
-          debugAlert(`❌ Error: ${err.message || 'Unknown'}`);
+          const errorMsg = err.message || err.toString() || 'Unknown error';
+          // Показываем детальную ошибку
+          debugAlert(`❌ Error: ${errorMsg}`);
+          
+          // Если это ошибка RLS или миграции, показываем инструкции
+          if (errorMsg.includes('RLS') || errorMsg.includes('policy')) {
+            setTimeout(() => {
+              if (tg.showAlert) {
+                tg.showAlert('Fix: Enable INSERT policy\nin Supabase RLS settings');
+              }
+            }, 2000);
+          } else if (errorMsg.includes('column') || errorMsg.includes('telegram_id')) {
+            setTimeout(() => {
+              if (tg.showAlert) {
+                tg.showAlert('Fix: Run migration\ndatabase_telegram_migration.sql');
+              }
+            }, 2000);
+          }
         }
-        
-        // Подключаем пользователя
-        setIsConnected(true);
-        setDisconnected(false);
-        
-        // Загружаем данные пользователя
-        await loadUserData(user.id, true);
       } else {
         // Данные пользователя недоступны
         const debugInfo = `User data not available\nPlatform: ${tg.platform || 'unknown'}\nVersion: ${tg.version || 'unknown'}`;
