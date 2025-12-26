@@ -520,30 +520,32 @@ export default function Index() {
       // Инициализация WebApp
       tg.ready();
       
-      // Проверяем платформу - expand() работает только на мобильных устройствах
+      // Проверяем платформу для логирования
       const platform = (tg as any).platform || '';
       const isMobile = ['ios', 'android'].includes(platform);
-      console.log('Telegram WebApp platform:', platform, 'isMobile:', isMobile);
+      const isDesktop = platform === 'tdesktop' || platform === 'web';
+      console.log('Telegram WebApp platform:', platform, 'isMobile:', isMobile, 'isDesktop:', isDesktop);
       
       // Настраиваем внешний вид для Telegram WebApp ПЕРЕД expand()
       tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
       tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
       tg.enableClosingConfirmation(); // Подтверждение закрытия
       
-      // Отключаем возможность закрытия свайпом вниз
+      // Отключаем возможность закрытия свайпом вниз (только на мобильных)
       // Это предотвращает случайное закрытие приложения
-      // Пробуем разные возможные методы API
-      if (typeof (tg as any).disableVerticalSwipes === 'function') {
-        (tg as any).disableVerticalSwipes();
-        console.log('Vertical swipes disabled via disableVerticalSwipes()');
-      }
-      if (typeof (tg as any).disableSwipeGesture === 'function') {
-        (tg as any).disableSwipeGesture();
-        console.log('Swipe gesture disabled via disableSwipeGesture()');
-      }
-      if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
-        (tg as any).setSwipeGestureEnabled(false);
-        console.log('Swipe gesture disabled via setSwipeGestureEnabled(false)');
+      if (isMobile) {
+        if (typeof (tg as any).disableVerticalSwipes === 'function') {
+          (tg as any).disableVerticalSwipes();
+          console.log('Vertical swipes disabled via disableVerticalSwipes()');
+        }
+        if (typeof (tg as any).disableSwipeGesture === 'function') {
+          (tg as any).disableSwipeGesture();
+          console.log('Swipe gesture disabled via disableSwipeGesture()');
+        }
+        if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
+          (tg as any).setSwipeGestureEnabled(false);
+          console.log('Swipe gesture disabled via setSwipeGestureEnabled(false)');
+        }
       }
       
       // Устанавливаем, что приложение должно быть закрыто только через кнопку
@@ -552,37 +554,44 @@ export default function Index() {
         (tg as any).setCloseConfirmationEnabled(true);
       }
       
-      // Принудительно разворачиваем в полноэкранный режим только на мобильных
+      // Принудительно разворачиваем в полноэкранный режим
+      // Вызываем всегда, но с разной агрессивностью для мобильных и десктопа
       const forceExpand = () => {
-        if (!isMobile) {
-          console.log('Skipping expand() - not on mobile platform');
-          return;
-        }
         try {
           console.log('Calling tg.expand()...');
           tg.expand();
           const isExpanded = (tg as any).isExpanded;
           const viewportHeight = (tg as any).viewportHeight;
           const viewportStableHeight = (tg as any).viewportStableHeight;
-          console.log('After expand() - isExpanded:', isExpanded, 'viewportHeight:', viewportHeight, 'viewportStableHeight:', viewportStableHeight);
+          console.log('After expand() - isExpanded:', isExpanded, 'viewportHeight:', viewportHeight, 'viewportStableHeight:', viewportStableHeight, 'platform:', platform);
         } catch (e) {
           console.warn('Error calling expand():', e);
         }
       };
       
       // Вызываем expand() ПОСЛЕ всех настроек
+      // На мобильных вызываем более агрессивно
       console.log('Telegram WebApp initialized, forcing expand after settings...');
       if (isMobile) {
-        // Небольшая задержка после ready() для применения всех настроек
+        // На мобильных - очень агрессивные вызовы
         setTimeout(() => {
           forceExpand();
-          // Множественные вызовы для гарантии
+          setTimeout(() => forceExpand(), 10);
+          setTimeout(() => forceExpand(), 25);
           setTimeout(() => forceExpand(), 50);
           setTimeout(() => forceExpand(), 100);
           setTimeout(() => forceExpand(), 200);
           setTimeout(() => forceExpand(), 300);
           setTimeout(() => forceExpand(), 500);
           setTimeout(() => forceExpand(), 1000);
+          setTimeout(() => forceExpand(), 2000);
+        }, 50);
+      } else {
+        // На десктопе - менее агрессивно, но все равно вызываем
+        setTimeout(() => {
+          forceExpand();
+          setTimeout(() => forceExpand(), 100);
+          setTimeout(() => forceExpand(), 300);
         }, 50);
       }
       
@@ -603,12 +612,25 @@ export default function Index() {
       // Получаем safe area insets для правильного позиционирования контента
       const updateSafeArea = () => {
         const safeArea = (tg as any).safeAreaInsets || { top: 0, bottom: 0, left: 0, right: 0 };
+        const viewportHeight = (tg as any).viewportHeight || 0;
+        const viewportStableHeight = (tg as any).viewportStableHeight || 0;
+        
+        // На мобильных устройствах нужен больший отступ
         // Учитываем динамик/камеру (обычно 44-50px) + кнопка закрытия Telegram (50-60px) + отступ для визуального разделения
-        // Минимум 120px для безопасного отображения контента ниже всех элементов
+        let minTop = isMobile ? 120 : 0; // На мобильных минимум 120px, на десктопе 0
+        
+        // Если есть viewportStableHeight, используем его для расчета
+        if (viewportStableHeight > 0 && viewportHeight > 0) {
+          const diff = viewportHeight - viewportStableHeight;
+          if (diff > 0) {
+            minTop = Math.max(minTop, diff + 20); // Добавляем 20px для безопасности
+          }
+        }
+        
         const calculatedTop = safeArea.top || 0;
-        const finalTop = Math.max(calculatedTop, 120);
+        const finalTop = Math.max(calculatedTop, minTop);
         setSafeAreaTop(finalTop);
-        console.log('Safe area top updated:', finalTop, 'safeArea.top:', calculatedTop);
+        console.log('Safe area top updated:', finalTop, 'safeArea.top:', calculatedTop, 'minTop:', minTop, 'viewportHeight:', viewportHeight, 'viewportStableHeight:', viewportStableHeight, 'isMobile:', isMobile);
       };
       
       // Обновляем сразу
@@ -616,6 +638,14 @@ export default function Index() {
       
       // Также обновляем при изменении viewport
       tg.onEvent('viewportChanged', updateSafeArea);
+      
+      // Обновляем после expand() с задержкой
+      setTimeout(() => {
+        updateSafeArea();
+      }, 100);
+      setTimeout(() => {
+        updateSafeArea();
+      }, 500);
       
       // Возвращаем функцию очистки для удаления обработчика событий
       return () => {
