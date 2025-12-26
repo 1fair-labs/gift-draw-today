@@ -191,6 +191,8 @@ export default function Index() {
 
       // Пользователь не существует, создаем нового
       console.log('getOrCreateUserByTelegramId: User not found, creating new user with telegram_id:', telegramId);
+      console.log('Inserting user data:', { telegram_id: telegramId, balance: 0 });
+      
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
@@ -201,7 +203,12 @@ export default function Index() {
         .single();
 
       if (insertError) {
-        console.error('Error creating user:', insertError);
+        console.error('❌ Error creating user:', insertError);
+        console.error('Error code:', insertError.code);
+        console.error('Error message:', insertError.message);
+        console.error('Error details:', insertError.details);
+        console.error('Error hint:', insertError.hint);
+        
         // Если ошибка из-за дубликата, пытаемся найти существующего
         if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
           console.log('getOrCreateUserByTelegramId: Duplicate detected, fetching existing user');
@@ -216,7 +223,7 @@ export default function Index() {
           }
           
           if (foundUser) {
-            console.log('getOrCreateUserByTelegramId: Found existing user after duplicate error:', foundUser.id);
+            console.log('✅ getOrCreateUserByTelegramId: Found existing user after duplicate error:', foundUser.id);
             return foundUser as User;
           }
         }
@@ -224,7 +231,10 @@ export default function Index() {
       }
 
       if (newUser) {
-        console.log('getOrCreateUserByTelegramId: New user created successfully:', newUser.id);
+        console.log('✅ getOrCreateUserByTelegramId: New user created successfully:', newUser.id);
+        console.log('Created user data:', JSON.stringify(newUser, null, 2));
+      } else {
+        console.error('❌ getOrCreateUserByTelegramId: User creation returned null');
       }
       return newUser as User;
     } catch (error) {
@@ -426,15 +436,50 @@ export default function Index() {
       // Альтернативный способ: проверяем initData (если доступен)
       if (!user && tg.initData) {
         try {
+          console.log('Attempting to parse initData:', tg.initData);
           // initData может быть строкой в формате query string
           const params = new URLSearchParams(tg.initData);
           const userParam = params.get('user');
+          console.log('User param from initData:', userParam);
           if (userParam) {
-            user = JSON.parse(decodeURIComponent(userParam));
-            console.log('User parsed from initData:', user);
+            try {
+              user = JSON.parse(decodeURIComponent(userParam));
+              console.log('✅ User parsed from initData:', user);
+            } catch (parseError) {
+              console.error('Error parsing user JSON:', parseError);
+              // Попробуем без decodeURIComponent
+              try {
+                user = JSON.parse(userParam);
+                console.log('✅ User parsed from initData (without decode):', user);
+              } catch (parseError2) {
+                console.error('Error parsing user JSON (without decode):', parseError2);
+              }
+            }
+          } else {
+            console.log('No user param found in initData');
+            // Попробуем найти все параметры
+            console.log('All initData params:', Array.from(params.keys()));
           }
         } catch (e) {
           console.error('Error parsing initData:', e);
+        }
+      }
+      
+      // Если все еще нет user, попробуем проверить другие поля
+      if (!user) {
+        console.log('User still not found, checking other fields...');
+        console.log('tg.initDataUnsafe:', tg.initDataUnsafe);
+        console.log('tg.initData:', tg.initData);
+        console.log('tg.platform:', tg.platform);
+        console.log('tg.version:', tg.version);
+        
+        // Попробуем проверить, может быть данные в другом формате
+        if (tg.initDataUnsafe && typeof tg.initDataUnsafe === 'object') {
+          const keys = Object.keys(tg.initDataUnsafe);
+          console.log('Available keys in initDataUnsafe:', keys);
+          for (const key of keys) {
+            console.log(`initDataUnsafe[${key}]:`, tg.initDataUnsafe[key]);
+          }
         }
       }
       
@@ -447,14 +492,22 @@ export default function Index() {
         
         // Сохраняем telegram_id в БД (с await для гарантии сохранения)
         try {
+          console.log('Attempting to save user to Supabase with telegram_id:', user.id);
           const savedUser = await getOrCreateUserByTelegramId(user.id);
           if (savedUser) {
             console.log('✅ User saved/loaded in Supabase successfully:', savedUser.id, 'telegram_id:', savedUser.telegram_id);
+            console.log('Full saved user data:', JSON.stringify(savedUser, null, 2));
           } else {
             console.error('❌ Failed to save/load user in Supabase');
+            console.error('This might be due to:');
+            console.error('1. Supabase connection issue');
+            console.error('2. RLS (Row Level Security) policies blocking the insert');
+            console.error('3. Missing telegram_id column in users table');
+            console.error('4. Database constraint violation');
           }
         } catch (err) {
           console.error('Error saving telegram_id:', err);
+          console.error('Error details:', JSON.stringify(err, null, 2));
         }
         
         // Если пользователь не был явно отключен, автоматически подключаем по Telegram ID
@@ -814,6 +867,7 @@ export default function Index() {
       console.log('Full initDataUnsafe:', JSON.stringify(tg.initDataUnsafe, null, 2));
       console.log('initDataUnsafe.user:', tg.initDataUnsafe?.user);
       console.log('initDataUnsafe keys:', Object.keys(tg.initDataUnsafe || {}));
+      console.log('initData (raw):', tg.initData);
       
       // Пробуем получить user разными способами
       let user = tg.initDataUnsafe?.user;
@@ -821,15 +875,50 @@ export default function Index() {
       // Альтернативный способ: проверяем initData (если доступен)
       if (!user && tg.initData) {
         try {
+          console.log('Attempting to parse initData:', tg.initData);
           // initData может быть строкой в формате query string
           const params = new URLSearchParams(tg.initData);
           const userParam = params.get('user');
+          console.log('User param from initData:', userParam);
           if (userParam) {
-            user = JSON.parse(decodeURIComponent(userParam));
-            console.log('User parsed from initData:', user);
+            try {
+              user = JSON.parse(decodeURIComponent(userParam));
+              console.log('✅ User parsed from initData:', user);
+            } catch (parseError) {
+              console.error('Error parsing user JSON:', parseError);
+              // Попробуем без decodeURIComponent
+              try {
+                user = JSON.parse(userParam);
+                console.log('✅ User parsed from initData (without decode):', user);
+              } catch (parseError2) {
+                console.error('Error parsing user JSON (without decode):', parseError2);
+              }
+            }
+          } else {
+            console.log('No user param found in initData');
+            // Попробуем найти все параметры
+            console.log('All initData params:', Array.from(params.keys()));
           }
         } catch (e) {
           console.error('Error parsing initData:', e);
+        }
+      }
+      
+      // Если все еще нет user, попробуем проверить другие поля
+      if (!user) {
+        console.log('User still not found, checking other fields...');
+        console.log('tg.initDataUnsafe:', tg.initDataUnsafe);
+        console.log('tg.initData:', tg.initData);
+        console.log('tg.platform:', tg.platform);
+        console.log('tg.version:', tg.version);
+        
+        // Попробуем проверить, может быть данные в другом формате
+        if (tg.initDataUnsafe && typeof tg.initDataUnsafe === 'object') {
+          const keys = Object.keys(tg.initDataUnsafe);
+          console.log('Available keys in initDataUnsafe:', keys);
+          for (const key of keys) {
+            console.log(`initDataUnsafe[${key}]:`, tg.initDataUnsafe[key]);
+          }
         }
       }
       
@@ -839,11 +928,18 @@ export default function Index() {
         setTelegramId(user.id);
         
         // Сохраняем telegram_id в БД
+        console.log('Attempting to save user to Supabase with telegram_id:', user.id);
         const savedUser = await getOrCreateUserByTelegramId(user.id);
         if (savedUser) {
-          console.log('✅ User saved/loaded in Supabase:', savedUser.id);
+          console.log('✅ User saved/loaded in Supabase:', savedUser.id, 'telegram_id:', savedUser.telegram_id);
+          console.log('Full saved user data:', JSON.stringify(savedUser, null, 2));
         } else {
           console.error('❌ Failed to save/load user in Supabase');
+          console.error('This might be due to:');
+          console.error('1. Supabase connection issue');
+          console.error('2. RLS (Row Level Security) policies blocking the insert');
+          console.error('3. Missing telegram_id column in users table');
+          console.error('4. Database constraint violation');
         }
         
         // Подключаем пользователя
