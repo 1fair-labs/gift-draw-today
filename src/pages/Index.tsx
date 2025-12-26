@@ -520,150 +520,70 @@ export default function Index() {
       // Инициализация WebApp
       tg.ready();
       
-      // Определяем мобильное устройство несколькими способами
-      const platform = (tg as any).platform || '';
-      const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
-      const isIOS = /iphone|ipad|ipod/.test(userAgent);
-      const isAndroid = /android/.test(userAgent);
-      const isMobileUA = isIOS || isAndroid;
-      const isMobileScreen = typeof window !== 'undefined' && window.innerWidth <= 768;
-      // Если это Telegram WebApp, скорее всего это мобильное устройство
-      // Используем комбинацию проверок
-      const isMobile = isMobileUA || isMobileScreen || ['ios', 'android'].includes(platform);
-      const isDesktop = platform === 'tdesktop' || platform === 'web' || platform === 'windows';
-      console.log('Telegram WebApp platform:', platform, 'userAgent:', userAgent.substring(0, 50), 'isMobileUA:', isMobileUA, 'isMobileScreen:', isMobileScreen, 'isMobile:', isMobile, 'isDesktop:', isDesktop);
+      // Настраиваем внешний вид для Telegram WebApp
+      tg.setHeaderColor('#0a0a0a');
+      tg.setBackgroundColor('#0a0a0a');
+      tg.enableClosingConfirmation();
       
-      // Настраиваем внешний вид для Telegram WebApp ПЕРЕД expand()
-      tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
-      tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
-      tg.enableClosingConfirmation(); // Подтверждение закрытия
-      
-      // Отключаем возможность закрытия свайпом вниз (только на мобильных)
-      // Это предотвращает случайное закрытие приложения
-      // Применяем на всех устройствах, так как определение платформы может быть неточным
-      if (isMobile || !isDesktop) {
+      // Отключаем возможность закрытия свайпом вниз
+      try {
         if (typeof (tg as any).disableVerticalSwipes === 'function') {
           (tg as any).disableVerticalSwipes();
-          console.log('Vertical swipes disabled via disableVerticalSwipes()');
-        }
-        if (typeof (tg as any).disableSwipeGesture === 'function') {
-          (tg as any).disableSwipeGesture();
-          console.log('Swipe gesture disabled via disableSwipeGesture()');
         }
         if (typeof (tg as any).setSwipeGestureEnabled === 'function') {
           (tg as any).setSwipeGestureEnabled(false);
-          console.log('Swipe gesture disabled via setSwipeGestureEnabled(false)');
         }
+      } catch (e) {
+        // Игнорируем ошибки
       }
       
-      // Устанавливаем, что приложение должно быть закрыто только через кнопку
-      // Это важно для полноэкранного режима
-      if (typeof (tg as any).setCloseConfirmationEnabled === 'function') {
-        (tg as any).setCloseConfirmationEnabled(true);
-      }
-      
-      // Принудительно разворачиваем в полноэкранный режим
-      // Вызываем всегда, но с разной агрессивностью для мобильных и десктопа
-      const forceExpand = () => {
+      // Разворачиваем в полноэкранный режим - вызываем несколько раз с задержками
+      const expandApp = () => {
         try {
-          console.log('Calling tg.expand()...');
           tg.expand();
-          const isExpanded = (tg as any).isExpanded;
-          const viewportHeight = (tg as any).viewportHeight;
-          const viewportStableHeight = (tg as any).viewportStableHeight;
-          console.log('After expand() - isExpanded:', isExpanded, 'viewportHeight:', viewportHeight, 'viewportStableHeight:', viewportStableHeight, 'platform:', platform);
         } catch (e) {
-          console.warn('Error calling expand():', e);
+          // Игнорируем ошибки
         }
       };
       
-      // Вызываем expand() ПОСЛЕ всех настроек
-      // На мобильных вызываем более агрессивно
-      // Если не десктоп, то применяем мобильные настройки (так как определение платформы может быть неточным)
-      console.log('Telegram WebApp initialized, forcing expand after settings...');
-      if (!isDesktop) {
-        // На мобильных - очень агрессивные вызовы
-        setTimeout(() => {
-          forceExpand();
-          setTimeout(() => forceExpand(), 10);
-          setTimeout(() => forceExpand(), 25);
-          setTimeout(() => forceExpand(), 50);
-          setTimeout(() => forceExpand(), 100);
-          setTimeout(() => forceExpand(), 200);
-          setTimeout(() => forceExpand(), 300);
-          setTimeout(() => forceExpand(), 500);
-          setTimeout(() => forceExpand(), 1000);
-          setTimeout(() => forceExpand(), 2000);
-        }, 50);
-      } else {
-        // На десктопе - менее агрессивно, но все равно вызываем
-        setTimeout(() => {
-          forceExpand();
-          setTimeout(() => forceExpand(), 100);
-          setTimeout(() => forceExpand(), 300);
-        }, 50);
-      }
-      
-      // Также вызываем при изменении viewport
-      const handleViewportChanged = () => {
-        forceExpand();
-      };
-      tg.onEvent('viewportChanged', handleViewportChanged);
-      
-      // Вызываем при изменении состояния расширения
-      const handleExpand = () => {
-        forceExpand();
-      };
-      if ((tg as any).onEvent) {
-        (tg as any).onEvent('expand', handleExpand);
-      }
+      // Вызываем expand() сразу и с небольшими задержками
+      expandApp();
+      setTimeout(expandApp, 100);
+      setTimeout(expandApp, 300);
       
       // Получаем safe area insets для правильного позиционирования контента
       const updateSafeArea = () => {
-        const safeArea = (tg as any).safeAreaInsets || { top: 0, bottom: 0, left: 0, right: 0 };
+        const safeArea = (tg as any).safeAreaInsets || { top: 0 };
         const viewportHeight = (tg as any).viewportHeight || 0;
         const viewportStableHeight = (tg as any).viewportStableHeight || 0;
         
-        // На мобильных устройствах нужен больший отступ
-        // Учитываем динамик/камеру (обычно 44-50px) + кнопка закрытия Telegram (50-60px) + отступ для визуального разделения
-        // Если не десктоп, то применяем мобильные настройки (так как определение платформы может быть неточным)
-        let minTop = (!isDesktop) ? 120 : 0; // На мобильных минимум 120px, на десктопе 0
+        // Минимум 120px для мобильных (динамик/камера + кнопка закрытия)
+        let minTop = 120;
         
-        // Если есть viewportStableHeight, используем его для расчета
+        // Если есть viewportStableHeight, используем его
         if (viewportStableHeight > 0 && viewportHeight > 0) {
           const diff = viewportHeight - viewportStableHeight;
           if (diff > 0) {
-            minTop = Math.max(minTop, diff + 20); // Добавляем 20px для безопасности
+            minTop = Math.max(minTop, diff + 20);
           }
         }
         
         const calculatedTop = safeArea.top || 0;
         const finalTop = Math.max(calculatedTop, minTop);
         setSafeAreaTop(finalTop);
-        console.log('Safe area top updated:', finalTop, 'safeArea.top:', calculatedTop, 'minTop:', minTop, 'viewportHeight:', viewportHeight, 'viewportStableHeight:', viewportStableHeight, 'isMobile:', isMobile, 'isDesktop:', isDesktop);
       };
       
-      // Обновляем сразу
+      // Обновляем safe area сразу и после expand()
       updateSafeArea();
+      setTimeout(updateSafeArea, 200);
+      setTimeout(updateSafeArea, 500);
       
-      // Также обновляем при изменении viewport
+      // Обновляем при изменении viewport
       tg.onEvent('viewportChanged', updateSafeArea);
-      
-      // Обновляем после expand() с задержкой
-      setTimeout(() => {
-        updateSafeArea();
-      }, 100);
-      setTimeout(() => {
-        updateSafeArea();
-      }, 500);
       
       // Возвращаем функцию очистки для удаления обработчика событий
       return () => {
-        tg.offEvent('viewportChanged', handleViewportChanged);
         tg.offEvent('viewportChanged', updateSafeArea);
-        if ((tg as any).offEvent) {
-          (tg as any).offEvent('expand', handleExpand);
-        }
       };
       
       // Скрываем стандартную кнопку "Back" если нужно, или настраиваем её
