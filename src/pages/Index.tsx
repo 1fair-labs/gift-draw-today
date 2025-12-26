@@ -522,6 +522,7 @@ export default function Index() {
       tg.setHeaderColor('#0a0a0a'); // Темный фон для шапки
       tg.setBackgroundColor('#0a0a0a'); // Темный фон для приложения
       tg.enableClosingConfirmation(); // Подтверждение закрытия
+      tg.disableVerticalSwipes(); // Отключаем вертикальные свайпы
       
       // Скрываем стандартную кнопку "Back" если нужно, или настраиваем её
       // tg.BackButton.hide(); // Раскомментируйте, если хотите скрыть кнопку "Back"
