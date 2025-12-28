@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,9 +11,42 @@ import { isInTelegramWebApp } from "./lib/telegram";
 
 const queryClient = new QueryClient();
 
-// Типы для window.telegram уже определены в Index.tsx
-
 const App = () => {
+  const [isTelegram, setIsTelegram] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+
+  // Проверяем наличие Telegram WebApp после загрузки
+  useEffect(() => {
+    const checkTelegram = () => {
+      const tg = (window as any).Telegram?.WebApp || (window as any).telegram?.WebApp;
+      if (tg) {
+        setIsTelegram(true);
+        setIsChecked(true);
+      } else {
+        // Проверяем несколько раз, так как SDK может загружаться асинхронно
+        let attempts = 0;
+        const maxAttempts = 50;
+        const interval = setInterval(() => {
+          attempts++;
+          const tgCheck = (window as any).Telegram?.WebApp || (window as any).telegram?.WebApp;
+          if (tgCheck) {
+            setIsTelegram(true);
+            setIsChecked(true);
+            clearInterval(interval);
+          } else if (attempts >= maxAttempts) {
+            setIsTelegram(false);
+            setIsChecked(true);
+            clearInterval(interval);
+          }
+        }, 100);
+        
+        return () => clearInterval(interval);
+      }
+    };
+
+    checkTelegram();
+  }, []);
+
   // Инициализация Telegram WebApp при загрузке приложения
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
@@ -208,6 +241,21 @@ const App = () => {
     };
   }, []);
 
+  // Показываем Landing пока проверяем, или если не Telegram
+  if (!isChecked) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -215,7 +263,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={isInTelegramWebApp() ? <MiniApp /> : <Landing />} />
+            <Route path="/" element={isTelegram ? <MiniApp /> : <Landing />} />
             <Route path="/landing" element={<Landing />} />
             <Route path="/miniapp" element={<MiniApp />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
