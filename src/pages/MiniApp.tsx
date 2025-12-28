@@ -148,32 +148,27 @@ export default function MiniApp() {
       return;
     }
 
-    const tg = (window as any).Telegram?.WebApp || window.telegram?.WebApp;
-    if (!tg) return;
-
-    // КРИТИЧНО: Автоматическое разворачивание из Compact в Fullscreen
-    // Простая функция для разворачивания
-    const expandToFullscreen = () => {
-      if (tg.expand) {
-        try {
-          tg.expand();
-        } catch (e) {
-          // Игнорируем ошибки
-        }
-      }
-    };
-
-    // Обработчик изменения viewport
-    const handleViewportChanged = () => {
-      setTimeout(expandToFullscreen, 100);
-    };
+    // Используем Telegram.WebApp напрямую, как в официальной документации
+    const WebApp = (window as any).Telegram?.WebApp;
+    if (!WebApp) return;
 
     try {
-      tg.ready(); // ← обязательно
+      // Готовность Web App
+      WebApp.ready();
+
+      // Открытие в полноэкранном режиме
+      // Вызываем expand() сразу и с задержками для надежности
+      const expandToFullscreen = () => {
+        if (WebApp.expand) {
+          try {
+            WebApp.expand();
+          } catch (e) {
+            // Игнорируем ошибки
+          }
+        }
+      };
 
       // Вызываем expand сразу и с задержками для надежности
-      // Это гарантирует разворачивание даже если приложение открылось в Compact режиме
-      // Более агрессивное разворачивание для перехода из fullsize в fullscreen
       expandToFullscreen();
       setTimeout(expandToFullscreen, 0);
       setTimeout(expandToFullscreen, 10);
@@ -188,41 +183,43 @@ export default function MiniApp() {
       setTimeout(expandToFullscreen, 1000);
 
       // Слушаем изменения viewport и разворачиваем при необходимости
-      if (tg.onEvent) {
-        tg.onEvent('viewportChanged', handleViewportChanged);
+      if (WebApp.onEvent) {
+        WebApp.onEvent('viewportChanged', () => {
+          setTimeout(expandToFullscreen, 100);
+        });
       }
 
       // Запрашиваем право на отправку сообщений пользователю
-      if (tg.initDataUnsafe?.user && tg.requestWriteAccess) {
+      if (WebApp.initDataUnsafe?.user && WebApp.requestWriteAccess) {
         try {
-          tg.requestWriteAccess();
+          WebApp.requestWriteAccess();
           console.log('Write access requested');
         } catch (error) {
           console.warn('Error requesting write access:', error);
         }
       }
 
-      if (tg.disableVerticalSwipes) {
-        tg.disableVerticalSwipes();
+      if (WebApp.disableVerticalSwipes) {
+        WebApp.disableVerticalSwipes();
       }
 
-      if (tg.setHeaderColor) {
-        tg.setHeaderColor('transparent');
+      if (WebApp.setHeaderColor) {
+        WebApp.setHeaderColor('transparent');
       }
 
-      if (tg.setBackgroundColor) {
-        tg.setBackgroundColor('#0a0a0a');
+      if (WebApp.setBackgroundColor) {
+        WebApp.setBackgroundColor('#0a0a0a');
       }
     } catch (error) {
       console.error('Error initializing Telegram WebApp:', error);
     }
 
     const connectUser = async () => {
-      let user = tg.initDataUnsafe?.user;
+      let user = WebApp.initDataUnsafe?.user;
 
-      if (!user && tg.initData) {
+      if (!user && WebApp.initData) {
         try {
-          const params = new URLSearchParams(tg.initData);
+          const params = new URLSearchParams(WebApp.initData);
           const userParam = params.get('user');
           if (userParam) {
             user = JSON.parse(decodeURIComponent(userParam));
@@ -255,9 +252,9 @@ export default function MiniApp() {
     // Это критично для iOS, где expand() может требовать пользовательского действия
     let hasExpandedOnInteraction = false;
     const handleFirstInteraction = () => {
-      if (!hasExpandedOnInteraction && tg && tg.expand) {
+      if (!hasExpandedOnInteraction && WebApp && WebApp.expand) {
         try {
-          tg.expand();
+          WebApp.expand();
           hasExpandedOnInteraction = true;
           console.log('Expanded on first user interaction');
           // Удаляем обработчики после первого успешного разворачивания
@@ -277,8 +274,8 @@ export default function MiniApp() {
     return () => {
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('touchstart', handleFirstInteraction);
-      if (tg?.offEvent) {
-        tg.offEvent('viewportChanged', handleViewportChanged);
+      if (WebApp?.offEvent) {
+        WebApp.offEvent('viewportChanged', () => {});
       }
     };
   }, []);
@@ -311,8 +308,8 @@ export default function MiniApp() {
 
     try {
       setLoading(true);
-      const tg = (window as any).Telegram?.WebApp || window.telegram?.WebApp;
-      if (!tg || !isInTelegramWebApp()) {
+      const WebApp = (window as any).Telegram?.WebApp;
+      if (!WebApp || !isInTelegramWebApp()) {
         alert('Please open this site in Telegram to buy tickets.');
         setLoading(false);
         return;
@@ -335,8 +332,8 @@ export default function MiniApp() {
         })
       )}`;
 
-      if (tg.openInvoice) {
-        tg.openInvoice({ url: invoiceUrl }, (status: string) => {
+      if (WebApp.openInvoice) {
+        WebApp.openInvoice({ url: invoiceUrl }, (status: string) => {
           if (status === 'paid') {
             createTicketsAfterPayment(ticketCount, telegramId);
           } else {
