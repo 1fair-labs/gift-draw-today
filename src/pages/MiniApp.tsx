@@ -238,6 +238,34 @@ export default function MiniApp() {
     };
 
     connectUser();
+
+    // Глобальный обработчик клика на body для расширения при первом взаимодействии
+    // Это критично для iOS и для запуска из чата бота
+    let hasExpandedOnClick = false;
+    const handleBodyClick = (e: MouseEvent | TouchEvent) => {
+      if (!hasExpandedOnClick && tg && tg.expand) {
+        try {
+          tg.expand();
+          hasExpandedOnClick = true;
+          console.log('App expanded on user interaction');
+          // Удаляем обработчик после первого успешного расширения
+          document.body.removeEventListener('click', handleBodyClick);
+          document.body.removeEventListener('touchstart', handleBodyClick);
+        } catch (error) {
+          console.error('Error expanding on click:', error);
+        }
+      }
+    };
+
+    // Добавляем обработчики на body
+    document.body.addEventListener('click', handleBodyClick, { once: true, passive: true });
+    document.body.addEventListener('touchstart', handleBodyClick, { once: true, passive: true });
+
+    // Cleanup: удаляем обработчики при размонтировании
+    return () => {
+      document.body.removeEventListener('click', handleBodyClick);
+      document.body.removeEventListener('touchstart', handleBodyClick);
+    };
   }, [expandApp]);
 
   const handleDisconnect = (e?: React.MouseEvent) => {
