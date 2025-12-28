@@ -161,10 +161,18 @@ export default function MiniApp() {
       
       if (!response.ok) {
         console.error('Error sending message:', data);
-        // Показываем пользователю ошибку, если это не ошибка конфигурации
-        if (response.status !== 500 || !data.error?.includes('BOT_TOKEN')) {
-          // Можно показать toast или alert, но пока просто логируем
+        
+        // Если ошибка связана с тем, что пользователь не начал диалог с ботом
+        if (data.details?.error_code === 403 || data.details?.description?.includes('bot was blocked') || data.details?.description?.includes('chat not found')) {
+          console.warn('User has not started a conversation with the bot. They need to send /start to the bot first.');
+          // Можно показать уведомление пользователю, но пока просто логируем
         }
+        
+        // Если ошибка конфигурации
+        if (response.status === 500 && data.error?.includes('BOT_TOKEN')) {
+          console.error('BOT_TOKEN not configured in Vercel environment variables');
+        }
+        
         return false;
       }
       console.log('Message sent successfully, messageId:', data.messageId);

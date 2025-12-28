@@ -62,9 +62,13 @@ export default async function handler(
     const data = await telegramResponse.json();
 
     if (!telegramResponse.ok) {
-      return response.status(telegramResponse.status).json({
+      console.error('Telegram API error:', data);
+      // Возвращаем более детальную информацию об ошибке
+      return response.status(telegramResponse.status >= 400 && telegramResponse.status < 500 ? telegramResponse.status : 500).json({
         error: 'Telegram API error',
         details: data,
+        errorCode: data.error_code,
+        description: data.description,
       });
     }
 
