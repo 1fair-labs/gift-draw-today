@@ -190,12 +190,32 @@ export default function MiniApp() {
       }
 
       // Запрашиваем право на отправку сообщений пользователю
+      // Это нужно для отправки сообщений через Bot API
       if (WebApp.initDataUnsafe?.user && WebApp.requestWriteAccess) {
         try {
-          WebApp.requestWriteAccess();
+          WebApp.requestWriteAccess((granted: boolean) => {
+            if (granted) {
+              console.log('Write access granted - can send messages to user');
+            } else {
+              console.warn('Write access denied - cannot send messages');
+            }
+          });
           console.log('Write access requested');
         } catch (error) {
           console.warn('Error requesting write access:', error);
+        }
+      }
+
+      // Открываем чат-бот при загрузке мини-апп
+      // Это позволяет пользователю видеть чат-бота одновременно с мини-апп
+      if (WebApp.openTelegramLink) {
+        try {
+          // Открываем чат с ботом
+          const botUsername = 'cryptolotterytoday_bot';
+          WebApp.openTelegramLink(`https://t.me/${botUsername}`);
+          console.log('Bot chat opened');
+        } catch (error) {
+          console.warn('Error opening bot chat:', error);
         }
       }
 
