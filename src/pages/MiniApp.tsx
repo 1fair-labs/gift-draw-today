@@ -243,6 +243,37 @@ export default function MiniApp() {
     };
 
     connectUser();
+
+    // Дополнительная страховка: разворачиваем при первом взаимодействии пользователя
+    // Это критично для iOS, где expand() может требовать пользовательского действия
+    let hasExpandedOnInteraction = false;
+    const handleFirstInteraction = () => {
+      if (!hasExpandedOnInteraction && tg && tg.expand) {
+        try {
+          tg.expand();
+          hasExpandedOnInteraction = true;
+          console.log('Expanded on first user interaction');
+          // Удаляем обработчики после первого успешного разворачивания
+          document.removeEventListener('click', handleFirstInteraction);
+          document.removeEventListener('touchstart', handleFirstInteraction);
+        } catch (e) {
+          console.warn('Error expanding on interaction:', e);
+        }
+      }
+    };
+
+    // Добавляем обработчики на document для первого взаимодействия
+    document.addEventListener('click', handleFirstInteraction, { once: true, passive: true });
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true, passive: true });
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      if (tg?.offEvent) {
+        tg.offEvent('viewportChanged', expandToFullscreen);
+      }
+    };
   }, []);
 
   const handleDisconnect = (e?: React.MouseEvent) => {
