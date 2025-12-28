@@ -85,12 +85,6 @@
     background-attachment: fixed;
   }
 
-  /* Предотвращаем свайп вниз для закрытия в Telegram WebApp */
-  body:has([data-telegram-webapp]) {
-    overscroll-behavior-y: none;
-    touch-action: pan-y;
-  }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }

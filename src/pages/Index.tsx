@@ -707,7 +707,9 @@ export default function Index() {
   const isInTelegramWebApp = () => {
     if (typeof window === 'undefined') return false;
     // Проверяем оба варианта: Telegram и telegram (для совместимости)
-    return !!((window as any).Telegram?.WebApp || window.telegram?.WebApp);
+    const tg = (window as any).Telegram?.WebApp || window.telegram?.WebApp;
+    // Простая проверка: объект WebApp должен существовать
+    return !!tg;
   };
 
   // ========== TELEGRAM WALLET CONNECTION (TON Connect) ==========
@@ -928,6 +930,27 @@ export default function Index() {
     if (isConnected) {
       console.log('Already connected');
       return;
+    }
+    
+    // Расширяем приложение на весь экран для десктопной версии
+    if (tg && tg.expand) {
+      try {
+        // Проверяем, что это десктопная версия (web или desktop)
+        const platform = tg.platform;
+        if (platform === 'web' || platform === 'desktop' || platform === 'macos' || platform === 'windows' || platform === 'linux') {
+          console.log('Expanding app to fullscreen on desktop platform:', platform);
+          tg.expand();
+          // Вызываем несколько раз для надежности
+          setTimeout(() => {
+            if (tg.expand) tg.expand();
+          }, 100);
+          setTimeout(() => {
+            if (tg.expand) tg.expand();
+          }, 300);
+        }
+      } catch (expandError) {
+        console.warn('Error expanding app:', expandError);
+      }
     }
     
     // В Telegram WebApp подключаем по telegram_id (если автоматическое подключение не сработало)
@@ -1208,46 +1231,168 @@ export default function Index() {
             : 'sticky top-0' // Обычная sticky шапка на десктопе
         }`}>
           <div className="container mx-auto px-4">
-            <div className={`max-w-4xl mx-auto ${isInTelegramWebApp() ? 'py-4 min-h-[60px]' : 'py-2 sm:py-4'} flex justify-between items-center gap-2`}>
-            <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-shrink">
-              <div className="relative flex-shrink-0">
-                <div className="w-9 h-9 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
-                  <Sparkles className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 text-background" />
-                </div>
-              </div>
-              <h1 className={`${isInTelegramWebApp() ? 'text-sm' : 'text-base sm:text-base md:text-lg lg:text-xl'} font-display font-bold gradient-text leading-tight truncate`}>
-                <span>CryptoLottery.today</span>
-              </h1>
-            </div>
+            <div className={`max-w-4xl mx-auto ${isInTelegramWebApp() ? 'py-4 min-h-[60px]' : 'py-2 sm:py-4'} flex ${isInTelegramWebApp() && isConnected ? 'justify-start' : 'justify-between'} items-center gap-2`}>
+            {/* Логотип - показывается только на десктопе (не в Telegram Mini App) */}
+            {(() => {
+              const inTelegram = isInTelegramWebApp();
+              if (!inTelegram) {
+                return (
+                  <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-shrink">
+                    <div className="relative flex-shrink-0">
+                      <div className="w-9 h-9 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
+                        <Sparkles className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 text-background" />
+                      </div>
+                    </div>
+                    <h1 className="text-base sm:text-base md:text-lg lg:text-xl font-display font-bold gradient-text leading-tight truncate">
+                      <span>CryptoLottery.today</span>
+                    </h1>
+                  </div>
+                );
+              }
+              return null;
+            })()}
             
-            {isConnected ? (
+            {/* В Telegram Mini App: аватар и баланс слева, если подключен */}
+            {(() => {
+              const inTelegram = isInTelegramWebApp();
+              if (inTelegram && isConnected) {
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="neon-border bg-card/50 hover:bg-card border border-primary/30 font-medium gap-1.5 sm:gap-2 px-2 sm:px-3 h-9 text-xs flex-shrink-0"
+                      >
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          {/* Аватар пользователя Telegram */}
+                          {telegramUser?.photo_url && (
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                              <AvatarFallback className="text-xs">
+                                {telegramUser.first_name?.[0] || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div className="text-[10px] font-semibold text-neon-gold leading-tight whitespace-nowrap">
+                            {isBalanceVisible 
+                              ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
+                              : '•••••• CLT'}
+                          </div>
+                        </div>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64 bg-card border-border/50">
+                      {/* Информация о пользователе */}
+                      {telegramUser && (
+                        <div className="px-2 py-2 border-b border-border/50">
+                          <div className="flex items-center gap-2">
+                            {telegramUser.photo_url && (
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                                <AvatarFallback>
+                                  {telegramUser.first_name?.[0] || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold truncate">
+                                {telegramUser.first_name} {telegramUser.last_name || ''}
+                              </div>
+                              {telegramUser.username && (
+                                <div className="text-xs text-muted-foreground truncate">
+                                  @{telegramUser.username}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between px-2 py-1.5">
+                        <DropdownMenuLabel className="text-sm text-muted-foreground tracking-wider p-0">Balance</DropdownMenuLabel>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-transparent"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newValue = !isBalanceVisible;
+                            setIsBalanceVisible(newValue);
+                            localStorage.setItem('balance_visible', String(newValue));
+                          }}
+                        >
+                          {isBalanceVisible ? (
+                            <Eye className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <EyeOff className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="px-2 py-1.5">
+                        <div className="text-lg font-semibold text-neon-gold mb-1">
+                          {isBalanceVisible 
+                            ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
+                            : '•••••• CLT'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {isBalanceVisible ? `≈ $${usdBalance} USDT` : '•••••• USDT'}
+                        </div>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={handleCopyAddress}
+                        className="cursor-pointer"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Address
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDisconnect(e);
+                        }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          handleDisconnect();
+                        }}
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Disconnect
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              }
+              return null;
+            })()}
+            
+            {/* На десктопе: аватар и баланс справа, если подключен */}
+            {!isInTelegramWebApp() && isConnected && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className={`neon-border bg-card/50 hover:bg-card border border-primary/30 font-medium gap-1.5 sm:gap-2 px-2 sm:px-3 ${isInTelegramWebApp() ? 'h-9 text-xs' : 'h-10 sm:h-10'} flex-shrink-0`}
+                    className="neon-border bg-card/50 hover:bg-card border border-primary/30 font-medium gap-1.5 sm:gap-2 px-2 sm:px-3 h-10 sm:h-10 flex-shrink-0"
                   >
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       {/* Аватар пользователя Telegram */}
                       {telegramUser?.photo_url && (
-                        <Avatar className={`${isInTelegramWebApp() ? 'h-5 w-5' : 'h-6 w-6 sm:h-7 sm:w-7'}`}>
+                        <Avatar className="h-6 w-6 sm:h-7 sm:w-7">
                           <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
                           <AvatarFallback className="text-xs">
                             {telegramUser.first_name?.[0] || 'U'}
                           </AvatarFallback>
                         </Avatar>
                       )}
-                      <div className={`${isInTelegramWebApp() ? 'text-[10px]' : 'text-xs sm:text-xs'} font-semibold text-neon-gold leading-tight whitespace-nowrap`}>
+                      <div className="text-xs sm:text-xs font-semibold text-neon-gold leading-tight whitespace-nowrap">
                         {isBalanceVisible 
                           ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
                           : '•••••• CLT'}
                       </div>
-                      {!isInTelegramWebApp() && (
-                        <div className="flex items-center gap-1.5 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-border/50">
-                          <div className="w-2 h-2 sm:w-2 sm:h-2 rounded-full bg-neon-green animate-blink"></div>
-                          <span className="text-xs sm:text-xs font-mono hidden sm:inline">{walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-border/50">
+                        <div className="w-2 h-2 sm:w-2 sm:h-2 rounded-full bg-neon-green animate-blink"></div>
+                        <span className="text-xs sm:text-xs font-mono hidden sm:inline">{walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''}</span>
+                      </div>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
@@ -1331,7 +1476,13 @@ export default function Index() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            )}
+            
+            {/* Кнопка подключения - скрыта в Telegram Mini App, показывается только на десктопе */}
+            {(() => {
+              const inTelegram = isInTelegramWebApp();
+              if (!inTelegram && !isConnected) {
+                return (
               <Button 
                 onClick={handleConnectWallet}
                 disabled={loading}
@@ -1357,7 +1508,10 @@ export default function Index() {
                   </>
                 )}
               </Button>
-            )}
+                );
+              }
+              return null;
+            })()}
             </div>
           </div>
         </header>
