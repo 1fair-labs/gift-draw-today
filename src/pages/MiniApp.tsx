@@ -152,23 +152,13 @@ export default function MiniApp() {
     if (!tg) return;
 
     // КРИТИЧНО: Автоматическое разворачивание из Compact в Fullscreen
-    // Вызываем expand() сразу после ready() для автоматического разворачивания
+    // Простая функция для разворачивания
     const expandToFullscreen = () => {
       if (tg.expand) {
         try {
           tg.expand();
-          console.log('Expanding to fullscreen');
-          
-          // Проверяем текущий режим и принудительно устанавливаем fullscreen
-          // Если приложение в fullsize (с верхней панелью), пробуем перейти в fullscreen
-          if (tg.isExpanded !== undefined && !tg.isExpanded) {
-            // Если еще не развернуто, вызываем еще раз
-            setTimeout(() => {
-              if (tg.expand) tg.expand();
-            }, 50);
-          }
         } catch (e) {
-          console.warn('Error expanding:', e);
+          // Игнорируем ошибки
         }
       }
     };
