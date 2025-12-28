@@ -158,6 +158,15 @@ export default function MiniApp() {
         try {
           tg.expand();
           console.log('Expanding to fullscreen');
+          
+          // Проверяем текущий режим и принудительно устанавливаем fullscreen
+          // Если приложение в fullsize (с верхней панелью), пробуем перейти в fullscreen
+          if (tg.isExpanded !== undefined && !tg.isExpanded) {
+            // Если еще не развернуто, вызываем еще раз
+            setTimeout(() => {
+              if (tg.expand) tg.expand();
+            }, 50);
+          }
         } catch (e) {
           console.warn('Error expanding:', e);
         }
@@ -199,6 +208,17 @@ export default function MiniApp() {
 
       if (tg.disableVerticalSwipes) {
         tg.disableVerticalSwipes();
+      }
+
+      // КРИТИЧНО: Включаем подтверждение закрытия для fullscreen режима
+      // Это помогает перейти в настоящий fullscreen (без верхней панели)
+      if (tg.enableClosingConfirmation) {
+        try {
+          tg.enableClosingConfirmation();
+          console.log('Closing confirmation enabled for fullscreen');
+        } catch (e) {
+          console.warn('Error enabling closing confirmation:', e);
+        }
       }
 
       if (tg.setHeaderColor) {
