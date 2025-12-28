@@ -216,17 +216,6 @@ export default function MiniApp() {
         tg.disableVerticalSwipes();
       }
 
-      // КРИТИЧНО: Включаем подтверждение закрытия для fullscreen режима
-      // Это помогает перейти в настоящий fullscreen (без верхней панели)
-      if (tg.enableClosingConfirmation) {
-        try {
-          tg.enableClosingConfirmation();
-          console.log('Closing confirmation enabled for fullscreen');
-        } catch (e) {
-          console.warn('Error enabling closing confirmation:', e);
-        }
-      }
-
       if (tg.setHeaderColor) {
         tg.setHeaderColor('transparent');
       }
