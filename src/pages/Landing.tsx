@@ -5,8 +5,7 @@ import { Card } from "@/components/ui/card";
 
 export default function Landing() {
   const handleConnect = () => {
-    // Убран лишний пробел в URL!
-    window.location.href = "https://t.me/cryptolotterytoday_bot/enjoy";
+    window.location.href = "https://t.me/cryptolotterytoday_bot?startapp";
   };
 
   return (
