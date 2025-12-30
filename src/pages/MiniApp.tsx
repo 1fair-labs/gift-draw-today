@@ -577,17 +577,27 @@ export default function MiniApp() {
             paddingTop: `${Math.max(safeAreaTop, 0)}px`
           }}
         >
-          <div className="flex items-end gap-4 px-4 py-3 min-h-[160px]">
+          <div className="flex items-center gap-3 px-4 py-3 min-h-[160px]">
             {telegramUser && (
               <>
-                {telegramUser.photo_url && (
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-                    <AvatarFallback className="text-sm">
-                      {telegramUser.first_name?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+                <div
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    triggerHaptic();
+                    handleNavigateToProfile();
+                  }}
+                >
+                  {telegramUser.photo_url && (
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                      <AvatarFallback className="text-sm">
+                        {telegramUser.first_name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
                 <div 
                   className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={(e) => {
