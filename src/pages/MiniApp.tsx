@@ -566,50 +566,173 @@ export default function MiniApp() {
           }}
         >
           {/* Header - только на десктопе */}
-      {!isMobile && (
-        <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0">
-          <div className="px-4 py-4 min-h-[60px] flex justify-start items-center gap-3">
-            {telegramUser && (
-              <>
-                <div
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    triggerHaptic();
-                    handleNavigateToProfile();
-                  }}
-                >
-                  {telegramUser.photo_url && (
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-                      <AvatarFallback className="text-sm">
-                        {telegramUser.first_name?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
+          <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0">
+            <div className="px-4 py-4 min-h-[60px] flex justify-start items-center gap-3">
+              {telegramUser && (
+                <>
+                  <div
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      triggerHaptic();
+                      handleNavigateToProfile();
+                    }}
+                  >
+                    {telegramUser.photo_url && (
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                        <AvatarFallback className="text-sm">
+                          {telegramUser.first_name?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                  <div 
+                    className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      triggerHaptic();
+                      handleNavigateToProfile();
+                    }}
+                  >
+                    <h2 className="text-sm font-display font-bold">
+                      {telegramUser?.first_name} {telegramUser?.last_name || ''}
+                    </h2>
+                    {telegramUser?.username && (
+                      <p className="text-xs text-muted-foreground">@{telegramUser.username}</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </header>
+
+          {/* Screens Container для десктопа */}
+          <div 
+            className="relative w-full overflow-hidden"
+            style={{
+              height: 'calc(100% - 60px - 80px)', // Высота минус header и footer
+              marginTop: '0',
+            }}
+          >
+            <div className="relative w-full h-full overflow-hidden">
+              {(currentScreen === 'home' || (currentScreen === 'tickets' && isTransitioning)) && (
                 <div 
-                  className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    triggerHaptic();
-                    handleNavigateToProfile();
+                  className="absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out"
+                  style={{
+                    transform: currentScreen === 'tickets' && isTransitioning ? 'translateX(-100%)' : 'translateX(0)',
                   }}
                 >
-                  <h2 className="text-sm font-display font-bold">
-                    {telegramUser?.first_name} {telegramUser?.last_name || ''}
-                  </h2>
-                  {telegramUser?.username && (
-                    <p className="text-xs text-muted-foreground">@{telegramUser.username}</p>
-                  )}
+                  <HomeScreen 
+                    currentDraw={mockDraw}
+                    onEnterDraw={handleNavigateToTickets}
+                  />
                 </div>
-              </>
-            )}
+              )}
+              {currentScreen === 'tickets' && (
+                <div 
+                  className="absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out"
+                  style={{
+                    transform: isTransitioning ? 'translateX(0)' : (prevScreen === 'home' ? 'translateX(100%)' : 'translateX(0)'),
+                  }}
+                >
+                  <TicketsScreen
+                    tickets={tickets}
+                    onEnterDraw={handleEnterDraw}
+                    onBuyTicket={handleBuyTicket}
+                    loading={loading}
+                  />
+                </div>
+              )}
+              {currentScreen === 'profile' && (
+                <div className="absolute inset-0 w-full h-full">
+                  <ProfileScreen
+                    telegramUser={telegramUser}
+                    user={user}
+                    walletAddress={walletAddress}
+                    cltBalance={cltBalance}
+                    usdtBalance={usdtBalance}
+                    tonBalance={tonBalance}
+                    isBalanceVisible={isBalanceVisible}
+                    onToggleBalanceVisibility={() => {
+                      const newValue = !isBalanceVisible;
+                      setIsBalanceVisible(newValue);
+                      localStorage.setItem('balance_visible', String(newValue));
+                    }}
+                    onConnectWallet={handleConnectWallet}
+                    onBuyTicket={handleBuyTicket}
+                    loading={loading}
+                  />
+                </div>
+              )}
+              {currentScreen === 'about' && (
+                <div className="absolute inset-0 w-full h-full">
+                  <AboutScreen />
+                </div>
+              )}
+            </div>
           </div>
-        </header>
-      )}
+
+          {/* Bottom Navigation для десктопа */}
+          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '16px' }}>
+            <div className="flex items-center justify-around px-4 py-4 h-20">
+              {/* About Button (Left) */}
+              <Button
+                variant="ghost"
+                size="lg"
+                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  triggerHaptic();
+                  setCurrentScreen('about');
+                }}
+              >
+                <Info className={`w-5 h-5 ${currentScreen === 'about' ? 'text-white' : 'text-muted-foreground'}`} />
+                <span className={`text-xs ${currentScreen === 'about' ? 'text-white font-semibold' : 'text-muted-foreground'}`}>
+                  About
+                </span>
+              </Button>
+
+              {/* Draw Button (Center) */}
+              <Button
+                variant="ghost"
+                size="lg"
+                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  triggerHaptic();
+                  handleNavigateToHome();
+                }}
+              >
+                <Sparkles className={`w-5 h-5 ${currentScreen === 'home' ? 'text-white' : 'text-muted-foreground'}`} />
+                <span className={`text-xs ${currentScreen === 'home' ? 'text-white font-semibold' : 'text-muted-foreground'}`}>
+                  Draw
+                </span>
+              </Button>
+
+              {/* Tickets Button (Right) */}
+              <Button
+                variant="ghost"
+                size="lg"
+                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  triggerHaptic();
+                  handleNavigateToTicketsNoAnimation();
+                }}
+              >
+                <Ticket className={`w-5 h-5 ${currentScreen === 'tickets' ? 'text-white' : 'text-muted-foreground'}`} />
+                <span className={`text-xs ${currentScreen === 'tickets' ? 'text-white font-semibold' : 'text-muted-foreground'}`}>
+                  Tickets
+                </span>
+              </Button>
+            </div>
+          </footer>
         </div>
       ) : (
         <>
