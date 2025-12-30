@@ -89,7 +89,15 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="text-center mb-4">
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
               <p className="text-2xl font-display font-bold text-neon-pink">
-                {timeRemaining}
+                <span className="font-mono tabular-nums">{timeRemaining.split(' ').map((part, i) => {
+                  if (i % 2 === 0) {
+                    // Цифры
+                    return <span key={i} className="inline-block w-8 text-center">{part}</span>;
+                  } else {
+                    // Буквы (h, m, s)
+                    return <span key={i} className="text-base mx-1">{part}</span>;
+                  }
+                })}</span>
               </p>
             </div>
 
