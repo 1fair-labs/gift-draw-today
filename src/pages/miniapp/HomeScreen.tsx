@@ -22,32 +22,24 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
       
       // Получаем следующую полуночь UTC
-      const nextMidnight = new Date(utcNow);
-      nextMidnight.setUTCHours(24, 0, 0, 0);
+      const nextMidnight = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0, 0, 0, 0
+      ));
       
-      const diff = nextMidnight.getTime() - utcNow.getTime();
+      const diff = nextMidnight.getTime() - now.getTime();
       
-      if (diff <= 0) {
-        // Если уже прошла полуночь, берем следующую
-        nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1);
-        const newDiff = nextMidnight.getTime() - utcNow.getTime();
-        const hours = Math.floor(newDiff / (1000 * 60 * 60));
-        const minutes = Math.floor((newDiff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((newDiff % (1000 * 60)) / 1000);
-        setTimeRemaining(
-          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-        );
-      } else {
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setTimeRemaining(
-          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-        );
-      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setTimeRemaining(
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      );
     };
 
     // Обновляем сразу
