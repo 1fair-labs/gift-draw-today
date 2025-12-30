@@ -599,9 +599,10 @@ export default function MiniApp() {
         <div className="relative w-full h-full overflow-hidden">
           {(currentScreen === 'home' || (currentScreen === 'tickets' && isTransitioning)) && (
             <div 
-              className={`absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out ${
-                currentScreen === 'tickets' && isTransitioning ? '-translate-x-full' : 'translate-x-0'
-              }`}
+              className="absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out"
+              style={{
+                transform: currentScreen === 'tickets' && isTransitioning ? 'translateX(-100%)' : 'translateX(0)',
+              }}
             >
               <HomeScreen 
                 currentDraw={mockDraw}
@@ -613,8 +614,7 @@ export default function MiniApp() {
             <div 
               className="absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out"
               style={{
-                transform: isTransitioning ? 'translateX(0)' : 'translateX(0)',
-                animation: isTransitioning ? 'slideInFromRight 0.3s ease-in-out' : 'none',
+                transform: isTransitioning ? 'translateX(100%)' : 'translateX(0)',
               }}
             >
               <TicketsScreen
