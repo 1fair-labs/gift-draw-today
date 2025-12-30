@@ -42,6 +42,7 @@ export default function MiniApp() {
   const [viewport, setViewport] = useState<{ height: number; width: number } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [safeAreaTop, setSafeAreaTop] = useState(0);
+  const [safeAreaBottom, setSafeAreaBottom] = useState(0);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -338,6 +339,7 @@ export default function MiniApp() {
       // Получаем safe area insets для мобильных
       if (isMobilePlatform && WebApp.safeAreaInsets) {
         setSafeAreaTop(WebApp.safeAreaInsets.top || 0);
+        setSafeAreaBottom(WebApp.safeAreaInsets.bottom || 0);
       }
 
       // Разворачиваем только на мобильных устройствах (не на десктопе)
@@ -384,6 +386,7 @@ export default function MiniApp() {
           }
           if (isMobilePlatform && WebApp.safeAreaInsets) {
             setSafeAreaTop(WebApp.safeAreaInsets.top || 0);
+            setSafeAreaBottom(WebApp.safeAreaInsets.bottom || 0);
           }
         });
       }
@@ -624,7 +627,9 @@ export default function MiniApp() {
       <div 
         className="relative w-full overflow-hidden"
         style={isMobile ? {
-          height: `calc(100vh - ${80 + 160 + Math.max(safeAreaTop, 0)}px)`,
+          height: viewport?.height 
+            ? `${viewport.height - 80 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16}px`
+            : `calc(100vh - ${80 + 160 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
           marginTop: `${160 + Math.max(safeAreaTop, 0)}px`,
         } : {
           height: `calc(100vh - 80px)`, // Полная высота минус footer
@@ -690,7 +695,7 @@ export default function MiniApp() {
       </div>
 
       {/* Bottom Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '16px' }}>
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
         <div className="flex items-center justify-around px-4 py-4 h-20">
           {/* About Button (Left) */}
           <Button
