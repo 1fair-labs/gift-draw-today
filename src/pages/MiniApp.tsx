@@ -482,7 +482,7 @@ export default function MiniApp() {
     return () => clearInterval(interval);
   }, [walletAddress, telegramId]);
 
-  // Handle navigation from buttons
+  // Handle navigation from buttons with animation (Enter Draw button)
   const handleNavigateToTickets = () => {
     setCurrentScreen('tickets');
     // Небольшая задержка для применения начального состояния
@@ -494,6 +494,12 @@ export default function MiniApp() {
         }, 300);
       });
     });
+  };
+
+  // Handle navigation to tickets without animation (bottom nav button)
+  const handleNavigateToTicketsNoAnimation = () => {
+    setCurrentScreen('tickets');
+    setIsTransitioning(false);
   };
 
   const handleNavigateToProfile = () => {
@@ -707,7 +713,7 @@ export default function MiniApp() {
               e.preventDefault();
               e.stopPropagation();
               triggerHaptic();
-              handleNavigateToTickets();
+              handleNavigateToTicketsNoAnimation();
             }}
           >
             <Ticket className={`w-5 h-5 ${currentScreen === 'tickets' ? 'text-white' : 'text-muted-foreground'}`} />
