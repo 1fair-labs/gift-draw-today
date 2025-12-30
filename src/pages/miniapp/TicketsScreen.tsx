@@ -67,7 +67,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
             <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
             <p className="text-lg text-muted-foreground mb-4">No tickets yet</p>
             <p className="text-sm text-muted-foreground/70 mb-4">Buy your first NFT ticket and enter the draw for a chance to win!</p>
-            <p className="text-sm text-muted-foreground mb-4">1 ticket ~ 1 USDT</p>
+            <p className="text-sm text-muted-foreground/70 mb-4">1 ticket ~ 1 USDT</p>
             <Button 
               onClick={onBuyTicket}
               disabled={loading}
@@ -165,7 +165,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
           ))}
         </div>
 
-        <p className="text-sm text-muted-foreground mt-4 mb-2">1 ticket ~ 1 USDT</p>
+        <p className="text-sm text-muted-foreground/70 mt-4 mb-2">1 ticket ~ 1 USDT</p>
         <Button 
           onClick={onBuyTicket}
           disabled={loading}
