@@ -17,7 +17,7 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps) {
-  const [timeRemaining, setTimeRemaining] = useState('00:00:00');
+  const [timeRemaining, setTimeRemaining] = useState({ hours: '00', minutes: '00', seconds: '00' });
 
   useEffect(() => {
     const updateTimer = () => {
@@ -37,9 +37,11 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       
-      setTimeRemaining(
-        `${String(hours).padStart(2, '0')} h ${String(minutes).padStart(2, '0')} m ${String(seconds).padStart(2, '0')} s`
-      );
+      setTimeRemaining({
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+        seconds: String(seconds).padStart(2, '0')
+      });
     };
 
     // Обновляем сразу
@@ -89,15 +91,14 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="text-center mb-4">
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
               <p className="text-2xl font-display font-bold text-neon-pink">
-                <span className="font-mono tabular-nums">{timeRemaining.split(' ').map((part, i) => {
-                  if (i % 2 === 0) {
-                    // Цифры
-                    return <span key={i} className="inline-block w-8 text-center">{part}</span>;
-                  } else {
-                    // Буквы (h, m, s)
-                    return <span key={i} className="text-base mx-1">{part}</span>;
-                  }
-                })}</span>
+                <span className="font-mono tabular-nums">
+                  <span className="inline-block w-8 text-center">{timeRemaining.hours}</span>
+                  <span className="text-base mx-1">h</span>
+                  <span className="inline-block w-8 text-center">{timeRemaining.minutes}</span>
+                  <span className="text-base mx-1">m</span>
+                  <span className="inline-block w-8 text-center">{timeRemaining.seconds}</span>
+                  <span className="text-base mx-1">s</span>
+                </span>
               </p>
             </div>
 
