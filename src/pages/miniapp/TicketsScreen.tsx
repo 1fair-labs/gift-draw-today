@@ -72,7 +72,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
               disabled={loading}
               className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold glow-gold"
             >
-              Buy Ticket (~$1)
+              Buy Ticket <span className="font-body font-normal">~$1</span>
             </Button>
           </Card>
         </div>
@@ -169,7 +169,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
           disabled={loading}
           className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold glow-gold mt-4"
         >
-          Buy More Tickets (~$1)
+          Buy More Tickets <span className="font-body font-normal">~$1</span>
         </Button>
 
         {/* How It Works */}
