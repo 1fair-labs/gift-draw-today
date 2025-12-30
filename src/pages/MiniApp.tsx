@@ -550,7 +550,7 @@ export default function MiniApp() {
       {/* Header - только на мобильных, с CryptoLottery.today и аватаром */}
       {isMobile && (
         <header 
-          className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50 border-b border-white/20"
+          className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50"
           style={{ 
             paddingTop: `${Math.max(safeAreaTop, 0)}px`
           }}
