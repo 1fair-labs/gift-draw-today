@@ -603,9 +603,6 @@ export default function MiniApp() {
                   {telegramUser?.username && (
                     <p className="text-xs text-muted-foreground">@{telegramUser.username}</p>
                   )}
-                  {user?.anon_id && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">ID: {user.anon_id}</p>
-                  )}
                 </div>
               </>
             )}
