@@ -38,7 +38,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       
       setTimeRemaining(
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        `${String(hours).padStart(2, '0')} h ${String(minutes).padStart(2, '0')} m ${String(seconds).padStart(2, '0')} s`
       );
     };
 
