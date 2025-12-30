@@ -334,6 +334,7 @@ export default function MiniApp() {
       // Определяем платформу
       const platform = WebApp.platform || '';
       const isMobilePlatform = platform === 'ios' || platform === 'android';
+      const isDesktop = platform === 'desktop' || platform === 'web' || (!isMobilePlatform && platform !== '');
       setIsMobile(isMobilePlatform);
 
       // Получаем safe area insets для мобильных
@@ -343,7 +344,7 @@ export default function MiniApp() {
       }
 
       // Разворачиваем только на мобильных устройствах (не на десктопе)
-      if (isMobilePlatform) {
+      if (isMobilePlatform && !isDesktop) {
         const expandToFullscreen = () => {
           if (WebApp.expand) {
             try {
@@ -370,7 +371,7 @@ export default function MiniApp() {
 
       if (WebApp.onEvent) {
         WebApp.onEvent('viewportChanged', () => {
-          if (isMobilePlatform) {
+          if (isMobilePlatform && !isDesktop) {
             setTimeout(() => {
               if (WebApp.expand) {
                 try {
