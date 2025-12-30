@@ -61,7 +61,7 @@ export default function ProfileScreen({
     : '';
 
   return (
-    <div className="h-full overflow-y-auto pb-24">
+    <div className="h-full w-full overflow-y-auto">
       <div className="p-4 space-y-6">
         {/* Profile Header */}
         <Card className="glass-card p-6">

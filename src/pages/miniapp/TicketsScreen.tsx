@@ -81,7 +81,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
   }
 
   return (
-    <div className="h-full overflow-y-auto pb-24">
+    <div className="h-full w-full overflow-y-auto">
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

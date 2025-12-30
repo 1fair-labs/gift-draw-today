@@ -1,4 +1,4 @@
-// src/pages/MiniApp.tsx - New Mini App architecture
+// src/pages/MiniAppNew.tsx - New Mini App architecture
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Wallet, Ticket, Sparkles, ChevronRight } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -21,7 +21,7 @@ const mockDraw = {
 
 type Screen = 'home' | 'tickets' | 'profile';
 
-export default function MiniApp() {
+export default function MiniAppNew() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [telegramId, setTelegramId] = useState<number | null>(null);
   const [telegramUser, setTelegramUser] = useState<any>(null);
@@ -539,51 +539,47 @@ export default function MiniApp() {
 
       {/* Screens Container */}
       <div 
-        className="relative w-full overflow-hidden"
+        className="relative flex transition-transform duration-300 ease-in-out"
         style={{
-          height: `calc(100vh - 60px - 80px)`,
+          transform: `translateX(-${currentScreen === 'home' ? 0 : currentScreen === 'tickets' ? 100 : 200}%)`,
+          width: '300%',
+          height: `calc(100% - 60px - 80px)`,
           marginTop: '60px',
         }}
       >
-        {currentScreen === 'home' && (
-          <div className="w-full h-full">
-            <HomeScreen 
-              currentDraw={mockDraw}
-              onEnterDraw={handleNavigateToTickets}
-            />
-          </div>
-        )}
-        {currentScreen === 'tickets' && (
-          <div className="w-full h-full">
-            <TicketsScreen
-              tickets={tickets}
-              onEnterDraw={handleEnterDraw}
-              onBuyTicket={handleBuyTicket}
-              loading={loading}
-            />
-          </div>
-        )}
-        {currentScreen === 'profile' && (
-          <div className="w-full h-full">
-            <ProfileScreen
-              telegramUser={telegramUser}
-              user={user}
-              walletAddress={walletAddress}
-              cltBalance={cltBalance}
-              usdtBalance={usdtBalance}
-              tonBalance={tonBalance}
-              isBalanceVisible={isBalanceVisible}
-              onToggleBalanceVisibility={() => {
-                const newValue = !isBalanceVisible;
-                setIsBalanceVisible(newValue);
-                localStorage.setItem('balance_visible', String(newValue));
-              }}
-              onConnectWallet={handleConnectWallet}
-              onBuyTicket={handleBuyTicket}
-              loading={loading}
-            />
-          </div>
-        )}
+        <div className="w-1/3 flex-shrink-0">
+          <HomeScreen 
+            currentDraw={mockDraw}
+            onEnterDraw={handleNavigateToTickets}
+          />
+        </div>
+        <div className="w-1/3 flex-shrink-0">
+          <TicketsScreen
+            tickets={tickets}
+            onEnterDraw={handleEnterDraw}
+            onBuyTicket={handleBuyTicket}
+            loading={loading}
+          />
+        </div>
+        <div className="w-1/3 flex-shrink-0">
+          <ProfileScreen
+            telegramUser={telegramUser}
+            user={user}
+            walletAddress={walletAddress}
+            cltBalance={cltBalance}
+            usdtBalance={usdtBalance}
+            tonBalance={tonBalance}
+            isBalanceVisible={isBalanceVisible}
+            onToggleBalanceVisibility={() => {
+              const newValue = !isBalanceVisible;
+              setIsBalanceVisible(newValue);
+              localStorage.setItem('balance_visible', String(newValue));
+            }}
+            onConnectWallet={handleConnectWallet}
+            onBuyTicket={handleBuyTicket}
+            loading={loading}
+          />
+        </div>
       </div>
 
       {/* Bottom Navigation */}
@@ -594,11 +590,7 @@ export default function MiniApp() {
             variant="ghost"
             size="lg"
             className="flex flex-col items-center gap-1 h-auto py-2"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleNavigateToProfile();
-            }}
+            onClick={handleNavigateToProfile}
           >
             <Wallet className={`w-5 h-5 ${currentScreen === 'profile' ? 'text-primary' : 'text-muted-foreground'}`} />
             <span className={`text-xs ${currentScreen === 'profile' ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
@@ -610,11 +602,7 @@ export default function MiniApp() {
           <Button
             size="lg"
             className="rounded-full w-16 h-16 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-primary-foreground font-display font-bold glow-purple shadow-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleNavigateToTickets();
-            }}
+            onClick={handleNavigateToTickets}
           >
             <Sparkles className="w-6 h-6" />
           </Button>
@@ -624,11 +612,7 @@ export default function MiniApp() {
             variant="ghost"
             size="lg"
             className="flex flex-col items-center gap-1 h-auto py-2"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleBuyTicket();
-            }}
+            onClick={handleBuyTicket}
             disabled={loading}
           >
             <Ticket className={`w-5 h-5 ${loading ? 'text-muted-foreground' : 'text-muted-foreground'}`} />
