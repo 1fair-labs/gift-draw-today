@@ -642,7 +642,7 @@ export default function MiniApp() {
       </div>
 
       {/* Bottom Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '12px' }}>
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '16px' }}>
         <div className="flex items-center justify-around px-4 py-4 h-20">
           {/* About Button (Left) */}
           <Button
