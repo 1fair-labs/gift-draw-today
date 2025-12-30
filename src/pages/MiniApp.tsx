@@ -555,7 +555,7 @@ export default function MiniApp() {
             paddingTop: `${Math.max(safeAreaTop, 0)}px`
           }}
         >
-          <div className="flex items-center justify-between px-4 py-3 min-h-[240px]">
+          <div className="flex items-end justify-between px-4 py-3 min-h-[240px]">
             <div className="flex items-center gap-2">
               <X className="w-5 h-5 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">CryptoLottery.today</span>
