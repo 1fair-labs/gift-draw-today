@@ -792,12 +792,12 @@ export default function MiniApp() {
             className="relative w-full overflow-hidden"
             style={isMobile ? {
               height: viewport?.height 
-                ? `${Math.max(viewport.height - 80 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
-                : `calc(100dvh - ${80 + 160 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
+                ? `${Math.max(viewport.height - 96 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
+                : `calc(100dvh - ${96 + 160 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
               marginTop: `${160 + Math.max(safeAreaTop, 0)}px`,
               overflow: 'hidden',
               maxHeight: viewport?.height 
-                ? `${Math.max(viewport.height - 80 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
+                ? `${Math.max(viewport.height - 96 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
                 : undefined,
             } : {}}
           >
@@ -861,7 +861,7 @@ export default function MiniApp() {
 
           {/* Bottom Navigation для мобильных */}
           <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
-            <div className="flex items-center justify-around px-4 py-4 h-20">
+            <div className="flex items-center justify-around px-4 py-4 h-24">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
