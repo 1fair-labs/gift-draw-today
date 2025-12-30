@@ -1,5 +1,5 @@
 // src/pages/MiniApp.tsx - New Mini App architecture
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Info, Sparkles, Ticket } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -40,11 +40,6 @@ export default function MiniApp() {
   const [viewport, setViewport] = useState<{ height: number; width: number } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [safeAreaTop, setSafeAreaTop] = useState(0);
-  
-  // Swipe handling
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -320,39 +315,6 @@ export default function MiniApp() {
     }
   }, []);
 
-  // Swipe handling
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-    
-    const distance = touchStartX.current - touchEndX.current;
-    const minSwipeDistance = 50;
-
-    if (Math.abs(distance) > minSwipeDistance) {
-      if (distance > 0) {
-        // Swipe left - next screen
-        if (currentScreen === 'about') setCurrentScreen('home');
-        else if (currentScreen === 'home') setCurrentScreen('tickets');
-        else if (currentScreen === 'tickets') setCurrentScreen('about');
-      } else {
-        // Swipe right - previous screen
-        if (currentScreen === 'about') setCurrentScreen('tickets');
-        else if (currentScreen === 'tickets') setCurrentScreen('home');
-        else if (currentScreen === 'home') setCurrentScreen('about');
-      }
-    }
-    
-    touchStartX.current = 0;
-    touchEndX.current = 0;
-  };
-
   // Initialize Telegram WebApp
   useEffect(() => {
     if (!isInTelegramWebApp()) {
@@ -538,23 +500,45 @@ export default function MiniApp() {
     setCurrentScreen('home');
   };
 
+  // Haptic feedback function
+  const triggerHaptic = () => {
+    // Try Telegram WebApp haptic feedback first
+    const WebApp = (window as any).Telegram?.WebApp;
+    if (WebApp?.HapticFeedback?.impactOccurred) {
+      try {
+        WebApp.HapticFeedback.impactOccurred('light');
+      } catch (e) {
+        // Fallback to navigator.vibrate
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      }
+    } else if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+  };
+
   const screenHeight = viewport?.height || window.innerHeight;
 
   return (
     <div 
       className="overflow-hidden bg-background h-screen w-full"
       style={isMobile ? { height: `${screenHeight}px` } : {}}
-      ref={containerRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       {/* Header - только на десктопе */}
       {!isMobile && (
         <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 z-50 sticky top-0">
           <div className="px-4 py-3 min-h-[60px] flex justify-start items-center gap-2">
             {telegramUser && (
-              <div className="flex items-center gap-2">
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  triggerHaptic();
+                  handleNavigateToProfile();
+                }}
+              >
                 {telegramUser.photo_url && (
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
@@ -574,6 +558,12 @@ export default function MiniApp() {
         <div 
           className="fixed left-4 z-50 pointer-events-auto"
           style={{ top: `${Math.max(safeAreaTop, 20) + 16}px` }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerHaptic();
+            handleNavigateToProfile();
+          }}
         >
           {telegramUser.photo_url && (
             <Avatar className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
@@ -654,11 +644,12 @@ export default function MiniApp() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              triggerHaptic();
               setCurrentScreen('about');
             }}
           >
-            <Info className={`w-5 h-5 ${currentScreen === 'about' ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-xs ${currentScreen === 'about' ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+            <Info className={`w-5 h-5 ${currentScreen === 'about' ? 'text-white' : 'text-muted-foreground'}`} />
+            <span className={`text-xs ${currentScreen === 'about' ? 'text-white font-semibold' : 'text-muted-foreground'}`}>
               About
             </span>
           </Button>
@@ -671,11 +662,12 @@ export default function MiniApp() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              triggerHaptic();
               handleNavigateToHome();
             }}
           >
-            <Sparkles className={`w-5 h-5 ${currentScreen === 'home' ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-xs ${currentScreen === 'home' ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+            <Sparkles className={`w-5 h-5 ${currentScreen === 'home' ? 'text-white' : 'text-muted-foreground'}`} />
+            <span className={`text-xs ${currentScreen === 'home' ? 'text-white font-semibold' : 'text-muted-foreground'}`}>
               Draw
             </span>
           </Button>
@@ -688,11 +680,12 @@ export default function MiniApp() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              triggerHaptic();
               handleNavigateToTickets();
             }}
           >
-            <Ticket className={`w-5 h-5 ${currentScreen === 'tickets' ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-xs ${currentScreen === 'tickets' ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+            <Ticket className={`w-5 h-5 ${currentScreen === 'tickets' ? 'text-white' : 'text-muted-foreground'}`} />
+            <span className={`text-xs ${currentScreen === 'tickets' ? 'text-white font-semibold' : 'text-muted-foreground'}`}>
               Tickets
             </span>
           </Button>
