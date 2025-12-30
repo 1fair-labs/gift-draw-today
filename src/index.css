@@ -90,7 +90,7 @@
   #root {
     height: 100dvh; /* Используем dvh, а не vh! */
     width: 100%;
-    overflow: auto; /* Пусть скроллится только контент внутри */
+    overflow: hidden; /* Убираем скролл на корневом элементе */
     display: flex;
     align-items: flex-start;
     justify-content: center;
