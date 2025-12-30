@@ -1,4 +1,5 @@
 // src/pages/miniapp/HomeScreen.tsx
+import { useState, useEffect } from 'react';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,19 +17,47 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps) {
-  const formatTimeRemaining = (endAt: string) => {
-    const end = new Date(endAt).getTime();
-    const now = Date.now();
-    const diff = end - now;
+  const [timeRemaining, setTimeRemaining] = useState('00:00:00');
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+      
+      // Получаем следующую полуночь UTC
+      const nextMidnight = new Date(utcNow);
+      nextMidnight.setUTCHours(24, 0, 0, 0);
+      
+      const diff = nextMidnight.getTime() - utcNow.getTime();
+      
+      if (diff <= 0) {
+        // Если уже прошла полуночь, берем следующую
+        nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1);
+        const newDiff = nextMidnight.getTime() - utcNow.getTime();
+        const hours = Math.floor(newDiff / (1000 * 60 * 60));
+        const minutes = Math.floor((newDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((newDiff % (1000 * 60)) / 1000);
+        setTimeRemaining(
+          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        );
+      } else {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeRemaining(
+          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        );
+      }
+    };
+
+    // Обновляем сразу
+    updateTimer();
     
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
+    // Обновляем каждую секунду
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="h-full w-full overflow-y-auto">
@@ -68,7 +97,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="text-center mb-4">
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
               <p className="text-2xl font-display font-bold text-neon-pink">
-                {formatTimeRemaining(currentDraw.end_at)}
+                {timeRemaining}
               </p>
             </div>
 
