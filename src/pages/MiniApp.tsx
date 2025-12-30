@@ -1,6 +1,6 @@
 // src/pages/MiniApp.tsx - New Mini App architecture
 import { useState, useEffect, useCallback } from 'react';
-import { Info, Sparkles, Ticket } from 'lucide-react';
+import { Info, Sparkles, Ticket, X } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { supabase, type User, type Ticket as TicketType } from '@/lib/supabase';
@@ -547,35 +547,50 @@ export default function MiniApp() {
         </header>
       )}
 
-      {/* Avatar - только на мобильных, ниже safe area с нормальным отступом */}
-      {isMobile && telegramUser && (
-        <div 
-          className="fixed left-4 z-50 pointer-events-auto rounded-b-2xl backdrop-blur-xl bg-background/50 border-b border-border/50 px-4 py-3"
-          style={{ top: `${Math.max(safeAreaTop, 60)}px` }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            triggerHaptic();
-            handleNavigateToProfile();
+      {/* Header - только на мобильных, с CryptoLottery.today и аватаром */}
+      {isMobile && (
+        <header 
+          className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50 border-b border-white/20 rounded-b-2xl"
+          style={{ 
+            paddingTop: `${Math.max(safeAreaTop, 0)}px`,
+            marginTop: `${Math.max(safeAreaTop, 0)}px`
           }}
         >
-          {telegramUser.photo_url && (
-            <Avatar className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
-              <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-              <AvatarFallback className="text-sm">
-                {telegramUser.first_name?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          )}
-        </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              <X className="w-5 h-5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">CryptoLottery.today</span>
+            </div>
+            {telegramUser && (
+              <div 
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  triggerHaptic();
+                  handleNavigateToProfile();
+                }}
+              >
+                {telegramUser.photo_url && (
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                    <AvatarFallback className="text-sm">
+                      {telegramUser.first_name?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            )}
+          </div>
+        </header>
       )}
 
       {/* Screens Container */}
       <div 
         className="relative w-full overflow-hidden"
         style={isMobile ? {
-          height: `calc(100vh - ${80 + Math.max(safeAreaTop, 20) + 56}px)`,
-          marginTop: `${Math.max(safeAreaTop, 20) + 56}px`,
+          height: `calc(100vh - ${80 + 60 + Math.max(safeAreaTop, 0)}px)`,
+          marginTop: `${60 + Math.max(safeAreaTop, 0)}px`,
         } : {
           height: `calc(100vh - 80px)`, // Полная высота минус footer
           marginTop: '0',
@@ -628,7 +643,7 @@ export default function MiniApp() {
       </div>
 
       {/* Bottom Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-border/50 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '8px' }}>
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '12px' }}>
         <div className="flex items-center justify-around px-4 py-4 h-20">
           {/* About Button (Left) */}
           <Button
