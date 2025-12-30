@@ -546,14 +546,34 @@ export default function MiniApp() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Avatar - только на мобильных, ниже safe area */}
+      {/* Header - только на десктопе */}
+      {!isMobile && (
+        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 z-50 sticky top-0">
+          <div className="px-4 py-3 min-h-[60px] flex justify-start items-center gap-2">
+            {telegramUser && (
+              <div className="flex items-center gap-2">
+                {telegramUser.photo_url && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                    <AvatarFallback className="text-xs">
+                      {telegramUser.first_name?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            )}
+          </div>
+        </header>
+      )}
+
+      {/* Avatar - только на мобильных, ниже safe area с нормальным отступом */}
       {isMobile && telegramUser && (
         <div 
-          className="fixed left-4 z-50"
-          style={{ top: `${safeAreaTop + 8}px` }}
+          className="fixed left-4 z-50 pointer-events-auto"
+          style={{ top: `${Math.max(safeAreaTop, 20) + 16}px` }}
         >
           {telegramUser.photo_url && (
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
               <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
               <AvatarFallback className="text-sm">
                 {telegramUser.first_name?.[0] || 'U'}
@@ -567,10 +587,10 @@ export default function MiniApp() {
       <div 
         className="relative w-full overflow-hidden"
         style={isMobile ? {
-          height: `calc(100vh - ${80 + safeAreaTop}px)`,
-          marginTop: `${safeAreaTop + 56}px`,
+          height: `calc(100vh - ${80 + Math.max(safeAreaTop, 20) + 56}px)`,
+          marginTop: `${Math.max(safeAreaTop, 20) + 56}px`,
         } : {
-          height: `calc(100% - 80px)`,
+          height: `calc(100% - 60px - 80px)`,
           marginTop: '0',
         }}
       >

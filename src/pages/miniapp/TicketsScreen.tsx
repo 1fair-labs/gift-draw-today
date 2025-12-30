@@ -1,6 +1,6 @@
 // src/pages/miniapp/TicketsScreen.tsx
 import { useState } from 'react';
-import { Ticket, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Ticket, ChevronRight, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -171,6 +171,28 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
         >
           Buy More Tickets
         </Button>
+
+        {/* How It Works */}
+        <Card className="glass-card p-6 mt-6">
+          <h3 className="text-lg font-display font-bold mb-6 text-center gradient-text">How It Works</h3>
+          <div className="space-y-4">
+            {[
+              { step: '01', title: 'Buy NFT Ticket', desc: 'Mint unique NFT tickets that give you entry to the lottery draws' },
+              { step: '02', title: 'Enter the Draw', desc: 'Choose which draw to enter with your available tickets' },
+              { step: '03', title: 'Win Prizes', desc: 'Top 25% of participants share the prize pool, poker-style!' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-4 group">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-display font-bold text-background group-hover:scale-110 transition-transform flex-shrink-0">
+                  {item.step}
+                </div>
+                <div>
+                  <h4 className="font-display font-bold mb-1">{item.title}</h4>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </div>
   );
