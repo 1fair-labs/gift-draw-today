@@ -521,7 +521,7 @@ export default function MiniApp() {
     >
       {/* Header - только на десктопе */}
       {!isMobile && (
-        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 z-50 sticky top-0 rounded-b-2xl" style={{ marginTop: '8px' }}>
+        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 z-50 sticky top-0 rounded-b-2xl" style={{ marginTop: '60px' }}>
           <div className="px-4 py-4 min-h-[60px] flex justify-start items-center gap-2">
             {telegramUser && (
               <div 
