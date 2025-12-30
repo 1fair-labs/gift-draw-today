@@ -552,11 +552,10 @@ export default function MiniApp() {
         <header 
           className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50 border-b border-white/20 rounded-b-2xl"
           style={{ 
-            paddingTop: `${Math.max(safeAreaTop, 0)}px`,
-            marginTop: `${Math.max(safeAreaTop, 0)}px`
+            paddingTop: `${Math.max(safeAreaTop, 0)}px`
           }}
         >
-          <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center justify-between px-4 py-3 min-h-[60px]">
             <div className="flex items-center gap-2">
               <X className="w-5 h-5 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">CryptoLottery.today</span>
@@ -589,8 +588,8 @@ export default function MiniApp() {
       <div 
         className="relative w-full overflow-hidden"
         style={isMobile ? {
-          height: `calc(100vh - ${80 + 60 + Math.max(safeAreaTop, 0)}px)`,
-          marginTop: `${60 + Math.max(safeAreaTop, 0)}px`,
+          height: `calc(100vh - ${80 + 60 + Math.max(safeAreaTop, 0) + 12}px)`,
+          marginTop: `${60 + Math.max(safeAreaTop, 0) + 12}px`,
         } : {
           height: `calc(100vh - 80px)`, // Полная высота минус footer
           marginTop: '0',
