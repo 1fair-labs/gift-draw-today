@@ -555,11 +555,7 @@ export default function MiniApp() {
             paddingTop: `${Math.max(safeAreaTop, 0)}px`
           }}
         >
-          <div className="flex items-end justify-between px-4 py-3 min-h-[240px]">
-            <div className="flex items-center gap-2">
-              <X className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">CryptoLottery.today</span>
-            </div>
+          <div className="flex items-end px-4 py-3 min-h-[160px]">
             {telegramUser && (
               <div 
                 className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -588,8 +584,8 @@ export default function MiniApp() {
       <div 
         className="relative w-full overflow-hidden"
         style={isMobile ? {
-          height: `calc(100vh - ${80 + 240 + Math.max(safeAreaTop, 0) + 12}px)`,
-          marginTop: `${240 + Math.max(safeAreaTop, 0) + 12}px`,
+          height: `calc(100vh - ${80 + 160 + Math.max(safeAreaTop, 0) + 12}px)`,
+          marginTop: `${160 + Math.max(safeAreaTop, 0) + 12}px`,
         } : {
           height: `calc(100vh - 80px)`, // Полная высота минус footer
           marginTop: '0',
