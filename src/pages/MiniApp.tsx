@@ -658,7 +658,7 @@ export default function MiniApp() {
             ? `${Math.max(viewport.height - 80 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
             : undefined,
         } : {
-          height: `calc(100vh - 80px)`, // Полная высота минус footer
+          height: '100vh', // Полная высота экрана
           marginTop: '0',
         }}
       >
