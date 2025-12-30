@@ -73,12 +73,21 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             </div>
 
             {/* Prize distribution hint */}
-            <div className="pt-4 border-t border-border/50">
-              <p className="text-xs text-muted-foreground text-center">
+            <div className="pt-4 border-t border-border/50 mb-4">
+              <p className="text-xs text-muted-foreground text-center mb-4">
                 <Sparkles className="w-3 h-3 inline-block mr-1 text-neon-gold" />
                 Poker-style payouts: Top 25% share the prize pool. First place takes the biggest share!
               </p>
             </div>
+
+            {/* Enter Draw Button */}
+            <Button
+              onClick={onEnterDraw}
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-primary-foreground font-display font-bold"
+            >
+              Enter Draw
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
         </Card>
 
