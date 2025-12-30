@@ -37,6 +37,8 @@ export default function MiniApp() {
   });
   const [loading, setLoading] = useState(false);
   const [viewport, setViewport] = useState<{ height: number; width: number } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [safeAreaTop, setSafeAreaTop] = useState(0);
   
   // Swipe handling
   const touchStartX = useRef<number>(0);
@@ -361,40 +363,70 @@ export default function MiniApp() {
     try {
       WebApp.ready();
 
-      const expandToFullscreen = () => {
-        if (WebApp.expand) {
-          try {
-            WebApp.expand();
-          } catch (e) {
-            // Ignore errors
-          }
-        }
-      };
+      // Определяем платформу
+      const platform = WebApp.platform || '';
+      const isMobilePlatform = platform === 'ios' || platform === 'android';
+      setIsMobile(isMobilePlatform);
 
-      expandToFullscreen();
-      setTimeout(expandToFullscreen, 0);
-      setTimeout(expandToFullscreen, 10);
-      setTimeout(expandToFullscreen, 20);
-      setTimeout(expandToFullscreen, 50);
-      setTimeout(expandToFullscreen, 100);
-      setTimeout(expandToFullscreen, 150);
-      setTimeout(expandToFullscreen, 200);
-      setTimeout(expandToFullscreen, 300);
-      setTimeout(expandToFullscreen, 500);
-      setTimeout(expandToFullscreen, 800);
-      setTimeout(expandToFullscreen, 1000);
+      // Получаем safe area insets для мобильных
+      if (isMobilePlatform && WebApp.safeAreaInsets) {
+        setSafeAreaTop(WebApp.safeAreaInsets.top || 0);
+      }
+
+      // Разворачиваем только на мобильных устройствах
+      if (isMobilePlatform) {
+        const expandToFullscreen = () => {
+          if (WebApp.expand) {
+            try {
+              WebApp.expand();
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+        };
+
+        expandToFullscreen();
+        setTimeout(expandToFullscreen, 0);
+        setTimeout(expandToFullscreen, 10);
+        setTimeout(expandToFullscreen, 20);
+        setTimeout(expandToFullscreen, 50);
+        setTimeout(expandToFullscreen, 100);
+        setTimeout(expandToFullscreen, 150);
+        setTimeout(expandToFullscreen, 200);
+        setTimeout(expandToFullscreen, 300);
+        setTimeout(expandToFullscreen, 500);
+        setTimeout(expandToFullscreen, 800);
+        setTimeout(expandToFullscreen, 1000);
+      }
 
       if (WebApp.onEvent) {
         WebApp.onEvent('viewportChanged', () => {
-          setTimeout(expandToFullscreen, 100);
+          if (isMobilePlatform) {
+            setTimeout(() => {
+              if (WebApp.expand) {
+                try {
+                  WebApp.expand();
+                } catch (e) {
+                  // Ignore errors
+                }
+              }
+            }, 100);
+          }
           if (WebApp.viewportHeight) {
             setViewport({ height: WebApp.viewportHeight, width: WebApp.viewportWidth || window.innerWidth });
+          }
+          if (isMobilePlatform && WebApp.safeAreaInsets) {
+            setSafeAreaTop(WebApp.safeAreaInsets.top || 0);
           }
         });
       }
 
       if (WebApp.viewportHeight) {
         setViewport({ height: WebApp.viewportHeight, width: WebApp.viewportWidth || window.innerWidth });
+      }
+      
+      if (isMobilePlatform && WebApp.safeAreaInsets) {
+        setSafeAreaTop(WebApp.safeAreaInsets.top || 0);
       }
 
       if (WebApp.initDataUnsafe?.user && WebApp.requestWriteAccess) {
@@ -507,42 +539,39 @@ export default function MiniApp() {
 
   return (
     <div 
-      className="h-screen w-full overflow-hidden bg-background"
-      style={{ height: `${screenHeight}px` }}
+      className={`w-full overflow-hidden bg-background ${isMobile ? 'h-screen' : ''}`}
+      style={isMobile ? { height: `${screenHeight}px` } : { maxWidth: '400px', margin: '0 auto', height: '600px' }}
       ref={containerRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 z-50 fixed top-0 left-0 right-0">
-        <div className="px-4 py-3 min-h-[60px] flex justify-start items-center gap-2">
-          {telegramUser && (
-            <div className="flex items-center gap-2">
-              {telegramUser.photo_url && (
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-                  <AvatarFallback className="text-xs">
-                    {telegramUser.first_name?.[0] || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div className="text-xs font-semibold text-neon-gold">
-                {isBalanceVisible 
-                  ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
-                  : '•••••• CLT'}
-              </div>
-            </div>
+      {/* Avatar - только на мобильных, ниже safe area */}
+      {isMobile && telegramUser && (
+        <div 
+          className="fixed left-4 z-50"
+          style={{ top: `${safeAreaTop + 8}px` }}
+        >
+          {telegramUser.photo_url && (
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+              <AvatarFallback className="text-sm">
+                {telegramUser.first_name?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
           )}
         </div>
-      </header>
+      )}
 
       {/* Screens Container */}
       <div 
         className="relative w-full overflow-hidden"
-        style={{
-          height: `calc(100vh - 60px - 80px)`,
-          marginTop: '60px',
+        style={isMobile ? {
+          height: `calc(100vh - ${80 + safeAreaTop}px)`,
+          marginTop: `${safeAreaTop + 56}px`,
+        } : {
+          height: `calc(100% - 80px)`,
+          marginTop: '0',
         }}
       >
         {currentScreen === 'home' && (
