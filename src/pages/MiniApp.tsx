@@ -590,7 +590,7 @@ export default function MiniApp() {
           height: `calc(100vh - ${80 + Math.max(safeAreaTop, 20) + 56}px)`,
           marginTop: `${Math.max(safeAreaTop, 20) + 56}px`,
         } : {
-          height: `calc(100% - 60px - 80px)`,
+          height: `460px`, // 600px - 60px (header) - 80px (footer)
           marginTop: '0',
         }}
       >
