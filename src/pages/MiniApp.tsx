@@ -634,13 +634,13 @@ export default function MiniApp() {
       </div>
 
       {/* Bottom Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-border/50 backdrop-blur-xl bg-background/50 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-border/50 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '8px' }}>
         <div className="flex items-center justify-around px-4 py-3 h-20">
           {/* About Button (Left) */}
           <Button
             variant="ghost"
             size="lg"
-            className="flex flex-col items-center gap-1 h-auto py-2"
+            className="flex flex-col items-center gap-1 h-auto py-2 hover:bg-transparent hover:text-inherit active:bg-transparent"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -658,7 +658,7 @@ export default function MiniApp() {
           <Button
             variant="ghost"
             size="lg"
-            className="flex flex-col items-center gap-1 h-auto py-2"
+            className="flex flex-col items-center gap-1 h-auto py-2 hover:bg-transparent hover:text-inherit active:bg-transparent"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -676,7 +676,7 @@ export default function MiniApp() {
           <Button
             variant="ghost"
             size="lg"
-            className="flex flex-col items-center gap-1 h-auto py-2"
+            className="flex flex-col items-center gap-1 h-auto py-2 hover:bg-transparent hover:text-inherit active:bg-transparent"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
