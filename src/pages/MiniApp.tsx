@@ -550,27 +550,45 @@ export default function MiniApp() {
     >
       {/* Header - только на десктопе */}
       {!isMobile && (
-        <header className="border-b border-border/50 backdrop-blur-xl bg-background/50 z-50 sticky top-0 rounded-b-2xl" style={{ marginTop: '60px' }}>
-          <div className="px-4 py-4 min-h-[60px] flex justify-start items-center gap-2">
+        <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0">
+          <div className="px-4 py-4 min-h-[60px] flex justify-start items-center gap-3">
             {telegramUser && (
-              <div 
-                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  triggerHaptic();
-                  handleNavigateToProfile();
-                }}
-              >
-                {telegramUser.photo_url && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-                    <AvatarFallback className="text-xs">
-                      {telegramUser.first_name?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
+              <>
+                <div
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    triggerHaptic();
+                    handleNavigateToProfile();
+                  }}
+                >
+                  {telegramUser.photo_url && (
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                      <AvatarFallback className="text-sm">
+                        {telegramUser.first_name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                <div 
+                  className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    triggerHaptic();
+                    handleNavigateToProfile();
+                  }}
+                >
+                  <h2 className="text-sm font-display font-bold">
+                    {telegramUser?.first_name} {telegramUser?.last_name || ''}
+                  </h2>
+                  {telegramUser?.username && (
+                    <p className="text-xs text-muted-foreground">@{telegramUser.username}</p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </header>
