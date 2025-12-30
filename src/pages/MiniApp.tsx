@@ -551,7 +551,7 @@ export default function MiniApp() {
       {isMobile && telegramUser && (
         <div 
           className="fixed left-4 z-50 pointer-events-auto rounded-b-2xl backdrop-blur-xl bg-background/50 border-b border-border/50 px-4 py-3"
-          style={{ top: `${Math.max(safeAreaTop, 8)}px` }}
+          style={{ top: `${Math.max(safeAreaTop, 60)}px` }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
