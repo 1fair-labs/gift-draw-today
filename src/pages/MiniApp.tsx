@@ -625,7 +625,7 @@ export default function MiniApp() {
             <div 
               className="absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out"
               style={{
-                transform: isTransitioning ? 'translateX(100%)' : 'translateX(0)',
+                transform: isTransitioning ? 'translateX(0)' : 'translateX(100%)',
               }}
             >
               <TicketsScreen
