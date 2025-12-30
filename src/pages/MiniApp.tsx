@@ -484,10 +484,13 @@ export default function MiniApp() {
 
   // Handle navigation from buttons with animation (Enter Draw button)
   const handleNavigateToTickets = () => {
+    // Сначала устанавливаем экран tickets с начальной позицией справа
     setCurrentScreen('tickets');
-    // Небольшая задержка для применения начального состояния
+    setIsTransitioning(false);
+    // Небольшая задержка для применения начального состояния (справа)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        // Запускаем анимацию - tickets сдвигается в центр, home уходит влево
         setIsTransitioning(true);
         setTimeout(() => {
           setIsTransitioning(false);
