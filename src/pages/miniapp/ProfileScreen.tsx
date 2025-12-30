@@ -219,13 +219,6 @@ export default function ProfileScreen({
               </div>
             )}
 
-            <Button
-              onClick={onBuyTicket}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold glow-gold"
-            >
-              Buy Ticket
-            </Button>
           </div>
         </Card>
       </div>
