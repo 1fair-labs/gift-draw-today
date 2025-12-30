@@ -24,6 +24,7 @@ type Screen = 'home' | 'tickets' | 'profile' | 'about';
 
 export default function MiniApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [telegramId, setTelegramId] = useState<number | null>(null);
   const [telegramUser, setTelegramUser] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -483,7 +484,13 @@ export default function MiniApp() {
 
   // Handle navigation from buttons
   const handleNavigateToTickets = () => {
-    setCurrentScreen('tickets');
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentScreen('tickets');
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
   };
 
   const handleNavigateToProfile = () => {
@@ -591,50 +598,72 @@ export default function MiniApp() {
           marginTop: '0',
         }}
       >
-        {currentScreen === 'home' && (
-          <div className="w-full h-full">
-            <HomeScreen 
-              currentDraw={mockDraw}
-              onEnterDraw={handleNavigateToTickets}
-            />
-          </div>
-        )}
-        {currentScreen === 'tickets' && (
-          <div className="w-full h-full">
-            <TicketsScreen
-              tickets={tickets}
-              onEnterDraw={handleEnterDraw}
-              onBuyTicket={handleBuyTicket}
-              loading={loading}
-            />
-          </div>
-        )}
-        {currentScreen === 'profile' && (
-          <div className="w-full h-full">
-            <ProfileScreen
-              telegramUser={telegramUser}
-              user={user}
-              walletAddress={walletAddress}
-              cltBalance={cltBalance}
-              usdtBalance={usdtBalance}
-              tonBalance={tonBalance}
-              isBalanceVisible={isBalanceVisible}
-              onToggleBalanceVisibility={() => {
-                const newValue = !isBalanceVisible;
-                setIsBalanceVisible(newValue);
-                localStorage.setItem('balance_visible', String(newValue));
+        <div 
+          className="relative w-full h-full transition-transform duration-300 ease-in-out"
+          style={{
+            transform: isTransitioning && currentScreen === 'tickets' 
+              ? 'translateX(0)' 
+              : currentScreen === 'home' 
+                ? 'translateX(0)' 
+                : 'translateX(0)',
+          }}
+        >
+          {currentScreen === 'home' && (
+            <div 
+              className={`absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out ${
+                isTransitioning ? '-translate-x-full' : 'translate-x-0'
+              }`}
+            >
+              <HomeScreen 
+                currentDraw={mockDraw}
+                onEnterDraw={handleNavigateToTickets}
+              />
+            </div>
+          )}
+          {currentScreen === 'tickets' && (
+            <div 
+              className={`absolute inset-0 w-full h-full transition-transform duration-300 ease-in-out ${
+                isTransitioning ? 'translate-x-0' : 'translate-x-full'
+              }`}
+              style={{
+                animation: !isTransitioning ? 'slideInFromRight 0.3s ease-in-out forwards' : undefined,
               }}
-              onConnectWallet={handleConnectWallet}
-              onBuyTicket={handleBuyTicket}
-              loading={loading}
-            />
-          </div>
-        )}
-        {currentScreen === 'about' && (
-          <div className="w-full h-full">
-            <AboutScreen />
-          </div>
-        )}
+            >
+              <TicketsScreen
+                tickets={tickets}
+                onEnterDraw={handleEnterDraw}
+                onBuyTicket={handleBuyTicket}
+                loading={loading}
+              />
+            </div>
+          )}
+          {currentScreen === 'profile' && (
+            <div className="absolute inset-0 w-full h-full">
+              <ProfileScreen
+                telegramUser={telegramUser}
+                user={user}
+                walletAddress={walletAddress}
+                cltBalance={cltBalance}
+                usdtBalance={usdtBalance}
+                tonBalance={tonBalance}
+                isBalanceVisible={isBalanceVisible}
+                onToggleBalanceVisibility={() => {
+                  const newValue = !isBalanceVisible;
+                  setIsBalanceVisible(newValue);
+                  localStorage.setItem('balance_visible', String(newValue));
+                }}
+                onConnectWallet={handleConnectWallet}
+                onBuyTicket={handleBuyTicket}
+                loading={loading}
+              />
+            </div>
+          )}
+          {currentScreen === 'about' && (
+            <div className="absolute inset-0 w-full h-full">
+              <AboutScreen />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom Navigation */}
