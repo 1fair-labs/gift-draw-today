@@ -242,65 +242,25 @@
     }
   }
 
-  .jackpot-shine {
-    position: relative;
-    overflow: hidden;
+  .enter-draw-text {
+    animation: doubleBlink 3s infinite;
   }
 
-  .jackpot-shine::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.2) 0%,
-      rgba(255, 255, 255, 0.1) 30%,
-      rgba(255, 255, 255, 0.05) 60%,
-      transparent 100%
-    );
-    transform: translate(-50%, -50%);
-    animation: circleExpand 10s infinite;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  @keyframes circleExpand {
-    0% {
-      width: 0;
-      height: 0;
-      opacity: 0;
+  @keyframes doubleBlink {
+    0%, 100% {
+      opacity: 1;
+    }
+    5% {
+      opacity: 0.3;
     }
     10% {
       opacity: 1;
     }
+    15% {
+      opacity: 0.3;
+    }
     20% {
-      width: 200%;
-      height: 200%;
-      opacity: 0.8;
-    }
-    30% {
-      width: 300%;
-      height: 300%;
-      opacity: 0.4;
-    }
-    40% {
-      width: 400%;
-      height: 400%;
-      opacity: 0.2;
-    }
-    50% {
-      width: 500%;
-      height: 500%;
-      opacity: 0;
-    }
-    100% {
-      width: 500%;
-      height: 500%;
-      opacity: 0;
+      opacity: 1;
     }
   }
 }

@@ -102,7 +102,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
     <div className="h-full w-full overflow-y-auto">
       <div className="p-4 pt-2 space-y-6">
         {/* Current Draw Card */}
-        <Card className="glass-card overflow-hidden relative jackpot-shine">
+        <Card className="glass-card overflow-hidden relative">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <Badge variant="outline" className="bg-neon-green/20 text-neon-green border-neon-green/30 animate-pulse">
