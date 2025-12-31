@@ -27,16 +27,20 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
   const jackpotUsd = (jackpot * cltPrice).toFixed(2);
   const prizePoolUsd = (prizePool * cltPrice).toFixed(2);
   
-  // Получаем предыдущие значения
+  // Получаем предыдущие значения (до обновления)
   const prevJackpot = prevDrawRef.current?.jackpot ?? null;
   const prevPrizePool = prevDrawRef.current?.prize_pool ?? null;
   const prevParticipants = prevDrawRef.current?.participants ?? null;
   const prevWinners = prevDrawRef.current?.winners ?? null;
   
-  // Обновляем предыдущие значения
+  // Обновляем предыдущие значения после рендера
   useEffect(() => {
     if (currentDraw) {
-      prevDrawRef.current = currentDraw;
+      // Используем setTimeout, чтобы обновить после того, как компонент отрендерился с новыми значениями
+      const timer = setTimeout(() => {
+        prevDrawRef.current = { ...currentDraw };
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [currentDraw]);
 
