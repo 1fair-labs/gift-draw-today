@@ -471,13 +471,23 @@ export default function MiniApp() {
 
   // Initialize Telegram WebApp
   useEffect(() => {
+    // Fallback: detect mobile by user agent if not in Telegram
+    const detectMobileFallback = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    };
+
     if (!isInTelegramWebApp()) {
-      console.warn('MiniApp rendered outside Telegram — this should not happen.');
+      console.warn('MiniApp rendered outside Telegram — using fallback detection.');
+      setIsMobile(detectMobileFallback());
       return;
     }
 
     const WebApp = (window as any).Telegram?.WebApp;
-    if (!WebApp) return;
+    if (!WebApp) {
+      setIsMobile(detectMobileFallback());
+      return;
+    }
 
     try {
       WebApp.ready();
