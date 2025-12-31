@@ -1,6 +1,6 @@
 // src/pages/miniapp/ProfileScreen.tsx
 import { useState, useEffect } from 'react';
-import { Copy, Eye, EyeOff, Wallet, Gift, ExternalLink, Loader2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Wallet, Gift, ExternalLink, Loader2, Send } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -197,9 +197,9 @@ export default function ProfileScreen({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(refLink, 'Referral link')}
+                    onClick={shareViaTelegram}
                   >
-                    <Copy className="w-4 h-4" />
+                    <Send className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
