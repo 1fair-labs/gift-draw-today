@@ -353,12 +353,30 @@ export default function MiniApp() {
       setLoading(true);
       await initTonConnect();
       
-      // Request connection
+      // Request connection - try to find Telegram Wallet or use first available wallet
       const walletsList = await tonConnect.getWallets();
-      const wallet = walletsList.find(w => w.name.toLowerCase().includes('telegram'));
+      
+      if (!walletsList || walletsList.length === 0) {
+        alert('No wallets available. Please make sure Telegram Wallet is enabled.');
+        setLoading(false);
+        return;
+      }
+      
+      // Try to find Telegram Wallet by various criteria
+      let wallet = walletsList.find(w => 
+        w.name.toLowerCase().includes('telegram') ||
+        w.name.toLowerCase().includes('wallet') ||
+        w.appName?.toLowerCase().includes('telegram') ||
+        w.appName?.toLowerCase().includes('wallet')
+      );
+      
+      // If not found, use the first available wallet (usually Telegram Wallet in Telegram WebApp)
+      if (!wallet && walletsList.length > 0) {
+        wallet = walletsList[0];
+      }
       
       if (!wallet) {
-        alert('Telegram Wallet not found. Please install Telegram Wallet.');
+        alert('No wallet found. Please try again.');
         setLoading(false);
         return;
       }
@@ -377,7 +395,12 @@ export default function MiniApp() {
       }
     } catch (error: any) {
       console.error('Error connecting wallet:', error);
-      alert('Failed to connect wallet. Please try again.');
+      // More user-friendly error message
+      if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
+        alert('Wallet connection was cancelled.');
+      } else {
+        alert('Failed to connect wallet. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
