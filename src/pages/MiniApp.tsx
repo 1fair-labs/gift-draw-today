@@ -12,13 +12,32 @@ import TicketsScreen from './miniapp/TicketsScreen';
 import ProfileScreen from './miniapp/ProfileScreen';
 import AboutScreen from './miniapp/AboutScreen';
 
-// Mock data for demonstration (fallback)
-const mockDraw = {
-  id: 42,
-  prize_pool: 125000,
-  jackpot: 1230000,
-  participants: 847,
-  end_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+// Load active draw from Supabase
+const loadActiveDraw = async (): Promise<Draw | null> => {
+  if (!supabase) {
+    console.error('Supabase is not configured.');
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('draws')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading active draw:', error);
+      return null;
+    }
+
+    return data as Draw | null;
+  } catch (error: any) {
+    console.error('Error in loadActiveDraw:', error);
+    return null;
+  }
 };
 
 type Screen = 'home' | 'tickets' | 'profile' | 'about';
@@ -139,39 +158,6 @@ export default function MiniApp() {
       console.error('Error loading user data:', error);
     }
   };
-
-  // Load active draw
-  const loadActiveDraw = useCallback(async () => {
-    if (!supabase) {
-      setCurrentDraw(null);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('draws')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error loading active draw:', error);
-        setCurrentDraw(null);
-        return;
-      }
-
-      if (data) {
-        setCurrentDraw(data as Draw);
-      } else {
-        setCurrentDraw(null);
-      }
-    } catch (error) {
-      console.error('Error in loadActiveDraw:', error);
-      setCurrentDraw(null);
-    }
-  }, []);
 
   // Load wallet balances
   const loadWalletBalances = async () => {
@@ -603,7 +589,7 @@ export default function MiniApp() {
     connectUser();
 
     // Load active draw
-    loadActiveDraw();
+    loadActiveDrawData();
 
     // Initialize TON Connect
     initTonConnect().then(() => {
@@ -637,16 +623,6 @@ export default function MiniApp() {
 
     return () => clearInterval(interval);
   }, [walletAddress, telegramId]);
-
-  // Update active draw every 10 seconds
-  useEffect(() => {
-    loadActiveDraw(); // Load immediately
-    const interval = setInterval(() => {
-      loadActiveDraw();
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [loadActiveDraw]);
 
   // Handle navigation from buttons with animation (Enter Draw button)
   const handleNavigateToTickets = () => {

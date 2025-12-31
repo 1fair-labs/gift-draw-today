@@ -37,13 +37,12 @@ export interface Ticket {
 }
 
 export interface Draw {
-  id: number;
   draw_id: string;
-  jackpot: number;
-  prize_pool: number;
-  participants: number;
-  winners: number;
-  status: 'active' | 'completed' | 'pending';
+  jackpot: number | null;
+  prize_pool: number | null;
+  participants: number | null;
+  winners: number | null;
+  status: string;
   created_at: string;
   updated_at: string;
 }
