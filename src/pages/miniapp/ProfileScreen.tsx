@@ -44,7 +44,7 @@ export default function ProfileScreen({
     setHasRefTicket(false);
   }, []);
 
-  const cltPrice = 0.041; // CLT/USDT
+  const cltPrice = 0.0002; // CLT/USDT
   const usdBalance = (cltBalance * cltPrice).toFixed(2);
 
   const copyToClipboard = (text: string, label: string) => {

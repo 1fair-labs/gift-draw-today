@@ -1,10 +1,9 @@
 // src/pages/miniapp/HomeScreen.tsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Wand2, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AnimatedNumber } from '@/components/ui/animated-number';
 import { type Draw } from '@/lib/supabase';
 
 interface HomeScreenProps {
@@ -15,10 +14,7 @@ interface HomeScreenProps {
 export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps) {
   const [timeRemaining, setTimeRemaining] = useState({ hours: '00', minutes: '00', seconds: '00' });
   
-  // Сохраняем предыдущие значения для анимации
-  const prevDrawRef = useRef<Draw | null>(null);
-  
-  const cltPrice = 0.041; // CLT/USDT
+  const cltPrice = 0.0002; // CLT/USDT
   const hasDraw = currentDraw !== null;
   const jackpot = currentDraw?.jackpot ?? 0;
   const prizePool = currentDraw?.prize_pool ?? 0;
@@ -26,23 +22,6 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
   const winners = currentDraw?.winners ?? 0;
   const jackpotUsd = (jackpot * cltPrice).toFixed(2);
   const prizePoolUsd = (prizePool * cltPrice).toFixed(2);
-  
-  // Получаем предыдущие значения (до обновления)
-  const prevJackpot = prevDrawRef.current?.jackpot ?? null;
-  const prevPrizePool = prevDrawRef.current?.prize_pool ?? null;
-  const prevParticipants = prevDrawRef.current?.participants ?? null;
-  const prevWinners = prevDrawRef.current?.winners ?? null;
-  
-  // Обновляем предыдущие значения после рендера
-  useEffect(() => {
-    if (currentDraw) {
-      // Используем setTimeout, чтобы обновить после того, как компонент отрендерился с новыми значениями
-      const timer = setTimeout(() => {
-        prevDrawRef.current = { ...currentDraw };
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [currentDraw]);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -94,12 +73,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="mb-6">
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Jackpot Prize</p>
               <p className="text-2xl md:text-3xl font-display font-black gradient-jackpot animate-pulse-glow">
-                <AnimatedNumber 
-                  value={jackpot} 
-                  previousValue={prevJackpot} 
-                  decimals={2}
-                  className=""
-                /> CLT
+                {jackpot.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 ≈ ${jackpotUsd} USDT
@@ -109,14 +83,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="grid grid-cols-1 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Prize Pool</p>
-                <p className="text-lg font-display font-bold text-neon-gold">
-                  <AnimatedNumber 
-                    value={prizePool} 
-                    previousValue={prevPrizePool} 
-                    decimals={2}
-                    className=""
-                  /> CLT
-                </p>
+                <p className="text-lg font-display font-bold text-neon-gold">{prizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   ≈ ${prizePoolUsd} USDT
                 </p>
@@ -126,25 +93,11 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Participants</p>
-                <p className="text-lg font-display font-bold text-neon-gold">
-                  <AnimatedNumber 
-                    value={participants} 
-                    previousValue={prevParticipants} 
-                    decimals={0}
-                    className=""
-                  />
-                </p>
+                <p className="text-lg font-display font-bold text-neon-gold">{participants}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Winners (Top 25%)</p>
-                <p className="text-lg font-display font-bold text-neon-gold">
-                  <AnimatedNumber 
-                    value={winners} 
-                    previousValue={prevWinners} 
-                    decimals={0}
-                    className=""
-                  />
-                </p>
+                <p className="text-lg font-display font-bold text-neon-gold">{winners}</p>
               </div>
             </div>
 
