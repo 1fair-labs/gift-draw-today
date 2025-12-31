@@ -282,11 +282,24 @@ export default function MiniApp() {
           };
 
           try {
+            // Set up status change listener
+            const statusChangeUnsubscribe = tonConnect.onStatusChange((walletInfo) => {
+              console.log('Wallet status changed:', walletInfo);
+              if (walletInfo) {
+                const address = walletInfo.account?.address;
+                if (address) {
+                  console.log('Wallet connected via status change, address:', address);
+                  setWalletAddress(address);
+                  loadWalletBalances();
+                }
+              }
+            });
+            
             await tonConnect.connect(connectionSource);
             console.log('Connection request sent');
             
-            // Wait a bit for connection to establish
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Wait longer for connection to establish (user might need to approve)
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Check connection again
             if (isWalletConnected()) {
@@ -295,14 +308,17 @@ export default function MiniApp() {
                 console.log('Wallet connected, address:', address);
                 setWalletAddress(address);
                 await loadWalletBalances();
+                statusChangeUnsubscribe();
               } else {
+                statusChangeUnsubscribe();
                 setLoading(false);
                 alert('Failed to get wallet address after connection. Please try again.');
                 return;
               }
             } else {
+              statusChangeUnsubscribe();
               setLoading(false);
-              alert('Connection was not established. Please try again.');
+              alert('Connection was not established. Please approve the connection in your wallet.');
               return;
             }
           } catch (connectError: any) {
