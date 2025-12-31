@@ -250,67 +250,57 @@
   .jackpot-shine::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 33.33%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.15) 50%,
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.1) 30%,
+      rgba(255, 255, 255, 0.05) 60%,
       transparent 100%
     );
-    animation: shineSweep 10s infinite;
+    transform: translate(-50%, -50%);
+    animation: circleExpand 10s infinite;
     pointer-events: none;
     z-index: 1;
   }
 
-  .jackpot-shine::after {
-    content: '';
-    position: absolute;
-    top: 33.33%;
-    left: -100%;
-    width: 100%;
-    height: 33.33%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.15) 50%,
-      transparent 100%
-    );
-    animation: shineSweep 10s infinite;
-    animation-delay: 3.33s;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .jackpot-shine-bottom {
-    position: absolute;
-    top: 66.66%;
-    left: -100%;
-    width: 100%;
-    height: 33.33%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.15) 50%,
-      transparent 100%
-    );
-    animation: shineSweep 10s infinite;
-    animation-delay: 6.66s;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  @keyframes shineSweep {
+  @keyframes circleExpand {
     0% {
-      left: -100%;
+      width: 0;
+      height: 0;
+      opacity: 0;
     }
-    5% {
-      left: 100%;
+    10% {
+      opacity: 1;
+    }
+    20% {
+      width: 200%;
+      height: 200%;
+      opacity: 0.8;
+    }
+    30% {
+      width: 300%;
+      height: 300%;
+      opacity: 0.4;
+    }
+    40% {
+      width: 400%;
+      height: 400%;
+      opacity: 0.2;
+    }
+    50% {
+      width: 500%;
+      height: 500%;
+      opacity: 0;
     }
     100% {
-      left: 100%;
+      width: 500%;
+      height: 500%;
+      opacity: 0;
     }
   }
 }
