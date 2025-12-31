@@ -490,6 +490,16 @@ export default function MiniApp() {
       setIsMobile(detectMobileFallback());
       // Still try to load data even if not in Telegram (for development/testing)
       loadActiveDraw();
+      // Initialize TON Connect even outside Telegram
+      initTonConnect().then(() => {
+        if (isWalletConnected()) {
+          const address = getWalletAddress();
+          if (address) {
+            setWalletAddress(address);
+            loadWalletBalances();
+          }
+        }
+      });
       return;
     }
 
