@@ -15,12 +15,7 @@ import AboutScreen from './miniapp/AboutScreen';
 type Screen = 'home' | 'tickets' | 'profile' | 'about';
 
 export default function MiniApp() {
-  let tonConnectUI: any = null;
-  try {
-    [tonConnectUI] = useTonConnectUI();
-  } catch (error) {
-    console.error('Error initializing TonConnectUI:', error);
-  }
+  const [tonConnectUI] = useTonConnectUI();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevScreen, setPrevScreen] = useState<Screen | null>(null);
