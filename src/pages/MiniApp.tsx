@@ -24,6 +24,7 @@ const mockDraw = {
 type Screen = 'home' | 'tickets' | 'profile' | 'about';
 
 export default function MiniApp() {
+  const [tonConnectUI] = useTonConnectUI();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [prevScreen, setPrevScreen] = useState<Screen | null>(null);
