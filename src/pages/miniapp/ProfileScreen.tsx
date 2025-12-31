@@ -107,84 +107,84 @@ export default function ProfileScreen({
               )}
             </Button>
           ) : (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Wallet</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
+            <>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Wallet</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
               </div>
-              <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
-            </div>
+
+              {/* Balances */}
+              <div className="border-t border-border/50 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-display font-bold">Balances</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onToggleBalanceVisibility}
+                    className="h-8 w-8 p-0"
+                  >
+                    {isBalanceVisible ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {/* CLT Balance */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">CLT</span>
+                    </div>
+                    <div className="text-2xl font-display font-bold text-neon-gold">
+                      {isBalanceVisible 
+                        ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
+                        : '•••••• CLT'}
+                    </div>
+                    {isBalanceVisible && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        ≈ ${usdBalance} USDT
+                      </div>
+                    )}
+                  </div>
+
+                  {/* USDT Balance */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">USDT (Jetton)</span>
+                    </div>
+                    <div className="text-xl font-display font-bold">
+                      {isBalanceVisible 
+                        ? `${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`
+                        : '•••••• USDT'}
+                    </div>
+                  </div>
+
+                  {/* TON Balance */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">TON</span>
+                    </div>
+                    <div className="text-xl font-display font-bold">
+                      {isBalanceVisible 
+                        ? `${tonBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} TON`
+                        : '•••••• TON'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </Card>
-
-        {/* Balances */}
-        {walletAddress && (
-          <Card className="glass-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-display font-bold">Balances</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleBalanceVisibility}
-                className="h-8 w-8 p-0"
-              >
-                {isBalanceVisible ? (
-                  <Eye className="w-4 h-4" />
-                ) : (
-                  <EyeOff className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {/* CLT Balance */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">CLT</span>
-                </div>
-                <div className="text-2xl font-display font-bold text-neon-gold">
-                  {isBalanceVisible 
-                    ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
-                    : '•••••• CLT'}
-                </div>
-                {isBalanceVisible && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    ≈ ${usdBalance} USDT
-                  </div>
-                )}
-              </div>
-
-              {/* USDT Balance */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">USDT (Jetton)</span>
-                </div>
-                <div className="text-xl font-display font-bold">
-                  {isBalanceVisible 
-                    ? `${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`
-                    : '•••••• USDT'}
-                </div>
-              </div>
-
-              {/* TON Balance */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">TON</span>
-                </div>
-                <div className="text-xl font-display font-bold">
-                  {isBalanceVisible 
-                    ? `${tonBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} TON`
-                    : '•••••• TON'}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
 
         {/* Referral Program */}
         <Card className="glass-card p-6">
