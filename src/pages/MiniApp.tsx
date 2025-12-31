@@ -263,12 +263,12 @@ export default function MiniApp() {
         attempts++;
         
         // Check if modal was opened
-        if (tonConnectUI.modalState === 'opened') {
+        if (tonConnectUI?.modalState === 'opened') {
           modalWasOpened = true;
         }
         
         // Check if modal was closed without connection
-        if (modalWasOpened && tonConnectUI.modalState === 'closed' && !tonConnectUI.connected) {
+        if (modalWasOpened && tonConnectUI?.modalState === 'closed' && !tonConnectUI?.connected) {
           unsubscribe();
           setLoading(false);
           alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
@@ -276,7 +276,7 @@ export default function MiniApp() {
         }
         
         // Check if connection was established
-        if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+        if (tonConnectUI?.connected && tonConnectUI?.wallet?.account?.address) {
           connectionEstablished = true;
           const address = tonConnectUI.wallet.account.address;
           setWalletAddress(address);
@@ -289,7 +289,7 @@ export default function MiniApp() {
       unsubscribe();
       
       // Check final connection status
-      if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+      if (tonConnectUI?.connected && tonConnectUI?.wallet?.account?.address) {
         const address = tonConnectUI.wallet.account.address;
         setWalletAddress(address);
         await loadWalletBalances();
@@ -380,7 +380,7 @@ export default function MiniApp() {
   // Connect wallet
   const handleConnectWallet = useCallback(async () => {
     // If wallet is already connected, do nothing
-    if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+    if (tonConnectUI?.connected && tonConnectUI?.wallet?.account?.address) {
       const address = tonConnectUI.wallet.account.address;
       setWalletAddress(address);
       await loadWalletBalances();
@@ -425,12 +425,12 @@ export default function MiniApp() {
         attempts++;
         
         // Check if modal was opened
-        if (tonConnectUI.modalState === 'opened') {
+        if (tonConnectUI?.modalState === 'opened') {
           modalWasOpened = true;
         }
         
         // Check if modal was closed without connection
-        if (modalWasOpened && tonConnectUI.modalState === 'closed' && !tonConnectUI.connected) {
+        if (modalWasOpened && tonConnectUI?.modalState === 'closed' && !tonConnectUI?.connected) {
           unsubscribe();
           setLoading(false);
           alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
@@ -438,7 +438,7 @@ export default function MiniApp() {
         }
         
         // Check if connection was established
-        if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+        if (tonConnectUI?.connected && tonConnectUI?.wallet?.account?.address) {
           connectionEstablished = true;
           const address = tonConnectUI.wallet.account.address;
           setWalletAddress(address);
@@ -451,7 +451,7 @@ export default function MiniApp() {
       unsubscribe();
       
       // Check final connection status
-      if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+      if (tonConnectUI?.connected && tonConnectUI?.wallet?.account?.address) {
         const address = tonConnectUI.wallet.account.address;
         setWalletAddress(address);
         await loadWalletBalances();
