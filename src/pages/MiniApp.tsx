@@ -230,55 +230,7 @@ export default function MiniApp() {
             return;
           }
         } else {
-          // If no existing connection, try to connect to Telegram Wallet
-          let walletsList;
-          try {
-            walletsList = await tonConnect.getWallets();
-          } catch (err: any) {
-            setLoading(false);
-            alert(`Ошибка получения списка кошельков: ${err.message || 'Неизвестная ошибка'}. Убедитесь, что вы открыли приложение в Telegram.`);
-            return;
-          }
-          
-          if (!walletsList || walletsList.length === 0) {
-            setLoading(false);
-            alert('Кошельки не найдены. Убедитесь, что Telegram Wallet включен в настройках Telegram.');
-            return;
-          }
-          
-          // Try to find Telegram Wallet (built-in wallet) - look for "Wallet" or "Telegram Wallet"
-          let wallet = walletsList.find(w => 
-            w.name.toLowerCase() === 'wallet' ||
-            w.name.toLowerCase() === 'telegram wallet' ||
-            w.name.toLowerCase().includes('telegram wallet') ||
-            (w.appName && w.appName.toLowerCase().includes('wallet'))
-          );
-          
-          // If not found by exact name, try broader search
-          if (!wallet) {
-            wallet = walletsList.find(w => 
-              w.name.toLowerCase().includes('wallet') ||
-              w.appName?.toLowerCase().includes('wallet')
-            );
-          }
-          
-          // If still not found, use the first available wallet
-          if (!wallet && walletsList.length > 0) {
-            wallet = walletsList[0];
-          }
-          
-          if (!wallet) {
-            setLoading(false);
-            alert('Кошелек не найден в списке доступных. Попробуйте позже.');
-            return;
-          }
-
-          // Prepare connection source
-          const connectionSource = {
-            bridgeUrl: wallet.bridgeUrl,
-            universalLink: wallet.universalLink,
-          };
-
+          // If no existing connection, use standard TON Connect wallet selection
           try {
             // Set up status change listener BEFORE connecting
             let connectionEstablished = false;
@@ -297,10 +249,10 @@ export default function MiniApp() {
               }
             });
             
-            // Initiate connection - this should open Telegram Wallet and show approval request
-            // The connect() method returns a promise that resolves when user approves
+            // Use standard TON Connect connection - this will show wallet selection UI
+            // Calling connect() without parameters shows the standard wallet selection modal
             try {
-              await tonConnect.connect(connectionSource);
+              await tonConnect.connect({});
             } catch (connectInitError: any) {
               statusChangeUnsubscribe();
               // If connection was rejected immediately
@@ -318,7 +270,7 @@ export default function MiniApp() {
             // Wait a moment for the connection UI to appear
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // Wait for user to approve connection (up to 30 seconds)
+            // Wait for user to select wallet and approve connection (up to 30 seconds)
             let attempts = 0;
             const maxAttempts = 60; // 30 seconds total (60 * 500ms)
             
@@ -353,7 +305,7 @@ export default function MiniApp() {
               }
             } else {
               setLoading(false);
-              alert('Подключение не установлено. Пожалуйста, подтвердите подключение в вашем кошельке Telegram Wallet. Если кошелек не установлен, вы будете перенаправлены для его активации. Попробуйте нажать кнопку еще раз после подтверждения.');
+              alert('Подключение не установлено. Пожалуйста, выберите кошелек в появившемся окне и подтвердите подключение. Попробуйте нажать кнопку еще раз.');
               return;
             }
           } catch (connectError: any) {
@@ -367,13 +319,9 @@ export default function MiniApp() {
               setLoading(false);
               alert('Превышено время ожидания подключения. Попробуйте еще раз.');
               return;
-            } else if (errorMsg.includes('not found') || errorMsg.includes('не найден')) {
-              setLoading(false);
-              alert('Telegram Wallet не найден. Вы будете перенаправлены для установки кошелька.');
-              return;
             } else {
               setLoading(false);
-              alert(`Ошибка подключения кошелька: ${errorMsg}. Если кошелек не установлен, вы будете перенаправлены для его активации.`);
+              alert(`Ошибка подключения кошелька: ${errorMsg}. Попробуйте еще раз.`);
               return;
             }
           }
