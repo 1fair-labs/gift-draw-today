@@ -55,6 +55,18 @@ export default function ProfileScreen({
     });
   };
 
+  const formatWalletAddress = (address: string | null): string => {
+    if (!address) return '';
+    if (address.length <= 10) return address;
+    const start = address.slice(0, 6);
+    const end = address.slice(-4);
+    return `${start}...${end}`;
+  };
+
+  const refLink = user?.anon_id 
+    ? `https://t.me/cryptolotterytoday_bot?startapp=ref_${user.anon_id}`
+    : '';
+
   const shareViaTelegram = () => {
     if (!refLink) return;
     
@@ -71,18 +83,6 @@ export default function ProfileScreen({
       window.open(shareUrl, '_blank');
     }
   };
-
-  const formatWalletAddress = (address: string | null): string => {
-    if (!address) return '';
-    if (address.length <= 10) return address;
-    const start = address.slice(0, 6);
-    const end = address.slice(-4);
-    return `${start}...${end}`;
-  };
-
-  const refLink = user?.anon_id 
-    ? `https://t.me/cryptolotterytoday_bot?startapp=ref_${user.anon_id}`
-    : '';
 
   return (
     <div className="h-full w-full overflow-y-auto">
