@@ -237,7 +237,7 @@ export default function MiniApp() {
         // Continue with purchase
       } else {
         setLoading(false);
-        alert('Подключение не установлено. Пожалуйста, выберите кошелек в появившемся окне и подтвердите подключение.');
+        alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
         return;
       }
     }
