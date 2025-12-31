@@ -137,7 +137,7 @@ export default function ProfileScreen({
                         : '•••••• CLT'}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
-                      {isBalanceVisible ? `≈ ${usdBalance} USDT` : '\u00A0'}
+                      {isBalanceVisible ? `≈ ${usdBalance} USDT` : '≈ •••••• USDT'}
                     </div>
                   </div>
 
