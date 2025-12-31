@@ -1,5 +1,5 @@
 // src/pages/miniapp/HomeScreen.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Wand2, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,19 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps) {
   const [timeRemaining, setTimeRemaining] = useState({ hours: '00', minutes: '00', seconds: '00' });
+  const [animatingValues, setAnimatingValues] = useState({
+    jackpot: false,
+    prizePool: false,
+    participants: false,
+    winners: false,
+  });
+  
+  const prevValuesRef = useRef({
+    jackpot: 0,
+    prizePool: 0,
+    participants: 0,
+    winners: 0,
+  });
   
   const cltPrice = 0.0002; // CLT/USDT
   const hasDraw = currentDraw !== null;
@@ -22,6 +35,34 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
   const winners = currentDraw?.winners ?? 0;
   const jackpotUsd = (jackpot * cltPrice).toFixed(2);
   const prizePoolUsd = (prizePool * cltPrice).toFixed(2);
+
+  // Track value changes and trigger animations
+  useEffect(() => {
+    if (!hasDraw) return;
+
+    const prev = prevValuesRef.current;
+    const newAnimating = { ...animatingValues };
+
+    if (jackpot !== prev.jackpot && prev.jackpot !== 0) {
+      newAnimating.jackpot = true;
+      setTimeout(() => setAnimatingValues(prev => ({ ...prev, jackpot: false })), 1000);
+    }
+    if (prizePool !== prev.prizePool && prev.prizePool !== 0) {
+      newAnimating.prizePool = true;
+      setTimeout(() => setAnimatingValues(prev => ({ ...prev, prizePool: false })), 1000);
+    }
+    if (participants !== prev.participants && prev.participants !== 0) {
+      newAnimating.participants = true;
+      setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false })), 1000);
+    }
+    if (winners !== prev.winners && prev.winners !== 0) {
+      newAnimating.winners = true;
+      setTimeout(() => setAnimatingValues(prev => ({ ...prev, winners: false })), 1000);
+    }
+
+    setAnimatingValues(newAnimating);
+    prevValuesRef.current = { jackpot, prizePool, participants, winners };
+  }, [jackpot, prizePool, participants, winners, hasDraw]);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -72,7 +113,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             
             <div className="mb-6">
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Jackpot Prize</p>
-              <p className="text-2xl md:text-3xl font-display font-black gradient-jackpot animate-pulse-glow">
+              <p className={`text-2xl md:text-3xl font-display font-black gradient-jackpot animate-pulse-glow transition-all duration-300 ${animatingValues.jackpot ? 'value-updated' : ''}`}>
                 {jackpot.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT
               </p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -83,7 +124,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="grid grid-cols-1 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Prize Pool</p>
-                <p className="text-lg font-display font-bold text-neon-gold">{prizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT</p>
+                <p className={`text-lg font-display font-bold text-neon-gold transition-all duration-300 ${animatingValues.prizePool ? 'value-updated' : ''}`}>{prizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   ≈ ${prizePoolUsd} USDT
                 </p>
@@ -93,11 +134,11 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Participants</p>
-                <p className="text-lg font-display font-bold text-neon-gold">{participants}</p>
+                <p className={`text-lg font-display font-bold text-neon-gold transition-all duration-300 ${animatingValues.participants ? 'value-updated' : ''}`}>{participants}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Winners (Top 25%)</p>
-                <p className="text-lg font-display font-bold text-neon-gold">{winners}</p>
+                <p className={`text-lg font-display font-bold text-neon-gold transition-all duration-300 ${animatingValues.winners ? 'value-updated' : ''}`}>{winners}</p>
               </div>
             </div>
 
