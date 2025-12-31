@@ -55,6 +55,13 @@ export default function ProfileScreen({
     });
   };
 
+  const shortenAddress = (address: string, startChars: number = 6, endChars: number = 4): string => {
+    if (!address || address.length <= startChars + endChars) {
+      return address;
+    }
+    return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
+  };
+
   const shareViaTelegram = () => {
     if (!refLink) return;
     
@@ -162,17 +169,19 @@ export default function ProfileScreen({
               </div>
 
               <div className="space-y-2 mt-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Wallet</span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    Wallet {walletAddress ? shortenAddress(walletAddress) : ''}
+                  </span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
+                    onClick={() => copyToClipboard(walletAddress!, 'Wallet address')}
+                    className="flex-shrink-0"
                   >
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
               </div>
             </>
           )}
