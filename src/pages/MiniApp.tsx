@@ -1014,7 +1014,7 @@ export default function MiniApp() {
                 </div>
               )}
               {currentScreen === 'profile' && (
-                <div className="absolute inset-0 w-full h-full">
+                <div className="w-full h-full">
                   <ProfileScreen
                     telegramUser={telegramUser}
                     user={user}
@@ -1035,7 +1035,7 @@ export default function MiniApp() {
                 </div>
               )}
               {currentScreen === 'about' && (
-                <div className="absolute inset-0 w-full h-full">
+                <div className="w-full h-full">
                   <AboutScreen />
                 </div>
               )}
