@@ -208,8 +208,13 @@ export default function MiniApp() {
       return;
     }
 
+    // Set loading immediately to show animation
+    setLoading(true);
+    
+    // Small delay to ensure UI updates
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     try {
-      setLoading(true);
       const WebApp = (window as any).Telegram?.WebApp;
       if (!WebApp || !isInTelegramWebApp()) {
         alert('Please open this site in Telegram to buy tickets.');
@@ -234,6 +239,9 @@ export default function MiniApp() {
 
       // Create tickets after payment
       await createTicketsAfterPayment(ticketCount, telegramId);
+      
+      // Add minimum delay to show minting animation
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Switch to tickets screen
       setCurrentScreen('tickets');
