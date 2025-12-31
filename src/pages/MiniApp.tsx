@@ -611,6 +611,17 @@ export default function MiniApp() {
     };
   }, []);
 
+  // Update active draw every 10 seconds
+  useEffect(() => {
+    loadActiveDraw();
+    
+    const interval = setInterval(() => {
+      loadActiveDraw();
+    }, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Update balances every 30 seconds
   useEffect(() => {
     if (!walletAddress) return;
