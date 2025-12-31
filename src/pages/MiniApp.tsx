@@ -482,15 +482,14 @@ export default function MiniApp() {
       return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
     };
 
-    if (!isInTelegramWebApp()) {
+    const WebApp = (window as any).Telegram?.WebApp;
+    const isInTelegram = isInTelegramWebApp() && WebApp;
+
+    if (!isInTelegram) {
       console.warn('MiniApp rendered outside Telegram — using fallback detection.');
       setIsMobile(detectMobileFallback());
-      return;
-    }
-
-    const WebApp = (window as any).Telegram?.WebApp;
-    if (!WebApp) {
-      setIsMobile(detectMobileFallback());
+      // Still try to load data even if not in Telegram (for development/testing)
+      loadActiveDraw();
       return;
     }
 
