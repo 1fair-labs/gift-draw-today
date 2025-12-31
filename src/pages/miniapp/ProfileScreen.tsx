@@ -165,7 +165,7 @@ export default function ProfileScreen({
         <Card className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-5 h-5 text-neon-gold" />
-            <h3 className="text-lg font-display font-bold">AirDrop</h3>
+            <h3 className="text-lg font-display font-bold">AirDrop (CryptoLotteryToken)</h3>
           </div>
           
           <div className="space-y-4">
