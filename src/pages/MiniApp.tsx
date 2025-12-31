@@ -4,7 +4,7 @@ import { Info, Sparkles, Ticket, X, Wand2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useTonConnectUI } from '@tonconnect/ui-react';
-import { supabase, type User, type Ticket as TicketType } from '@/lib/supabase';
+import { supabase, type User, type Ticket as TicketType, type Draw } from '@/lib/supabase';
 import { isInTelegramWebApp } from '@/lib/telegram';
 import { initTonConnect, getWalletAddress, isWalletConnected, tonConnect } from '@/lib/tonconnect';
 import HomeScreen from './miniapp/HomeScreen';
@@ -12,7 +12,7 @@ import TicketsScreen from './miniapp/TicketsScreen';
 import ProfileScreen from './miniapp/ProfileScreen';
 import AboutScreen from './miniapp/AboutScreen';
 
-// Mock data for demonstration
+// Mock data for demonstration (fallback)
 const mockDraw = {
   id: 42,
   prize_pool: 125000,
@@ -137,6 +137,35 @@ export default function MiniApp() {
       await loadUserTickets(telegramId);
     } catch (error) {
       console.error('Error loading user data:', error);
+    }
+  };
+
+  // Load active draw
+  const loadActiveDraw = async () => {
+    if (!supabase) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('draws')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading active draw:', error);
+        return;
+      }
+
+      if (data) {
+        setCurrentDraw(data as Draw);
+      } else {
+        setCurrentDraw(null);
+      }
+    } catch (error) {
+      console.error('Error in loadActiveDraw:', error);
+      setCurrentDraw(null);
     }
   };
 
@@ -569,6 +598,9 @@ export default function MiniApp() {
 
     connectUser();
 
+    // Load active draw
+    loadActiveDraw();
+
     // Initialize TON Connect
     initTonConnect().then(() => {
       if (isWalletConnected()) {
@@ -601,6 +633,16 @@ export default function MiniApp() {
 
     return () => clearInterval(interval);
   }, [walletAddress, telegramId]);
+
+  // Update active draw every 10 seconds
+  useEffect(() => {
+    loadActiveDraw(); // Load immediately
+    const interval = setInterval(() => {
+      loadActiveDraw();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle navigation from buttons with animation (Enter Draw button)
   const handleNavigateToTickets = () => {
@@ -741,7 +783,7 @@ export default function MiniApp() {
                   }}
                 >
                   <HomeScreen 
-                    currentDraw={mockDraw}
+                    currentDraw={currentDraw}
                     onEnterDraw={handleNavigateToTickets}
                   />
                 </div>
@@ -925,7 +967,7 @@ export default function MiniApp() {
                   }}
                 >
                   <HomeScreen 
-                    currentDraw={mockDraw}
+                    currentDraw={currentDraw}
                     onEnterDraw={handleNavigateToTickets}
                   />
                 </div>

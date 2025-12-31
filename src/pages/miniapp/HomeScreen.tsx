@@ -4,15 +4,11 @@ import { Wand2, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { type Draw } from '@/lib/supabase';
+import AnimatedCounter from '@/components/AnimatedCounter';
 
 interface HomeScreenProps {
-  currentDraw: {
-    id: number;
-    prize_pool: number;
-    jackpot: number;
-    participants: number;
-    end_at: string;
-  };
+  currentDraw: Draw | null;
   onEnterDraw: () => void;
 }
 
@@ -20,8 +16,8 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
   const [timeRemaining, setTimeRemaining] = useState({ hours: '00', minutes: '00', seconds: '00' });
   
   const cltPrice = 0.041; // CLT/USDT
-  const jackpotUsd = (currentDraw.jackpot * cltPrice).toFixed(2);
-  const prizePoolUsd = (currentDraw.prize_pool * cltPrice).toFixed(2);
+  const jackpotUsd = currentDraw ? (currentDraw.jackpot * cltPrice).toFixed(2) : '0.00';
+  const prizePoolUsd = currentDraw ? (currentDraw.prize_pool * cltPrice).toFixed(2) : '0.00';
 
   useEffect(() => {
     const updateTimer = () => {
@@ -67,15 +63,21 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
               <Badge variant="outline" className="bg-neon-green/20 text-neon-green border-neon-green/30 animate-pulse">
                 LIVE
               </Badge>
-              <span className="text-muted-foreground font-display">Draw #{currentDraw.id}</span>
+              <span className="text-muted-foreground font-display">
+                Draw #{currentDraw ? currentDraw.draw_id : '••••••'}
+              </span>
             </div>
             
             <div className="mb-6">
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Jackpot Prize</p>
-              <p className="text-2xl md:text-3xl font-display font-black gradient-jackpot animate-pulse-glow">
-                {currentDraw.jackpot.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT
+              <p className="text-2xl md:text-3xl font-display font-black gradient-jackpot animate-pulse-glow min-h-[2.5rem] flex items-center">
+                <AnimatedCounter
+                  value={currentDraw?.jackpot ?? null}
+                  formatValue={(val) => val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')}
+                  minHeight="2.5rem"
+                />{' '}CLT
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
                 ≈ ${jackpotUsd} USDT
               </p>
             </div>
@@ -83,8 +85,14 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="grid grid-cols-1 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Prize Pool</p>
-                <p className="text-lg font-display font-bold text-neon-gold">{currentDraw.prize_pool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT</p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-lg font-display font-bold text-neon-gold min-h-[1.75rem] flex items-center">
+                  <AnimatedCounter
+                    value={currentDraw?.prize_pool ?? null}
+                    formatValue={(val) => val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')}
+                    minHeight="1.75rem"
+                  />{' '}CLT
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
                   ≈ ${prizePoolUsd} USDT
                 </p>
               </div>
@@ -93,11 +101,23 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Participants</p>
-                <p className="text-lg font-display font-bold text-neon-gold">{currentDraw.participants}</p>
+                <p className="text-lg font-display font-bold text-neon-gold min-h-[1.75rem] flex items-center">
+                  <AnimatedCounter
+                    value={currentDraw?.participants ?? null}
+                    formatValue={(val) => val.toString()}
+                    minHeight="1.75rem"
+                  />
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Winners (Top 25%)</p>
-                <p className="text-lg font-display font-bold text-neon-gold">{Math.floor(currentDraw.participants * 0.25)}</p>
+                <p className="text-lg font-display font-bold text-neon-gold min-h-[1.75rem] flex items-center">
+                  <AnimatedCounter
+                    value={currentDraw?.winners ?? null}
+                    formatValue={(val) => val.toString()}
+                    minHeight="1.75rem"
+                  />
+                </p>
               </div>
             </div>
 

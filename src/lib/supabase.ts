@@ -36,3 +36,15 @@ export interface Ticket {
   created_at: string;
 }
 
+export interface Draw {
+  id: number;
+  draw_id: string;
+  jackpot: number;
+  prize_pool: number;
+  participants: number;
+  winners: number;
+  status: 'active' | 'completed' | 'pending';
+  created_at: string;
+  updated_at: string;
+}
+
