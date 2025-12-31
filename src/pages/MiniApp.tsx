@@ -203,17 +203,49 @@ export default function MiniApp() {
     // Small delay to ensure UI updates and animation is visible
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    if (!walletAddress) {
-      // Show message instead of switching to profile screen
-      setLoading(false);
-      alert('Please connect your wallet first.');
-      return;
-    }
-
     if (!telegramId) {
       setLoading(false);
       alert('Please connect via Telegram first.');
       return;
+    }
+
+    // If wallet is not connected, connect it first
+    if (!walletAddress || !isWalletConnected()) {
+      try {
+        await initTonConnect();
+        
+        // Request connection
+        const walletsList = await tonConnect.getWallets();
+        const wallet = walletsList.find(w => w.name.toLowerCase().includes('telegram'));
+        
+        if (!wallet) {
+          setLoading(false);
+          alert('Telegram Wallet not found. Please install Telegram Wallet.');
+          return;
+        }
+
+        const connectionSource = {
+          bridgeUrl: wallet.bridgeUrl,
+          universalLink: wallet.universalLink,
+        };
+
+        await tonConnect.connect(connectionSource);
+        
+        const address = getWalletAddress();
+        if (address) {
+          setWalletAddress(address);
+          await loadWalletBalances();
+        } else {
+          setLoading(false);
+          alert('Failed to connect wallet. Please try again.');
+          return;
+        }
+      } catch (error: any) {
+        console.error('Error connecting wallet:', error);
+        setLoading(false);
+        alert('Failed to connect wallet. Please try again.');
+        return;
+      }
     }
 
     try {
@@ -253,7 +285,7 @@ export default function MiniApp() {
     } finally {
       setLoading(false);
     }
-  }, [walletAddress, telegramId, tonBalance]);
+  }, [walletAddress, telegramId, tonBalance, loadWalletBalances]);
 
   // Create tickets after payment
   const createTicketsAfterPayment = async (count: number, tgId: number) => {
