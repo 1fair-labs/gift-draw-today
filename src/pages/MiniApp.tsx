@@ -198,8 +198,8 @@ export default function MiniApp() {
   // Handle buy ticket
   const handleBuyTicket = useCallback(async () => {
     if (!walletAddress) {
-      // Switch to profile screen to connect wallet
-      setCurrentScreen('profile');
+      // Show message instead of switching to profile screen
+      alert('Please connect your wallet first.');
       return;
     }
 

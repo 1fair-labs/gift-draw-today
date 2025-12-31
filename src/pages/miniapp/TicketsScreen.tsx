@@ -73,7 +73,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
               disabled={loading}
               className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold glow-gold"
             >
-              <Wand2 className="w-4 h-4 mr-2" />
+              <Wand2 className="w-4 h-4 mr-1" />
               Buy Ticket
             </Button>
           </Card>
