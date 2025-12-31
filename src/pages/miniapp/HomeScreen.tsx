@@ -42,25 +42,44 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
 
     const prev = prevValuesRef.current;
     const newAnimating = { ...animatingValues };
+    const isFirstLoad = prev.jackpot === 0 && prev.prizePool === 0 && prev.participants === 0 && prev.winners === 0;
 
-    if (jackpot !== prev.jackpot && prev.jackpot !== 0) {
-      newAnimating.jackpot = true;
-      setTimeout(() => setAnimatingValues(prev => ({ ...prev, jackpot: false })), 1000);
-    }
-    if (prizePool !== prev.prizePool && prev.prizePool !== 0) {
-      newAnimating.prizePool = true;
-      setTimeout(() => setAnimatingValues(prev => ({ ...prev, prizePool: false })), 1000);
-    }
-    if (participants !== prev.participants && prev.participants !== 0) {
-      newAnimating.participants = true;
-      setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false })), 1000);
-    }
-    if (winners !== prev.winners && prev.winners !== 0) {
-      newAnimating.winners = true;
-      setTimeout(() => setAnimatingValues(prev => ({ ...prev, winners: false })), 1000);
+    // Animate on first load or when values change
+    if (isFirstLoad && (jackpot > 0 || prizePool > 0 || participants > 0 || winners > 0)) {
+      // First load animation - animate all values
+      setAnimatingValues({
+        jackpot: true,
+        prizePool: true,
+        participants: true,
+        winners: true,
+      });
+      setTimeout(() => setAnimatingValues({
+        jackpot: false,
+        prizePool: false,
+        participants: false,
+        winners: false,
+      }), 1000);
+    } else {
+      // Value change animation
+      if (jackpot !== prev.jackpot && prev.jackpot !== 0) {
+        newAnimating.jackpot = true;
+        setTimeout(() => setAnimatingValues(prev => ({ ...prev, jackpot: false })), 1000);
+      }
+      if (prizePool !== prev.prizePool && prev.prizePool !== 0) {
+        newAnimating.prizePool = true;
+        setTimeout(() => setAnimatingValues(prev => ({ ...prev, prizePool: false })), 1000);
+      }
+      if (participants !== prev.participants && prev.participants !== 0) {
+        newAnimating.participants = true;
+        setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false })), 1000);
+      }
+      if (winners !== prev.winners && prev.winners !== 0) {
+        newAnimating.winners = true;
+        setTimeout(() => setAnimatingValues(prev => ({ ...prev, winners: false })), 1000);
+      }
+      setAnimatingValues(newAnimating);
     }
 
-    setAnimatingValues(newAnimating);
     prevValuesRef.current = { jackpot, prizePool, participants, winners };
   }, [jackpot, prizePool, participants, winners, hasDraw]);
 
