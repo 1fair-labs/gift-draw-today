@@ -216,11 +216,9 @@ export default function MiniApp() {
         
         // First, try to restore existing connection
         await initTonConnect();
-        console.log('TON Connect initialized');
         
         // Check if connection was restored
         if (isWalletConnected()) {
-          console.log('Wallet connection restored');
           const address = getWalletAddress();
           if (address) {
             setWalletAddress(address);
@@ -228,122 +226,140 @@ export default function MiniApp() {
             // Continue with purchase
           } else {
             setLoading(false);
-            alert('Failed to get wallet address. Please try again.');
+            alert('Ошибка: Не удалось получить адрес кошелька после восстановления соединения. Попробуйте подключиться заново.');
             return;
           }
         } else {
-          console.log('No existing connection, attempting to connect...');
-          
-          // If no existing connection, try to connect
+          // If no existing connection, try to connect to Telegram Wallet
           let walletsList;
           try {
             walletsList = await tonConnect.getWallets();
-            console.log('Available wallets:', walletsList);
           } catch (err: any) {
-            console.error('Error getting wallets list:', err);
             setLoading(false);
-            alert('Failed to get wallets list. Please make sure you are in Telegram.');
+            alert(`Ошибка получения списка кошельков: ${err.message || 'Неизвестная ошибка'}. Убедитесь, что вы открыли приложение в Telegram.`);
             return;
           }
           
           if (!walletsList || walletsList.length === 0) {
-            console.error('No wallets available');
             setLoading(false);
-            alert('No wallets available. Please make sure Telegram Wallet is enabled.');
+            alert('Кошельки не найдены. Убедитесь, что Telegram Wallet включен в настройках Telegram.');
             return;
           }
           
-          // Try to find Telegram Wallet by various criteria
+          // Try to find Telegram Wallet (built-in wallet) - look for "Wallet" or "Telegram Wallet"
           let wallet = walletsList.find(w => 
-            w.name.toLowerCase().includes('telegram') ||
-            w.name.toLowerCase().includes('wallet') ||
-            w.appName?.toLowerCase().includes('telegram') ||
-            w.appName?.toLowerCase().includes('wallet')
+            w.name.toLowerCase() === 'wallet' ||
+            w.name.toLowerCase() === 'telegram wallet' ||
+            w.name.toLowerCase().includes('telegram wallet') ||
+            (w.appName && w.appName.toLowerCase().includes('wallet'))
           );
           
-          // If not found, use the first available wallet (usually Telegram Wallet in Telegram WebApp)
+          // If not found by exact name, try broader search
+          if (!wallet) {
+            wallet = walletsList.find(w => 
+              w.name.toLowerCase().includes('wallet') ||
+              w.appName?.toLowerCase().includes('wallet')
+            );
+          }
+          
+          // If still not found, use the first available wallet
           if (!wallet && walletsList.length > 0) {
             wallet = walletsList[0];
-            console.log('Using first available wallet:', wallet.name);
           }
           
           if (!wallet) {
-            console.error('No wallet found in list');
             setLoading(false);
-            alert('No wallet found. Please try again.');
+            alert('Кошелек не найден в списке доступных. Попробуйте позже.');
             return;
           }
 
-          console.log('Connecting to wallet:', wallet.name, wallet);
-          
+          // Prepare connection source
           const connectionSource = {
             bridgeUrl: wallet.bridgeUrl,
             universalLink: wallet.universalLink,
           };
 
           try {
-            // Set up status change listener
+            // Set up status change listener to track connection
+            let connectionEstablished = false;
             const statusChangeUnsubscribe = tonConnect.onStatusChange((walletInfo) => {
-              console.log('Wallet status changed:', walletInfo);
-              if (walletInfo) {
-                const address = walletInfo.account?.address;
-                if (address) {
-                  console.log('Wallet connected via status change, address:', address);
-                  setWalletAddress(address);
-                  loadWalletBalances();
-                }
+              if (walletInfo && walletInfo.account?.address) {
+                connectionEstablished = true;
+                const address = walletInfo.account.address;
+                setWalletAddress(address);
+                loadWalletBalances();
               }
             });
             
+            // Initiate connection - this should open Telegram Wallet and show approval request
             await tonConnect.connect(connectionSource);
-            console.log('Connection request sent');
             
-            // Wait longer for connection to establish (user might need to approve)
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Wait for user to approve connection (up to 10 seconds)
+            let attempts = 0;
+            const maxAttempts = 20; // 10 seconds total (20 * 500ms)
             
-            // Check connection again
-            if (isWalletConnected()) {
+            while (!connectionEstablished && attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              attempts++;
+              
+              // Check if connection was established
+              if (isWalletConnected()) {
+                connectionEstablished = true;
+                break;
+              }
+            }
+            
+            statusChangeUnsubscribe();
+            
+            // Check final connection status
+            if (isWalletConnected() || connectionEstablished) {
               const address = getWalletAddress();
               if (address) {
-                console.log('Wallet connected, address:', address);
                 setWalletAddress(address);
                 await loadWalletBalances();
-                statusChangeUnsubscribe();
+                // Continue with purchase
               } else {
-                statusChangeUnsubscribe();
                 setLoading(false);
-                alert('Failed to get wallet address after connection. Please try again.');
+                alert('Ошибка: Не удалось получить адрес кошелька после подключения. Попробуйте еще раз.');
                 return;
               }
             } else {
-              statusChangeUnsubscribe();
               setLoading(false);
-              alert('Connection was not established. Please approve the connection in your wallet.');
+              alert('Подключение не установлено. Пожалуйста, подтвердите подключение в вашем кошельке Telegram Wallet. Если кошелек не установлен, вы будете перенаправлены для его активации.');
               return;
             }
           } catch (connectError: any) {
-            console.error('Error during connect:', connectError);
-            setLoading(false);
-            if (connectError.message?.includes('User rejected') || connectError.message?.includes('cancelled')) {
-              alert('Wallet connection was cancelled.');
-            } else if (connectError.message?.includes('timeout')) {
-              alert('Connection timeout. Please try again.');
+            const errorMsg = connectError.message || connectError.toString() || 'Неизвестная ошибка';
+            
+            if (errorMsg.includes('User rejected') || errorMsg.includes('cancelled') || errorMsg.includes('отменен')) {
+              setLoading(false);
+              alert('Подключение кошелька было отменено пользователем.');
+              return;
+            } else if (errorMsg.includes('timeout') || errorMsg.includes('таймаут')) {
+              setLoading(false);
+              alert('Превышено время ожидания подключения. Попробуйте еще раз.');
+              return;
+            } else if (errorMsg.includes('not found') || errorMsg.includes('не найден')) {
+              setLoading(false);
+              alert('Telegram Wallet не найден. Вы будете перенаправлены для установки кошелька.');
+              return;
             } else {
-              alert(`Failed to connect wallet: ${connectError.message || 'Unknown error'}. Please try again.`);
+              setLoading(false);
+              alert(`Ошибка подключения кошелька: ${errorMsg}. Если кошелек не установлен, вы будете перенаправлены для его активации.`);
+              return;
             }
-            return;
           }
         }
       } catch (error: any) {
-        console.error('Error connecting wallet:', error);
+        const errorMsg = error.message || error.toString() || 'Неизвестная ошибка';
         setLoading(false);
-        // More user-friendly error message
-        if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
-          alert('Wallet connection was cancelled.');
-        } else if (error.message?.includes('timeout')) {
-          alert('Connection timeout. Please try again.');
+        
+        if (errorMsg.includes('User rejected') || errorMsg.includes('cancelled') || errorMsg.includes('отменен')) {
+          alert('Подключение кошелька было отменено.');
+        } else if (errorMsg.includes('timeout') || errorMsg.includes('таймаут')) {
+          alert('Превышено время ожидания. Попробуйте еще раз.');
         } else {
-          alert(`Failed to connect wallet: ${error.message || 'Unknown error'}. Please try again.`);
+          alert(`Ошибка подключения кошелька: ${errorMsg}. Убедитесь, что Telegram Wallet доступен.`);
         }
         return;
       }
