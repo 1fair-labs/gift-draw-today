@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Info, Sparkles, Ticket, X, Wand2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { supabase, type User, type Ticket as TicketType } from '@/lib/supabase';
 import { isInTelegramWebApp } from '@/lib/telegram';
@@ -27,6 +28,7 @@ export default function MiniApp() {
   const [tonConnectUI] = useTonConnectUI();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showConnectionError, setShowConnectionError] = useState(false);
   const [prevScreen, setPrevScreen] = useState<Screen | null>(null);
   const [telegramId, setTelegramId] = useState<number | null>(null);
   const [telegramUser, setTelegramUser] = useState<any>(null);
@@ -978,6 +980,21 @@ export default function MiniApp() {
           </footer>
         </>
       )}
+      
+      {/* Connection Error Dialog */}
+      <AlertDialog open={showConnectionError} onOpenChange={setShowConnectionError}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>🪄 CryptoLottery.today</AlertDialogTitle>
+            <AlertDialogDescription>
+              Connection not established. Please select a wallet in the popup window and confirm the connection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowConnectionError(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
