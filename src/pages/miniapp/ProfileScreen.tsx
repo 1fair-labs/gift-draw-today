@@ -165,13 +165,13 @@ export default function ProfileScreen({
         <Card className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-5 h-5 text-neon-gold" />
-            <h3 className="text-lg font-display font-bold">Referral Program</h3>
+            <h3 className="text-lg font-display font-bold">AirDrop</h3>
           </div>
           
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-2">
-                Participate in the airdrop! Send a Gift ticket to a friend and get a ref ticket. It will automatically include you in the airdrop participant list.
+                To participate in the airdrop, send a GIFT ticket to your friend and after its activation, you will automatically become an airdrop participant. The more friends you invite, the more tokens you will receive!
               </p>
               
               <Badge 
