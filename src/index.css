@@ -247,91 +247,70 @@
     overflow: hidden;
   }
 
-  .jackpot-shine::before,
+  .jackpot-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 33.33%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    animation: shineSweep 10s infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .jackpot-shine::after {
     content: '';
     position: absolute;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.2) 0%,
-      rgba(255, 255, 255, 0.1) 40%,
-      transparent 70%
+    top: 33.33%;
+    left: -100%;
+    width: 100%;
+    height: 33.33%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
     );
+    animation: shineSweep 10s infinite;
+    animation-delay: 3.33s;
     pointer-events: none;
     z-index: 1;
-    opacity: 0;
   }
 
-  .jackpot-shine::before {
-    top: 20%;
-    left: 15%;
-    animation: randomGlow1 12s infinite;
+  .jackpot-shine-bottom {
+    position: absolute;
+    top: 66.66%;
+    left: -100%;
+    width: 100%;
+    height: 33.33%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    animation: shineSweep 10s infinite;
+    animation-delay: 6.66s;
+    pointer-events: none;
+    z-index: 1;
   }
 
-  .jackpot-shine::after {
-    bottom: 30%;
-    right: 20%;
-    animation: randomGlow2 15s infinite;
-  }
-
-  @keyframes randomGlow1 {
-    0%, 100% {
-      opacity: 0;
-      transform: scale(0.5);
+  @keyframes shineSweep {
+    0% {
+      left: -100%;
     }
     5% {
-      opacity: 1;
-      transform: scale(1.2);
+      left: 100%;
     }
-    10% {
-      opacity: 0;
-      transform: scale(1.5);
-    }
-    45% {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1);
-    }
-    55% {
-      opacity: 0;
-      transform: scale(1.3);
-    }
-  }
-
-  @keyframes randomGlow2 {
-    0%, 100% {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    15% {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    20% {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-    25% {
-      opacity: 0;
-      transform: scale(1.4);
-    }
-    60% {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    65% {
-      opacity: 0.7;
-      transform: scale(1);
-    }
-    70% {
-      opacity: 0;
-      transform: scale(1.2);
+    100% {
+      left: 100%;
     }
   }
 }
