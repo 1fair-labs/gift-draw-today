@@ -215,6 +215,7 @@ export default function ProfileScreen({
                     variant="outline"
                     size="sm"
                     onClick={shareViaTelegram}
+                    className="hover:bg-transparent hover:text-inherit active:bg-transparent"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
