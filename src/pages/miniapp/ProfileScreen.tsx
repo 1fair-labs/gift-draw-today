@@ -109,7 +109,7 @@ export default function ProfileScreen({
           ) : (
             <>
               {/* Balances */}
-              <div className="mb-6">
+              <div className="border-t border-border/50 pt-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-display font-bold">Balances</h3>
                   <Button
@@ -169,7 +169,7 @@ export default function ProfileScreen({
                 </div>
               </div>
 
-              <div className="border-t border-border/50 pt-6 space-y-2">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Wallet</span>
                   <Button
