@@ -222,4 +222,23 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--primary) / 0.5);
   }
+
+  .value-updated {
+    animation: valueUpdate 1s ease-in-out;
+  }
+
+  @keyframes valueUpdate {
+    0% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.05);
+      filter: brightness(1.5);
+    }
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+  }
 }
