@@ -88,7 +88,10 @@ export default function ProfileScreen({
               {/* Balances */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-display font-bold">Balances</h3>
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-5 h-5 text-neon-gold" />
+                    <h3 className="text-lg font-display font-bold">Balances</h3>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -105,13 +108,10 @@ export default function ProfileScreen({
                 <div className="space-y-4">
                   {/* CLT Balance */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-muted-foreground">CLT</span>
-                    </div>
                     <div className="text-2xl font-display font-bold text-neon-gold min-h-[2.5rem] flex items-center">
                       {isBalanceVisible 
-                        ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
-                        : '•••••• CLT'}
+                        ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : '••••••'}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
                       {isBalanceVisible ? `≈ ${usdBalance} USDT` : '≈ •••••• USDT'}
@@ -133,7 +133,7 @@ export default function ProfileScreen({
                   {/* TON Balance */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-muted-foreground">TON</span>
+                      <span className="text-sm text-muted-foreground">TON (gas)</span>
                     </div>
                     <div className="text-xl font-display font-bold min-h-[1.75rem] flex items-center">
                       {isBalanceVisible 
