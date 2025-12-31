@@ -22,14 +22,15 @@ export default function AnimatedCounter({
   useEffect(() => {
     if (value === null) {
       setDisplayValue('••••••');
+      prevValueRef.current = null;
       return;
     }
 
     const prevValue = prevValueRef.current;
-    prevValueRef.current = value;
-
+    
     if (prevValue === null) {
       // First render - no animation
+      prevValueRef.current = value;
       setDisplayValue(formatValue ? formatValue(value) : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       return;
     }
@@ -38,6 +39,8 @@ export default function AnimatedCounter({
       // No change - no animation
       return;
     }
+
+    prevValueRef.current = value;
 
     // Animate from prevValue to value
     setIsAnimating(true);

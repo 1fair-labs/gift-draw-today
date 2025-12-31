@@ -636,9 +636,13 @@ export default function MiniApp() {
 
   // Update active draw every 10 seconds
   useEffect(() => {
-    loadActiveDraw(); // Load immediately
+    const loadDraw = async () => {
+      await loadActiveDraw();
+    };
+    
+    loadDraw(); // Load immediately
     const interval = setInterval(() => {
-      loadActiveDraw();
+      loadDraw();
     }, 10000);
 
     return () => clearInterval(interval);
