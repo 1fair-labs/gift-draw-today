@@ -10,12 +10,6 @@ interface AnimatedNumberProps {
 }
 
 export function AnimatedNumber({ value, previousValue, decimals = 0, className = '', suffix = '' }: AnimatedNumberProps) {
-  const prevValueRef = useRef<number | null>(previousValue);
-
-  useEffect(() => {
-    prevValueRef.current = value;
-  }, [value]);
-
   const currentDigits = useMemo(() => {
     const formatted = value.toLocaleString('en-US', {
       minimumFractionDigits: decimals,
@@ -25,8 +19,8 @@ export function AnimatedNumber({ value, previousValue, decimals = 0, className =
   }, [value, decimals]);
 
   const previousDigits = useMemo(() => {
-    if (prevValueRef.current === null) return null;
-    const formatted = prevValueRef.current.toLocaleString('en-US', {
+    if (previousValue === null) return null;
+    const formatted = previousValue.toLocaleString('en-US', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
     }).replace(/,/g, '');
