@@ -113,7 +113,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw }: HomeScreenProps
             
             <div className="mb-6">
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Jackpot Prize</p>
-              <p className={`text-2xl md:text-3xl font-display font-black gradient-jackpot animate-pulse-glow transition-all duration-300 ${animatingValues.jackpot ? 'value-updated' : ''}`}>
+              <p className={`text-2xl md:text-3xl font-display font-black gradient-jackpot transition-all duration-300 ${animatingValues.jackpot ? 'value-updated' : ''}`}>
                 {jackpot.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT
               </p>
               <p className="text-xs text-muted-foreground mt-1">
