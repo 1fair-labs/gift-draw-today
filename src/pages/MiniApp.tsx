@@ -212,24 +212,56 @@ export default function MiniApp() {
 
     // If wallet is not connected, connect it first using standard TON Connect UI
     if (!walletAddress || !tonConnectUI.connected) {
+      // Track modal state to detect when it closes
+      let connectionEstablished = false;
+      
+      // Subscribe to connection status changes
+      const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
+        if (wallet && wallet.account) {
+          connectionEstablished = true;
+          const address = wallet.account.address;
+          setWalletAddress(address);
+          loadWalletBalances();
+        }
+      });
+      
       // Use standard TON Connect UI to open wallet selection modal
       tonConnectUI.openModal();
       
-      // Wait for connection to be established
+      // Monitor modal state and connection - check more frequently
       let attempts = 0;
-      const maxAttempts = 60; // 30 seconds
+      const maxAttempts = 300; // 30 seconds (300 * 100ms)
+      let lastModalState = tonConnectUI.modalState;
       
-      while (!tonConnectUI.connected && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      while (!connectionEstablished && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
         
+        // Check if modal was closed (state changed from open to closed)
+        const currentModalState = tonConnectUI.modalState;
+        if (lastModalState === 'opened' && currentModalState === 'closed') {
+          // Modal was closed, check if connection was established
+          if (!tonConnectUI.connected) {
+            unsubscribe();
+            setLoading(false);
+            setShowConnectionError(true);
+            return;
+          }
+        }
+        lastModalState = currentModalState;
+        
+        // Check if connection was established
         if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+          connectionEstablished = true;
           const address = tonConnectUI.wallet.account.address;
           setWalletAddress(address);
           await loadWalletBalances();
+          unsubscribe();
           break;
         }
       }
+      
+      unsubscribe();
       
       // Check final connection status
       if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
@@ -239,7 +271,7 @@ export default function MiniApp() {
         // Continue with purchase
       } else {
         setLoading(false);
-        alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
+        setShowConnectionError(true);
         return;
       }
     }
