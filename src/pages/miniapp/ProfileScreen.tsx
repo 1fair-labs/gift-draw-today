@@ -170,9 +170,7 @@ export default function ProfileScreen({
 
               <div className="space-y-2 mt-6">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    Wallet {walletAddress ? shortenAddress(walletAddress) : ''}
-                  </span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">Wallet</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -182,6 +180,9 @@ export default function ProfileScreen({
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
+                <p className="text-xs font-mono text-muted-foreground break-all">
+                  {walletAddress ? shortenAddress(walletAddress) : ''}
+                </p>
               </div>
             </>
           )}
