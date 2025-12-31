@@ -712,7 +712,7 @@ export default function MiniApp() {
                       handleNavigateToProfile();
                     }}
                   >
-                    <h2 className="text-sm font-display font-bold">
+                    <h2 className="text-base font-display font-bold">
                       {telegramUser?.first_name} {telegramUser?.last_name || ''}
                     </h2>
                     {user?.anon_id && (
@@ -889,7 +889,7 @@ export default function MiniApp() {
                         handleNavigateToProfile();
                       }}
                     >
-                      <h2 className="text-sm font-display font-bold truncate">
+                      <h2 className="text-base font-display font-bold truncate">
                         {telegramUser?.first_name} {telegramUser?.last_name || ''}
                       </h2>
                       {user?.anon_id && (
