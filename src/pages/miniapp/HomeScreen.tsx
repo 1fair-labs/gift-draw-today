@@ -203,11 +203,9 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {paidWinners} (25% of paid)
                 </p>
-                {freeWinners > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {freeWinners} (1 per 10 paid winners)
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {freeWinners} (1 per 10 paid winners)
+                </p>
               </div>
             </div>
 
