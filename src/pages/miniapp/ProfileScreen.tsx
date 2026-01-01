@@ -125,7 +125,7 @@ export default function ProfileScreen({
                 <div className="space-y-4">
                   {/* CLT Balance */}
                   <div>
-                    <div className="text-2xl font-display font-bold text-neon-gold min-h-[2.5rem] flex items-center">
+                    <div className="text-xl font-display font-bold text-neon-gold min-h-[2.5rem] flex items-center">
                       {isBalanceVisible 
                         ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
                         : '•••••• CLT'}
@@ -140,7 +140,7 @@ export default function ProfileScreen({
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-muted-foreground">USDT (Jetton)</span>
                     </div>
-                    <div className="text-xl font-display font-bold min-h-[1.75rem] flex items-center">
+                    <div className="text-lg font-display font-bold min-h-[1.75rem] flex items-center">
                       {isBalanceVisible 
                         ? `${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`
                         : '•••••• USDT'}
@@ -152,7 +152,7 @@ export default function ProfileScreen({
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-muted-foreground">TON (gas)</span>
                     </div>
-                    <div className="text-xl font-display font-bold min-h-[1.75rem] flex items-center">
+                    <div className="text-lg font-display font-bold min-h-[1.75rem] flex items-center">
                       {isBalanceVisible 
                         ? `${tonBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} TON`
                         : '•••••• TON'}
