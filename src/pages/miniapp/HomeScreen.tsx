@@ -69,17 +69,11 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
         setTimeout(() => setAnimatingValues(prev => ({ ...prev, prizePool: false })), 1000);
       }, 300);
 
-      // Entries
+      // Entries and Winners (simultaneous)
       setTimeout(() => {
-        setAnimatingValues(prev => ({ ...prev, participants: true }));
-        setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false })), 1000);
+        setAnimatingValues(prev => ({ ...prev, participants: true, winners: true }));
+        setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false, winners: false })), 1000);
       }, 600);
-
-      // Winners
-      setTimeout(() => {
-        setAnimatingValues(prev => ({ ...prev, winners: true }));
-        setTimeout(() => setAnimatingValues(prev => ({ ...prev, winners: false })), 1000);
-      }, 900);
     }
 
     prevVisibleRef.current = isVisible;
@@ -105,13 +99,17 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
       setAnimatingValues(prev => ({ ...prev, prizePool: true }));
       setTimeout(() => setAnimatingValues(prev => ({ ...prev, prizePool: false })), 1000);
     }
-    if (totalEntries !== prev.totalEntries && prev.totalEntries !== 0) {
-      setAnimatingValues(prev => ({ ...prev, participants: true }));
-      setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false })), 1000);
-    }
-    if (totalWinners !== prev.totalWinners && prev.totalWinners !== 0) {
-      setAnimatingValues(prev => ({ ...prev, winners: true }));
-      setTimeout(() => setAnimatingValues(prev => ({ ...prev, winners: false })), 1000);
+    // Animate Entries and Winners simultaneously if either changes
+    const entriesChanged = totalEntries !== prev.totalEntries && prev.totalEntries !== 0;
+    const winnersChanged = totalWinners !== prev.totalWinners && prev.totalWinners !== 0;
+    
+    if (entriesChanged || winnersChanged) {
+      setAnimatingValues(prev => ({ 
+        ...prev, 
+        participants: entriesChanged || prev.participants, 
+        winners: winnersChanged || prev.winners 
+      }));
+      setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false, winners: false })), 1000);
     }
   }, [jackpot, prizePool, totalEntries, totalWinners, hasDraw]);
 
