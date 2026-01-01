@@ -55,18 +55,6 @@ export default function ProfileScreen({
     });
   };
 
-  const formatWalletAddress = (address: string | null): string => {
-    if (!address) return '';
-    if (address.length <= 10) return address;
-    const start = address.slice(0, 6);
-    const end = address.slice(-4);
-    return `${start}...${end}`;
-  };
-
-  const refLink = user?.anon_id 
-    ? `https://t.me/cryptolotterytoday_bot?startapp=ref_${user.anon_id}`
-    : '';
-
   const shareViaTelegram = () => {
     if (!refLink) return;
     
@@ -83,6 +71,10 @@ export default function ProfileScreen({
       window.open(shareUrl, '_blank');
     }
   };
+
+  const refLink = user?.anon_id 
+    ? `https://t.me/cryptolotterytoday_bot?startapp=ref_${user.anon_id}`
+    : '';
 
   return (
     <div className="h-full w-full overflow-y-auto">
@@ -170,22 +162,17 @@ export default function ProfileScreen({
               </div>
 
               <div className="space-y-2 mt-6">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-sm text-muted-foreground flex-shrink-0">Wallet</span>
-                    <span className="text-xs font-mono text-muted-foreground truncate">
-                      {formatWalletAddress(walletAddress)}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Wallet</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(walletAddress || '', 'Wallet address')}
-                    className="flex-shrink-0"
+                    onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
                   >
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
+                <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
               </div>
             </>
           )}
@@ -205,13 +192,6 @@ export default function ProfileScreen({
               <p className="text-sm text-muted-foreground mb-2">
                 To participate in the airdrop, send a GIFT ticket to your friend and after its activation, you will automatically become an airdrop participant. The more friends you invite, the more tokens you will receive!
               </p>
-              
-              <Badge 
-                variant={hasRefTicket ? "default" : "outline"}
-                className={hasRefTicket ? "bg-neon-green/20 text-neon-green border-neon-green/30" : ""}
-              >
-                {hasRefTicket ? 'You are participating in Airdrop' : 'You are not participating in Airdrop'}
-              </Badge>
             </div>
 
             {refLink && (
@@ -235,6 +215,15 @@ export default function ProfileScreen({
                 </div>
               </div>
             )}
+
+            <div>
+              <Badge 
+                variant={hasRefTicket ? "default" : "outline"}
+                className={hasRefTicket ? "bg-neon-green/20 text-neon-green border-neon-green/30" : ""}
+              >
+                {hasRefTicket ? 'You are participating in Airdrop' : 'You are not participating in Airdrop'}
+              </Badge>
+            </div>
 
           </div>
         </Card>
