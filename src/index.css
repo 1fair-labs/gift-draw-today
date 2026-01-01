@@ -190,6 +190,29 @@
     100% { transform: translateX(0); }
   }
 
+  @keyframes glow-sweep {
+    0% {
+      box-shadow: 
+        inset -100px 0 30px -30px hsl(var(--neon-gold) / 0),
+        -20px 0 20px -10px hsl(var(--neon-gold) / 0.3);
+    }
+    50% {
+      box-shadow: 
+        inset 0 0 30px -10px hsl(var(--neon-gold) / 0.6),
+        0 0 40px -10px hsl(var(--neon-gold) / 0.8);
+    }
+    100% {
+      box-shadow: 
+        inset 100px 0 30px -30px hsl(var(--neon-gold) / 0),
+        20px 0 20px -10px hsl(var(--neon-gold) / 0.3);
+    }
+  }
+
+  .animate-glow-sweep {
+    animation: glow-sweep 5s ease-in-out infinite;
+    position: relative;
+  }
+
   .animate-shimmer {
     background: linear-gradient(
       90deg,

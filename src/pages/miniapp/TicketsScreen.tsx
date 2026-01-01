@@ -71,7 +71,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
             <Button 
               onClick={onBuyTicket}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold text-base glow-gold"
+              className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold text-base glow-gold animate-glow-sweep"
             >
               {loading ? (
                 <>
@@ -179,7 +179,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
         <Button 
           onClick={onBuyTicket}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold text-base glow-gold"
+          className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold text-base glow-gold animate-glow-sweep"
         >
           {loading ? (
             <>
