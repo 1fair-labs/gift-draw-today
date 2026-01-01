@@ -80,7 +80,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
                 </>
               ) : (
                 <>
-                  <Wand2 className="w-4 h-4 mr-1" />
+                  <Wand2 className="w-4 h-4 mr-1 animate-wand-shake" />
                   Buy Ticket
                 </>
               )}
@@ -188,7 +188,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
             </>
           ) : (
             <>
-              <Wand2 className="w-4 h-4 mr-1" />
+              <Wand2 className="w-4 h-4 mr-1 animate-wand-shake" />
               Buy More Tickets
             </>
           )}
