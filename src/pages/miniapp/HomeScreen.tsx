@@ -175,7 +175,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
             <div className="grid grid-cols-1 gap-4 text-sm mb-3">
               <div>
-                <p className="text-muted-foreground text-xs mb-1">Prize Pool</p>
+                <p className="text-muted-foreground text-sm mb-1">Prize Pool</p>
                 <p className={`text-lg font-display font-bold text-neon-gold leading-tight transition-all duration-300 ${animatingValues.prizePool ? 'value-updated' : ''}`}>{prizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} CLT</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   ≈ ${prizePoolUsd} USDT
@@ -185,7 +185,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
             
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
-                <p className="text-muted-foreground text-xs mb-1">Entries</p>
+                <p className="text-muted-foreground text-sm mb-1">Entries</p>
                 <p className={`text-lg font-display font-bold text-neon-gold leading-tight transition-all duration-300 ${animatingValues.participants ? 'value-updated' : ''}`}>
                   {totalEntries}
                 </p>
@@ -197,7 +197,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs mb-1">Winners</p>
+                <p className="text-muted-foreground text-sm mb-1">Winners</p>
                 <p className={`text-lg font-display font-bold text-neon-gold leading-tight transition-all duration-300 ${animatingValues.winners ? 'value-updated' : ''}`}>
                   {totalWinners}
                 </p>
@@ -232,7 +232,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
             {/* Prize distribution hint */}
             <div className="pt-4 border-t border-border/50">
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-sm text-muted-foreground text-center">
                 <Wand2 className="w-3 h-3 inline-block mr-1 text-neon-gold" />
                 Poker-style payouts: Top 25% of paid tickets plus a few free tickets win — first place gets the biggest share!
               </p>
