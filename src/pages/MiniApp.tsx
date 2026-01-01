@@ -262,14 +262,6 @@ export default function MiniApp() {
           modalWasOpened = true;
         }
         
-        // Check if modal was closed without connection
-        if (modalWasOpened && tonConnectUI.modalState === 'closed' && !tonConnectUI.connected) {
-          unsubscribe();
-          setLoading(false);
-          alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
-          return;
-        }
-        
         // Check if connection was established
         if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
           connectionEstablished = true;
@@ -291,7 +283,6 @@ export default function MiniApp() {
         // Continue with purchase
       } else {
         setLoading(false);
-        alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
         return;
       }
     }
@@ -415,14 +406,6 @@ export default function MiniApp() {
           modalWasOpened = true;
         }
         
-        // Check if modal was closed without connection
-        if (modalWasOpened && tonConnectUI.modalState === 'closed' && !tonConnectUI.connected) {
-          unsubscribe();
-          setLoading(false);
-          alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
-          return;
-        }
-        
         // Check if connection was established
         if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
           connectionEstablished = true;
@@ -443,7 +426,6 @@ export default function MiniApp() {
         await loadWalletBalances();
       } else if (!connectionEstablished) {
         setLoading(false);
-        alert('Connection not established. Please select a wallet in the popup window and confirm the connection.');
         return;
       }
     } catch (error: any) {
