@@ -182,13 +182,13 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
             <div className="space-y-3 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Entries</p>
-                <p className={`text-lg font-display font-bold text-neon-gold transition-all duration-300 ${animatingValues.participants ? 'value-updated' : ''}`}>
+                <p className="text-sm text-muted-foreground">
                   {participants} ({paidTickets} paid, {freeTickets} free)
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Winners</p>
-                <p className={`text-lg font-display font-bold text-neon-gold transition-all duration-300 ${animatingValues.winners ? 'value-updated' : ''}`}>
+                <p className="text-sm text-muted-foreground">
                   {winners}{freeWinners > 0 ? ` (${freeWinners} free ticket included)` : ''}
                 </p>
               </div>
@@ -196,14 +196,12 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
             <div className="text-center mb-4 -mt-2">
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
-              <p className="text-2xl font-display font-bold text-neon-pink">
-                <span className="font-mono tabular-nums">
-                  <span className="inline-block w-8 text-center">{timeRemaining.hours}</span>
-                  <span className="text-base mx-1">:</span>
-                  <span className="inline-block w-8 text-center">{timeRemaining.minutes}</span>
-                  <span className="text-base mx-1">:</span>
-                  <span className="inline-block w-8 text-center">{timeRemaining.seconds}</span>
-                </span>
+              <p className="text-2xl font-display font-bold text-neon-pink tabular-nums">
+                <span className="inline-block w-8 text-center">{timeRemaining.hours}</span>
+                <span className="text-base mx-1">:</span>
+                <span className="inline-block w-8 text-center">{timeRemaining.minutes}</span>
+                <span className="text-base mx-1">:</span>
+                <span className="inline-block w-8 text-center">{timeRemaining.seconds}</span>
               </p>
             </div>
 
