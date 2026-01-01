@@ -19,6 +19,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
     prizePool: false,
     participants: false,
     winners: false,
+    timer: false,
   });
   
   const prevValuesRef = useRef({
@@ -74,6 +75,12 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
         setAnimatingValues(prev => ({ ...prev, participants: true, winners: true }));
         setTimeout(() => setAnimatingValues(prev => ({ ...prev, participants: false, winners: false })), 1000);
       }, 600);
+
+      // Timer
+      setTimeout(() => {
+        setAnimatingValues(prev => ({ ...prev, timer: true }));
+        setTimeout(() => setAnimatingValues(prev => ({ ...prev, timer: false })), 1000);
+      }, 900);
     }
 
     prevVisibleRef.current = isVisible;
@@ -205,7 +212,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
             <div className="text-center mb-4 -mt-2">
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
-              <p className="text-xl font-display font-bold text-neon-pink tabular-nums">
+              <p className={`text-xl font-display font-bold text-neon-pink tabular-nums transition-all duration-300 ${animatingValues.timer ? 'value-updated' : ''}`}>
                 <span className="inline-block w-8 text-center">{timeRemaining.hours}</span>
                 <span className="text-base mx-1">:</span>
                 <span className="inline-block w-8 text-center">{timeRemaining.minutes}</span>
