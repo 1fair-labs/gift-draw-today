@@ -156,7 +156,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
               <Badge variant="outline" className="bg-neon-green/20 text-neon-green border-neon-green/30 animate-pulse">
                 LIVE
               </Badge>
-              <span className="text-muted-foreground font-display">Draw #{hasDraw ? currentDraw.draw_id : '••••••'}</span>
+              <span className="text-white font-display">Draw #{hasDraw ? currentDraw.draw_id : '••••••'}</span>
             </div>
             
             <div className="mb-6">
@@ -182,7 +182,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Entries</p>
-                <p className="text-lg font-display font-bold text-neon-gold leading-tight">
+                <p className={`text-lg font-display font-bold text-neon-gold leading-tight transition-all duration-300 ${animatingValues.participants ? 'value-updated' : ''}`}>
                   {participants}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -191,7 +191,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-1">Winners</p>
-                <p className="text-lg font-display font-bold text-neon-gold leading-tight">
+                <p className={`text-lg font-display font-bold text-neon-gold leading-tight transition-all duration-300 ${animatingValues.winners ? 'value-updated' : ''}`}>
                   {winners}
                 </p>
                 {freeWinners > 0 && (
