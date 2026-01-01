@@ -176,11 +176,11 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
         </div>
 
         <p className="text-sm text-muted-foreground/70 mt-4 mb-2">1 NFT ticket ≈ 1 USDT</p>
-        <Button 
-          onClick={onBuyTicket}
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold text-base glow-gold animate-glow-sweep"
-        >
+         <Button 
+           onClick={onBuyTicket}
+           disabled={loading}
+           className="w-full bg-gradient-to-r from-neon-gold to-orange-500 hover:opacity-90 text-background font-display font-bold text-base glow-gold animate-glow-sweep"
+         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
