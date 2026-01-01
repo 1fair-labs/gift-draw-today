@@ -251,7 +251,7 @@ export default function MiniApp() {
       
       // Wait for connection to be established or modal to close
       let attempts = 0;
-      const maxAttempts = 600; // 30 seconds (600 * 50ms)
+      const maxAttempts = 100; // 5 seconds (100 * 50ms)
       
       while (!connectionEstablished && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -310,11 +310,22 @@ export default function MiniApp() {
       const ticketCount = 1;
       const totalPriceCents = 100; // $1.00 = 100 cents
 
-      // Create tickets after payment
-      await createTicketsAfterPayment(ticketCount, telegramId);
+      // Create tickets after payment with max 5 seconds timeout
+      const mintingStartTime = Date.now();
+      const maxMintingTime = 5000; // 5 seconds max
       
-      // Add minimum delay to show minting animation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const mintingPromise = createTicketsAfterPayment(ticketCount, telegramId);
+      const timeoutPromise = new Promise<void>((resolve) => {
+        setTimeout(() => resolve(), maxMintingTime);
+      });
+      
+      await Promise.race([mintingPromise, timeoutPromise]);
+      
+      // Ensure minimum 1 second display
+      const elapsed = Date.now() - mintingStartTime;
+      if (elapsed < 1000) {
+        await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
+      }
       
       // Switch to tickets screen
       setCurrentScreen('tickets');
@@ -395,7 +406,7 @@ export default function MiniApp() {
       
       // Wait for connection to be established or modal to close
       let attempts = 0;
-      const maxAttempts = 600; // 30 seconds (600 * 50ms)
+      const maxAttempts = 100; // 5 seconds (100 * 50ms)
       
       while (!connectionEstablished && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 50));
