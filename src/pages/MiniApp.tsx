@@ -231,7 +231,8 @@ export default function MiniApp() {
     }
 
     // If wallet is not connected, connect it first using standard TON Connect UI
-    if (!walletAddress || !tonConnectUI.connected) {
+    // Check both walletAddress state and tonConnectUI.connected to ensure consistency
+    if (!walletAddress || (!tonConnectUI.connected && !tonConnectUI.wallet?.account?.address)) {
       // Use standard TON Connect UI to open wallet selection modal
       tonConnectUI.openModal();
       
@@ -435,6 +436,10 @@ export default function MiniApp() {
         const address = tonConnectUI.wallet.account.address;
         setWalletAddress(address);
         await loadWalletBalances();
+        // Force re-render by updating state
+        setLoading(false);
+        // Small delay to ensure state updates propagate
+        await new Promise(resolve => setTimeout(resolve, 100));
       } else if (!connectionEstablished) {
         setLoading(false);
         return;
@@ -614,6 +619,37 @@ export default function MiniApp() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Sync wallet connection state with tonConnectUI
+  useEffect(() => {
+    const checkConnection = () => {
+      if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+        const address = tonConnectUI.wallet.account.address;
+        if (address !== walletAddress) {
+          setWalletAddress(address);
+          loadWalletBalances();
+        }
+      } else if (!tonConnectUI.connected && walletAddress) {
+        // Wallet disconnected
+        setWalletAddress(null);
+        setCltBalance(0);
+        setUsdtBalance(0);
+        setTonBalance(0);
+      }
+    };
+
+    // Check immediately
+    checkConnection();
+
+    // Subscribe to connection status changes
+    const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
+      checkConnection();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [tonConnectUI.connected, tonConnectUI.wallet, walletAddress, loadWalletBalances]);
 
   // Update balances every 30 seconds
   useEffect(() => {
