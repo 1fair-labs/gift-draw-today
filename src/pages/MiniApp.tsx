@@ -705,20 +705,67 @@ export default function MiniApp() {
     }
   };
 
-  // Connect wallet
+  // Connect wallet - prefer Telegram Wallet
   const handleConnectWallet = useCallback(async () => {
-    // If wallet is already connected, do nothing
+    // If wallet is already connected, check if it's Telegram Wallet
     if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
       const address = tonConnectUI.wallet.account.address;
-      setWalletAddress(address);
-      await loadWalletBalances(false); // Use cache if available
-      return;
+      const walletName = tonConnectUI.wallet?.name || tonConnectUI.wallet?.appName || '';
+      const isTelegramWallet = walletName.toLowerCase().includes('telegram') || 
+                              walletName.toLowerCase().includes('wallet') && walletName.toLowerCase().includes('telegram');
+      
+      if (!isTelegramWallet && walletName) {
+        // Not Telegram Wallet - ask to reconnect
+        const reconnect = confirm(
+          `Currently connected to ${walletName}, but Telegram Wallet is recommended.\n\n` +
+          `Your address: ${address}\n\n` +
+          `Would you like to reconnect to Telegram Wallet?`
+        );
+        if (reconnect) {
+          // Disconnect current wallet
+          await tonConnectUI.disconnect();
+          setWalletAddress(null);
+          // Continue to connection flow below
+        } else {
+          // Use current wallet
+          setWalletAddress(address);
+          await loadWalletBalances(false);
+          return;
+        }
+      } else {
+        // Already connected to Telegram Wallet or unknown
+        setWalletAddress(address);
+        await loadWalletBalances(false);
+        return;
+      }
     }
 
     try {
       setLoading(true);
       
-      // Use standard TON Connect UI to open wallet selection modal
+      // Try to connect directly to Telegram Wallet if available
+      try {
+        const walletsList = await tonConnectUI.walletList;
+        if (walletsList && Array.isArray(walletsList)) {
+          const telegramWallet = walletsList.find((w: any) => 
+            w.name?.toLowerCase().includes('telegram') || 
+            w.appName?.toLowerCase().includes('telegram')
+          );
+          
+          if (telegramWallet) {
+            addDebugLog(`🔗 Found Telegram Wallet: ${telegramWallet.name || telegramWallet.appName}`);
+            // Try to connect directly
+            await tonConnectUI.connectWallet(telegramWallet);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (directConnectError) {
+        addDebugLog(`ℹ️ Direct Telegram Wallet connection not available, using modal`);
+      }
+      
+      // Fallback: Use standard TON Connect UI to open wallet selection modal
+      addDebugLog(`💡 Opening wallet selection modal - please choose Telegram Wallet`);
       tonConnectUI.openModal();
       
       // Track modal state to detect when it closes
@@ -730,6 +777,17 @@ export default function MiniApp() {
         if (wallet && wallet.account) {
           connectionEstablished = true;
           const address = wallet.account.address;
+          const walletName = wallet?.name || wallet?.appName || '';
+          addDebugLog(`✅ Wallet connected: ${walletName || 'Unknown'}`);
+          addDebugLog(`📍 Address: ${address}`);
+          
+          // Check if it's Telegram Wallet
+          const isTelegramWallet = walletName.toLowerCase().includes('telegram') || 
+                                    walletName.toLowerCase().includes('wallet') && walletName.toLowerCase().includes('telegram');
+          if (!isTelegramWallet && walletName) {
+            addDebugLog(`⚠️ Warning: Not Telegram Wallet (${walletName})`);
+          }
+          
           setWalletAddress(address);
           loadWalletBalances(true); // Force update on connection
         }
@@ -955,6 +1013,20 @@ export default function MiniApp() {
     const checkConnection = () => {
       if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
         const address = tonConnectUI.wallet.account.address;
+        const walletName = tonConnectUI.wallet?.name || tonConnectUI.wallet?.appName || '';
+        const isTelegramWallet = walletName.toLowerCase().includes('telegram') || 
+                                walletName.toLowerCase().includes('wallet') && walletName.toLowerCase().includes('telegram');
+        
+        // Log wallet info
+        addDebugLog(`🔗 Connected wallet: ${walletName || 'Unknown'}`);
+        addDebugLog(`📍 Address: ${address}`);
+        
+        // Check if it's Telegram Wallet
+        if (!isTelegramWallet && walletName) {
+          addDebugLog(`⚠️ Warning: Connected wallet is not Telegram Wallet (${walletName})`);
+          addDebugLog(`💡 Please connect Telegram Wallet for proper functionality`);
+        }
+        
         if (address !== walletAddress) {
           setWalletAddress(address);
           loadWalletBalances(true); // Force update when address changes
