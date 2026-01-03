@@ -727,19 +727,26 @@ export default function MiniApp() {
     };
   }, [tonConnectUI.connected, tonConnectUI.wallet, walletAddress, loadWalletBalances]);
 
-  // Update balances every 30 seconds
+  // Update balances automatically every 10 seconds
   useEffect(() => {
     if (!walletAddress) return;
 
+    // Update immediately when wallet address changes
+    loadWalletBalances();
+    if (telegramId) {
+      loadUserData(telegramId);
+    }
+
+    // Then update every 10 seconds
     const interval = setInterval(() => {
       loadWalletBalances();
       if (telegramId) {
         loadUserData(telegramId);
       }
-    }, 30000);
+    }, 10000); // Update every 10 seconds
 
     return () => clearInterval(interval);
-  }, [walletAddress, telegramId]);
+  }, [walletAddress, telegramId, loadWalletBalances]);
 
   // Update balances when app becomes visible (user returns from wallet)
   useEffect(() => {
