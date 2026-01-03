@@ -522,69 +522,57 @@ export default function MiniApp() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Check final connection status
-      if (isWalletConnected()) {
-        const address = getWalletAddress();
-        if (address) {
-          setWalletAddress(address);
-          await loadWalletBalances(true); // Force update on connection
-          
-          // After successful connection from Buy Ticket, check USDT balance
-        const WebApp = (window as any).Telegram?.WebApp;
-        const minUsdtBalance = 1.1; // Minimum required USDT balance
-        
-        // Wait a bit for balances to load
-        addDebugLog('⏳ Waiting for balances to load...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Re-check balances after loading and get actual values
-        const balances = await loadWalletBalances(true); // Force update before checking
-        const currentUsdtBalance = balances?.usdt ?? usdtBalance;
-        
-        addDebugLog(`💰 Current USDT balance: ${currentUsdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
-        
-        // Check USDT balance
-        if (currentUsdtBalance < minUsdtBalance) {
-          addDebugLog(`❌ Insufficient balance: ${currentUsdtBalance.toFixed(6)} < ${minUsdtBalance}`);
-          setLoading(false);
-          const openPurchase = confirm(
-            `Insufficient USDT balance. You need at least ${minUsdtBalance} USDT to buy a ticket.\n\nYour current balance: ${usdtBalance.toFixed(2)} USDT\n\nWould you like to open the USDT purchase page?`
-          );
-          
-          if (openPurchase && WebApp) {
-            // Open wallet app with top up button
-            // Using TON wallet deep link to open wallet with top up
-            const walletUrl = 'ton://transfer'; // Opens wallet with transfer/top up
-            
-            // Try to open via Telegram Wallet or deep link
-            if (WebApp.openTelegramLink) {
-              // Use Telegram Wallet link
-              WebApp.openTelegramLink('https://t.me/wallet?startattach=topup');
-            } else if (WebApp.openLink) {
-              // Try deep link first, fallback to web
-              try {
-                window.location.href = walletUrl;
-                // Fallback after timeout
-                setTimeout(() => {
-                  WebApp.openLink('https://wallet.ton.org/');
-                }, 1000);
-              } catch (e) {
-                WebApp.openLink('https://wallet.ton.org/');
-              }
-            } else {
-              // Fallback
-              window.open('https://wallet.ton.org/', '_blank');
-            }
-          }
-          return;
-        }
-        
-        // Continue with purchase
-      } else {
+      if (!isWalletConnected()) {
         setLoading(false);
+        return;
+      }
+      
+      const address = getWalletAddress();
+      if (!address) {
+        setLoading(false);
+        return;
+      }
+      
+      setWalletAddress(address);
+      await loadWalletBalances(true); // Force update on connection
+      
+      // After successful connection from Buy Ticket, check USDT balance
+      const WebApp = (window as any).Telegram?.WebApp;
+      const minUsdtBalance = 1.1; // Minimum required USDT balance
+      
+      // Wait a bit for balances to load
+      addDebugLog('⏳ Waiting for balances to load...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Re-check balances after loading and get actual values
+      const balances = await loadWalletBalances(true); // Force update before checking
+      const currentUsdtBalance = balances?.usdt ?? usdtBalance;
+      
+      addDebugLog(`💰 Current USDT balance: ${currentUsdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
+      
+      // Check USDT balance
+      if (currentUsdtBalance < minUsdtBalance) {
+        addDebugLog(`❌ Insufficient balance: ${currentUsdtBalance.toFixed(6)} < ${minUsdtBalance}`);
+        setLoading(false);
+        const openPurchase = confirm(
+          `Insufficient USDT balance. You need at least ${minUsdtBalance} USDT to buy a ticket.\n\nYour current balance: ${usdtBalance.toFixed(2)} USDT\n\nWould you like to open the USDT purchase page?`
+        );
+        
+        if (openPurchase && WebApp) {
+          // Open wallet app with top up button
+          if (WebApp.openTelegramLink) {
+            WebApp.openTelegramLink('https://t.me/wallet?startattach=topup');
+          } else if (WebApp.openLink) {
+            WebApp.openLink('https://wallet.ton.org/');
+          } else {
+            window.open('https://wallet.ton.org/', '_blank');
+          }
+        }
         return;
       }
     }
 
+    // Main purchase logic
     try {
       const WebApp = (window as any).Telegram?.WebApp;
       if (!WebApp || !isInTelegramWebApp()) {
