@@ -281,6 +281,41 @@ export default function MiniApp() {
         const address = tonConnectUI.wallet.account.address;
         setWalletAddress(address);
         await loadWalletBalances();
+        
+        // After successful connection from Buy Ticket, check USDT balance
+        const WebApp = (window as any).Telegram?.WebApp;
+        const minUsdtBalance = 1.1; // Minimum required USDT balance
+        
+        // Wait a bit for balances to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Re-check balances after loading
+        await loadWalletBalances();
+        
+        // Check USDT balance
+        if (usdtBalance < minUsdtBalance) {
+          setLoading(false);
+          const openPurchase = confirm(
+            `Insufficient USDT balance. You need at least ${minUsdtBalance} USDT to buy a ticket.\n\nYour current balance: ${usdtBalance.toFixed(2)} USDT\n\nWould you like to open the USDT purchase page?`
+          );
+          
+          if (openPurchase && WebApp) {
+            // Open USDT purchase page in wallet app
+            // Using TON wallet deep link or exchange link
+            const purchaseUrl = 'https://app.tonkeeper.com/swap'; // TONKeeper swap page
+            // Alternative: 'https://wallet.ton.org/swap' or other exchange links
+            
+            if (WebApp.openLink) {
+              WebApp.openLink(purchaseUrl);
+            } else if (WebApp.openTelegramLink) {
+              WebApp.openTelegramLink(purchaseUrl);
+            } else {
+              window.open(purchaseUrl, '_blank');
+            }
+          }
+          return;
+        }
+        
         // Continue with purchase
       } else {
         setLoading(false);
@@ -293,6 +328,27 @@ export default function MiniApp() {
       if (!WebApp || !isInTelegramWebApp()) {
         setLoading(false);
         alert('Please open this site in Telegram to buy tickets.');
+        return;
+      }
+
+      // Check USDT balance (if wallet was already connected)
+      const minUsdtBalance = 1.1;
+      if (usdtBalance < minUsdtBalance) {
+        setLoading(false);
+        const openPurchase = confirm(
+          `Insufficient USDT balance. You need at least ${minUsdtBalance} USDT to buy a ticket.\n\nYour current balance: ${usdtBalance.toFixed(2)} USDT\n\nWould you like to open the USDT purchase page?`
+        );
+        
+        if (openPurchase) {
+          const purchaseUrl = 'https://app.tonkeeper.com/swap';
+          if (WebApp.openLink) {
+            WebApp.openLink(purchaseUrl);
+          } else if (WebApp.openTelegramLink) {
+            WebApp.openTelegramLink(purchaseUrl);
+          } else {
+            window.open(purchaseUrl, '_blank');
+          }
+        }
         return;
       }
 
@@ -336,7 +392,7 @@ export default function MiniApp() {
     } finally {
       setLoading(false);
     }
-  }, [walletAddress, telegramId, tonBalance, loadWalletBalances]);
+  }, [walletAddress, telegramId, tonBalance, usdtBalance, loadWalletBalances]);
 
   // Create tickets after payment
   const createTicketsAfterPayment = async (count: number, tgId: number) => {
