@@ -167,13 +167,51 @@ export default function MiniApp() {
     if (!walletAddress) return;
 
     try {
-      // TODO: Implement actual balance fetching from TON blockchain
-      // For now, using mock data
-      // You'll need to use TON API or TON Connect to get balances
-      setUsdtBalance(0);
-      setTonBalance(0);
+      // Get TON balance
+      const tonApiUrl = 'https://tonapi.io/v2';
+      const accountAddress = walletAddress;
+      
+      // Get TON balance
+      const tonBalanceResponse = await fetch(`${tonApiUrl}/accounts/${accountAddress}`);
+      if (tonBalanceResponse.ok) {
+        const tonData = await tonBalanceResponse.json();
+        // Balance is in nanoTON, convert to TON (1 TON = 1,000,000,000 nanoTON)
+        const balanceNano = BigInt(tonData.balance || '0');
+        const balanceTon = Number(balanceNano) / 1_000_000_000;
+        setTonBalance(balanceTon);
+      }
+
+      // Get USDT Jetton balance
+      // USDT Jetton contract address on TON mainnet
+      const usdtJettonAddress = 'EQDo_ZJyQ_YqBzBwbVpMm4rh1k6H1fGsaSpPfG9sE7V8TL3o';
+      
+      try {
+        // Get jetton wallet address for this user's wallet
+        const jettonWalletResponse = await fetch(
+          `${tonApiUrl}/accounts/${accountAddress}/jettons/${usdtJettonAddress}`
+        );
+        
+        if (jettonWalletResponse.ok) {
+          const jettonData = await jettonWalletResponse.json();
+          if (jettonData.balance) {
+            // USDT has 6 decimals (1 USDT = 1,000,000 units)
+            const balanceUnits = BigInt(jettonData.balance);
+            const balanceUsdt = Number(balanceUnits) / 1_000_000;
+            setUsdtBalance(balanceUsdt);
+          } else {
+            setUsdtBalance(0);
+          }
+        } else {
+          // If jetton wallet doesn't exist, balance is 0
+          setUsdtBalance(0);
+        }
+      } catch (jettonError) {
+        console.error('Error loading USDT balance:', jettonError);
+        // Don't reset to 0 on error, keep previous value
+      }
     } catch (error) {
       console.error('Error loading wallet balances:', error);
+      // Don't reset balances on error, keep previous values
     }
   };
 
