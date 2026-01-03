@@ -1,5 +1,5 @@
 // src/pages/MiniApp.tsx - New Mini App architecture
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Info, Sparkles, Ticket, X, Wand2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,11 @@ export default function MiniApp() {
   const [currentDraw, setCurrentDraw] = useState<Draw | null>(null);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [showDebug, setShowDebug] = useState(false);
+  
+  // Prevent multiple simultaneous balance requests
+  const balanceLoadingRef = useRef<boolean>(false);
+  const balanceCacheRef = useRef<{ ton: number; usdt: number; timestamp: number } | null>(null);
+  const lastRequestTimeRef = useRef<number>(0);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -173,12 +178,35 @@ export default function MiniApp() {
     setDebugLogs(prev => [...prev.slice(-49), logMessage]); // Keep last 50 logs
   }, []);
 
-  // Load wallet balances
-  const loadWalletBalances = async (): Promise<{ ton: number; usdt: number } | null> => {
+  // Load wallet balances with rate limiting and caching
+  const loadWalletBalances = async (force = false): Promise<{ ton: number; usdt: number } | null> => {
     if (!walletAddress) {
       addDebugLog('❌ No wallet address');
       return null;
     }
+
+    // Prevent multiple simultaneous requests
+    if (balanceLoadingRef.current && !force) {
+      addDebugLog('⏸️ Balance request already in progress, skipping...');
+      return balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : null;
+    }
+
+    // Check cache (5 seconds)
+    const now = Date.now();
+    if (!force && balanceCacheRef.current && (now - balanceCacheRef.current.timestamp) < 5000) {
+      addDebugLog('💾 Using cached balance');
+      return { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt };
+    }
+
+    // Rate limiting: minimum 2 seconds between requests
+    const timeSinceLastRequest = now - lastRequestTimeRef.current;
+    if (!force && timeSinceLastRequest < 2000) {
+      addDebugLog(`⏳ Rate limit: waiting ${Math.ceil((2000 - timeSinceLastRequest) / 1000)}s...`);
+      return balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : null;
+    }
+
+    balanceLoadingRef.current = true;
+    lastRequestTimeRef.current = now;
 
     try {
       // TON API (tonapi.io/v2) accepts user-friendly addresses directly
@@ -193,6 +221,14 @@ export default function MiniApp() {
       try {
         addDebugLog(`📡 Fetching TON balance from ${tonApiUrl}/accounts/${accountAddress}`);
         const tonBalanceResponse = await fetch(`${tonApiUrl}/accounts/${accountAddress}`);
+        
+        if (tonBalanceResponse.status === 429) {
+          addDebugLog(`⚠️ Rate limit hit (429). Waiting before retry...`);
+          balanceLoadingRef.current = false;
+          // Don't update cache on rate limit, return cached or current values
+          return balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : { ton: tonBalance, usdt: usdtBalance };
+        }
+        
         if (tonBalanceResponse.ok) {
           const tonData = await tonBalanceResponse.json();
           const balanceNano = BigInt(tonData.balance || '0');
@@ -216,6 +252,14 @@ export default function MiniApp() {
         const jettonsResponse = await fetch(
           `${tonApiUrl}/accounts/${accountAddress}/jettons`
         );
+        
+        if (jettonsResponse.status === 429) {
+          addDebugLog(`⚠️ Rate limit hit (429) for jettons. Using cached values.`);
+          balanceLoadingRef.current = false;
+          // Don't update cache on rate limit, return cached or current values
+          const result = balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : { ton: balanceTon, usdt: usdtBalance };
+          return result;
+        }
         
         if (jettonsResponse.ok) {
           const jettonsData = await jettonsResponse.json();
@@ -288,28 +332,41 @@ export default function MiniApp() {
             const balanceUsdt = Number(balanceUnits) / 1_000_000;
             addDebugLog(`✅ USDT balance: ${balanceUsdt.toFixed(6)} USDT`);
             setUsdtBalance(balanceUsdt);
-            return { ton: balanceTon, usdt: balanceUsdt };
+            
+            // Update cache
+            const result = { ton: balanceTon, usdt: balanceUsdt };
+            balanceCacheRef.current = { ...result, timestamp: Date.now() };
+            balanceLoadingRef.current = false;
+            return result;
           } else {
             addDebugLog(`❌ USDT jetton not found in ${jettons.length} jettons`);
             setUsdtBalance(0);
-            return { ton: balanceTon, usdt: 0 };
+            
+            // Update cache
+            const result = { ton: balanceTon, usdt: 0 };
+            balanceCacheRef.current = { ...result, timestamp: Date.now() };
+            balanceLoadingRef.current = false;
+            return result;
           }
         } else {
           const errorText = await jettonsResponse.text();
           addDebugLog(`❌ Failed to get jettons: ${jettonsResponse.status} - ${errorText}`);
           setUsdtBalance(0);
-          return { ton: balanceTon, usdt: 0 };
+          
+          // Don't update cache on error, return cached or current values
+          balanceLoadingRef.current = false;
+          return balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : { ton: balanceTon, usdt: 0 };
         }
       } catch (jettonError: any) {
         addDebugLog(`❌ Error loading USDT balance: ${jettonError.message}`);
-        return { ton: balanceTon, usdt: usdtBalance }; // Return previous USDT balance
+        balanceLoadingRef.current = false;
+        return balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : { ton: balanceTon, usdt: usdtBalance };
       }
     } catch (error: any) {
       addDebugLog(`❌ Error loading wallet balances: ${error.message}`);
-      return null;
+      balanceLoadingRef.current = false;
+      return balanceCacheRef.current ? { ton: balanceCacheRef.current.ton, usdt: balanceCacheRef.current.usdt } : null;
     }
-    
-    return { ton: tonBalance, usdt: usdtBalance };
   };
 
   // Update ticket draw_id in Supabase
@@ -381,7 +438,7 @@ export default function MiniApp() {
           connectionEstablished = true;
           const address = wallet.account.address;
           setWalletAddress(address);
-          loadWalletBalances();
+          loadWalletBalances(true); // Force update on connection
         }
       });
       
@@ -403,7 +460,7 @@ export default function MiniApp() {
           connectionEstablished = true;
           const address = tonConnectUI.wallet.account.address;
           setWalletAddress(address);
-          await loadWalletBalances();
+          await loadWalletBalances(true); // Force update on connection
           unsubscribe();
           break;
         }
@@ -415,7 +472,7 @@ export default function MiniApp() {
       if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
         const address = tonConnectUI.wallet.account.address;
         setWalletAddress(address);
-        await loadWalletBalances();
+        await loadWalletBalances(true); // Force update on connection
         
         // After successful connection from Buy Ticket, check USDT balance
         const WebApp = (window as any).Telegram?.WebApp;
@@ -426,7 +483,7 @@ export default function MiniApp() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Re-check balances after loading and get actual values
-        const balances = await loadWalletBalances();
+        const balances = await loadWalletBalances(true); // Force update before checking
         const currentUsdtBalance = balances?.usdt ?? usdtBalance;
         
         addDebugLog(`💰 Current USDT balance: ${currentUsdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
@@ -489,7 +546,7 @@ export default function MiniApp() {
       // Reload balances before check and get actual values
       let currentUsdtBalance = usdtBalance;
       if (walletAddress) {
-        const balances = await loadWalletBalances();
+        const balances = await loadWalletBalances(true); // Force update before purchase
         currentUsdtBalance = balances?.usdt ?? usdtBalance;
       }
       
@@ -609,7 +666,7 @@ export default function MiniApp() {
     if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
       const address = tonConnectUI.wallet.account.address;
       setWalletAddress(address);
-      await loadWalletBalances();
+      await loadWalletBalances(false); // Use cache if available
       return;
     }
 
@@ -629,7 +686,7 @@ export default function MiniApp() {
           connectionEstablished = true;
           const address = wallet.account.address;
           setWalletAddress(address);
-          loadWalletBalances();
+          loadWalletBalances(true); // Force update on connection
         }
       });
       
@@ -651,7 +708,7 @@ export default function MiniApp() {
           connectionEstablished = true;
           const address = tonConnectUI.wallet.account.address;
           setWalletAddress(address);
-          await loadWalletBalances();
+          await loadWalletBalances(true); // Force update on connection
           unsubscribe();
           break;
         }
@@ -663,7 +720,7 @@ export default function MiniApp() {
       if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
         const address = tonConnectUI.wallet.account.address;
         setWalletAddress(address);
-        await loadWalletBalances();
+        await loadWalletBalances(true); // Force update on connection
         // Force re-render by updating state
         setLoading(false);
         // Small delay to ensure state updates propagate
@@ -824,7 +881,7 @@ export default function MiniApp() {
         const address = getWalletAddress();
         if (address) {
           setWalletAddress(address);
-          loadWalletBalances();
+          loadWalletBalances(true); // Force update on initial connection
         }
       }
     });
@@ -855,11 +912,12 @@ export default function MiniApp() {
         const address = tonConnectUI.wallet.account.address;
         if (address !== walletAddress) {
           setWalletAddress(address);
-          loadWalletBalances();
+          loadWalletBalances(true); // Force update when address changes
         }
       } else if (!tonConnectUI.connected && walletAddress) {
         // Wallet disconnected
         setWalletAddress(null);
+        balanceCacheRef.current = null; // Clear cache on disconnect
         setCltBalance(0);
         setUsdtBalance(0);
         setTonBalance(0);
@@ -879,30 +937,35 @@ export default function MiniApp() {
     };
   }, [tonConnectUI.connected, tonConnectUI.wallet, walletAddress, loadWalletBalances]);
 
-  // Update balances automatically every 10 seconds
+  // Update balances automatically every 30 seconds (reduced frequency to avoid rate limits)
   useEffect(() => {
     if (!walletAddress) {
       addDebugLog('⏸️ No wallet address, skipping balance update');
       return;
     }
 
-    // Update immediately when wallet address changes
-    addDebugLog('🔄 Wallet address changed, loading balances...');
-    loadWalletBalances();
-    if (telegramId) {
-      loadUserData(telegramId);
-    }
-
-    // Then update every 10 seconds
-    const interval = setInterval(() => {
-      loadWalletBalances();
+    // Update immediately when wallet address changes (with debounce)
+    const timeoutId = setTimeout(() => {
+      addDebugLog('🔄 Wallet address changed, loading balances...');
+      loadWalletBalances(true); // Force update on address change
       if (telegramId) {
         loadUserData(telegramId);
       }
-    }, 10000); // Update every 10 seconds
+    }, 500); // Debounce 500ms
 
-    return () => clearInterval(interval);
-  }, [walletAddress, telegramId, loadWalletBalances]);
+    // Then update every 30 seconds (increased from 10 to reduce API calls)
+    const interval = setInterval(() => {
+      loadWalletBalances(false); // Use cache if available
+      if (telegramId) {
+        loadUserData(telegramId);
+      }
+    }, 30000); // Update every 30 seconds
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
+  }, [walletAddress, telegramId]);
 
   // Update balances when app becomes visible (user returns from wallet)
   useEffect(() => {
@@ -910,11 +973,13 @@ export default function MiniApp() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // User returned to app, refresh balances
-        loadWalletBalances();
-        if (telegramId) {
-          loadUserData(telegramId);
-        }
+        // User returned to app, refresh balances (with delay to avoid rate limit)
+        setTimeout(() => {
+          loadWalletBalances(true); // Force update when returning
+          if (telegramId) {
+            loadUserData(telegramId);
+          }
+        }, 1000);
       }
     };
 
@@ -922,10 +987,12 @@ export default function MiniApp() {
     
     // Also listen for focus event as fallback
     const handleFocus = () => {
-      loadWalletBalances();
-      if (telegramId) {
-        loadUserData(telegramId);
-      }
+      setTimeout(() => {
+        loadWalletBalances(true); // Force update on focus
+        if (telegramId) {
+          loadUserData(telegramId);
+        }
+      }, 1000);
     };
     
     window.addEventListener('focus', handleFocus);
