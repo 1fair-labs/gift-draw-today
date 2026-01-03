@@ -263,20 +263,58 @@ export default function MiniApp() {
         
         if (jettonsResponse.ok) {
           const jettonsData = await jettonsResponse.json();
-          const jettons = jettonsData.jettons || jettonsData || [];
+          
+          // Log full response for debugging
+          addDebugLog(`📋 Full jettons response: ${JSON.stringify(jettonsData).slice(0, 200)}...`);
+          
+          // Handle different response structures
+          let jettons: any[] = [];
+          if (Array.isArray(jettonsData)) {
+            jettons = jettonsData;
+          } else if (jettonsData && Array.isArray(jettonsData.jettons)) {
+            jettons = jettonsData.jettons;
+          } else if (jettonsData && jettonsData.balances && Array.isArray(jettonsData.balances)) {
+            jettons = jettonsData.balances;
+          } else if (jettonsData && typeof jettonsData === 'object') {
+            // Try to find any array in the response
+            const keys = Object.keys(jettonsData);
+            for (const key of keys) {
+              if (Array.isArray(jettonsData[key])) {
+                jettons = jettonsData[key];
+                addDebugLog(`📦 Found jettons array in key: ${key}`);
+                break;
+              }
+            }
+          }
+          
+          if (!Array.isArray(jettons)) {
+            addDebugLog(`⚠️ Jettons is not an array. Type: ${typeof jettons}, Value: ${JSON.stringify(jettons).slice(0, 100)}`);
+            jettons = [];
+          }
           
           addDebugLog(`📦 Found ${jettons.length} jettons`);
           addDebugLog(`🔍 Looking for USDT (master: ${usdtJettonMasterAddress})`);
           
-          // Log all jettons for debugging
-          jettons.forEach((j: any, idx: number) => {
-            const symbol = j.jetton?.symbol || j.symbol || '?';
-            const name = j.jetton?.name || j.name || '?';
-            const addr = j.jetton?.address || j.master?.address || j.jetton?.master?.address || '?';
-            addDebugLog(`  Jetton ${idx + 1}: ${symbol} (${name}) - ${addr.slice(0, 10)}...`);
-          });
+          // Log all jettons for debugging (only if array)
+          if (Array.isArray(jettons) && jettons.length > 0) {
+            jettons.forEach((j: any, idx: number) => {
+              const symbol = j.jetton?.symbol || j.symbol || '?';
+              const name = j.jetton?.name || j.name || '?';
+              const addr = j.jetton?.address || j.master?.address || j.jetton?.master?.address || '?';
+              addDebugLog(`  Jetton ${idx + 1}: ${symbol} (${name}) - ${addr.slice(0, 10)}...`);
+            });
+          } else {
+            addDebugLog(`ℹ️ No jettons found or empty array`);
+          }
           
-          // Find USDT jetton - check all possible fields and formats
+          // Find USDT jetton - check all possible fields and formats (only if jettons is an array)
+          if (!Array.isArray(jettons)) {
+            addDebugLog(`❌ Jettons is not an array, cannot search for USDT`);
+            setUsdtBalance(0);
+            balanceLoadingRef.current = false;
+            return { ton: balanceTon, usdt: 0 };
+          }
+          
           const usdtJetton = jettons.find((jetton: any) => {
             // Check by symbol
             const symbol = jetton.jetton?.symbol || jetton.symbol || '';
