@@ -183,7 +183,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+            <div className="grid grid-cols-2 gap-4 text-sm mb-3">
               <div>
                 <p className="text-muted-foreground text-sm mb-1">Entries</p>
                 <p className={`text-lg font-display font-bold text-neon-gold leading-tight transition-all duration-300 ${animatingValues.participants ? 'value-updated' : ''}`}>
