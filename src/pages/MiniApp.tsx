@@ -293,18 +293,25 @@ export default function MiniApp() {
           }
           
           addDebugLog(`📦 Found ${jettons.length} jettons`);
-          addDebugLog(`🔍 Looking for USDT (master: ${usdtJettonMasterAddress})`);
           
-          // Log all jettons for debugging (only if array)
-          if (Array.isArray(jettons) && jettons.length > 0) {
+          if (jettons.length === 0) {
+            addDebugLog(`⚠️ No jettons found on this address`);
+            addDebugLog(`📍 Wallet address: ${accountAddress}`);
+            addDebugLog(`💡 Check on tonviewer.com or tonapi.io if USDT is on this address`);
+            addDebugLog(`💡 If USDT is there but not showing, try sending a small amount to activate it`);
+          } else {
+            addDebugLog(`🔍 Looking for USDT (master: ${usdtJettonMasterAddress})`);
+            
+            // Log all jettons for debugging
             jettons.forEach((j: any, idx: number) => {
               const symbol = j.jetton?.symbol || j.symbol || '?';
               const name = j.jetton?.name || j.name || '?';
               const addr = j.jetton?.address || j.master?.address || j.jetton?.master?.address || '?';
-              addDebugLog(`  Jetton ${idx + 1}: ${symbol} (${name}) - ${addr.slice(0, 10)}...`);
+              const balance = j.balance || j.amount || j.quantity || j.jetton?.balance || '0';
+              addDebugLog(`  Jetton ${idx + 1}: ${symbol} (${name})`);
+              addDebugLog(`    Address: ${addr}`);
+              addDebugLog(`    Balance: ${balance}`);
             });
-          } else {
-            addDebugLog(`ℹ️ No jettons found or empty array`);
           }
           
           // Find USDT jetton - check all possible fields and formats (only if jettons is an array)
