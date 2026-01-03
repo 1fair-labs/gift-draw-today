@@ -73,8 +73,22 @@ function RootRedirect() {
 function App() {
   const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
   
+  // Configure to only show Telegram Wallet
+  const uiOptions = {
+    actionsConfiguration: {
+      twaReturnUrl: window.location.href,
+      skipWalletsBalance: false
+    },
+    // This should filter wallets, but may not be supported in all versions
+    // So we'll handle it in the component instead
+  };
+  
   return (
-    <TonConnectUIProvider manifestUrl={manifestUrl} uiPreferences={{ theme: 'DARK' }}>
+    <TonConnectUIProvider 
+      manifestUrl={manifestUrl} 
+      uiPreferences={{ theme: 'DARK' }}
+      {...uiOptions}
+    >
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />

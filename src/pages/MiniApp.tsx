@@ -18,15 +18,52 @@ type Screen = 'home' | 'tickets' | 'profile' | 'about';
 export default function MiniApp() {
   const [tonConnectUI] = useTonConnectUI();
   
-  // Override openModal to connect directly to Telegram Wallet
-  useEffect(() => {
-    if (!tonConnectUI) return;
+  // Helper function to connect to Telegram Wallet only
+  const connectToTelegramWallet = useCallback(async () => {
+    // First, try to find Telegram Wallet in the list
+    try {
+      addDebugLog(`🔍 Searching for Telegram Wallet in available wallets...`);
+      const walletsList = await tonConnectUI.walletList;
+      
+      if (walletsList && Array.isArray(walletsList)) {
+        addDebugLog(`📋 Found ${walletsList.length} wallets`);
+        walletsList.forEach((w: any, idx: number) => {
+          addDebugLog(`  ${idx + 1}. ${w.name || w.appName} - ${w.universalLink || 'no link'}`);
+        });
+        
+        // Look for Telegram Wallet - check multiple criteria
+        const telegramWallet = walletsList.find((w: any) => {
+          const name = (w.name || '').toLowerCase();
+          const appName = (w.appName || '').toLowerCase();
+          const universalLink = (w.universalLink || '').toLowerCase();
+          
+          return universalLink.includes('t.me/wallet') ||
+                 universalLink.includes('wallet?startapp') ||
+                 name.includes('telegram') && name.includes('wallet') ||
+                 appName === 'wallet' ||
+                 (name.includes('wallet') && isInTelegramWebApp());
+        });
+        
+        if (telegramWallet) {
+          addDebugLog(`✅ Found Telegram Wallet: ${telegramWallet.name || telegramWallet.appName}`);
+          addDebugLog(`  UniversalLink: ${telegramWallet.universalLink}`);
+          addDebugLog(`  BridgeUrl: ${telegramWallet.bridgeUrl}`);
+          
+          // Connect to Telegram Wallet
+          await tonConnectUI.connectWallet(telegramWallet);
+          addDebugLog(`✅ Telegram Wallet connection initiated`);
+          return;
+        } else {
+          addDebugLog(`❌ Telegram Wallet not found in wallet list`);
+        }
+      }
+    } catch (listError: any) {
+      addDebugLog(`❌ Error getting wallet list: ${listError.message}`);
+    }
     
-    // Store original openModal
-    const originalOpenModal = tonConnectUI.openModal.bind(tonConnectUI);
-    
-    // Override openModal to connect directly to Telegram Wallet
-    tonConnectUI.openModal = async () => {
+    // Fallback: Try with manual config
+    try {
+      addDebugLog(`🔗 Trying manual Telegram Wallet configuration...`);
       const telegramWalletConfig = {
         name: 'Telegram Wallet',
         imageUrl: 'https://telegram.org/img/ico/favicon.ico',
@@ -36,42 +73,12 @@ export default function MiniApp() {
         platforms: ['ios', 'android', 'macos', 'windows', 'linux']
       };
       
-      try {
-        // Try to connect directly to Telegram Wallet
-        await tonConnectUI.connectWallet(telegramWalletConfig as any);
-      } catch (error) {
-        // If direct connection fails, try to find Telegram Wallet in list
-        try {
-          const walletsList = await tonConnectUI.walletList;
-          if (walletsList && Array.isArray(walletsList)) {
-            const telegramWallet = walletsList.find((w: any) => 
-              w.universalLink?.includes('t.me/wallet') ||
-              w.universalLink?.includes('wallet?startapp') ||
-              w.name?.toLowerCase().includes('telegram') || 
-              w.appName?.toLowerCase().includes('telegram') ||
-              w.appName?.toLowerCase() === 'wallet'
-            );
-            
-            if (telegramWallet) {
-              await tonConnectUI.connectWallet(telegramWallet);
-              return;
-            }
-          }
-        } catch (listError) {
-          console.error('Error getting wallet list:', listError);
-        }
-        
-        // Last resort: show original modal
-        originalOpenModal();
-      }
-    };
-    
-    return () => {
-      // Restore original on unmount
-      if (tonConnectUI.openModal !== originalOpenModal) {
-        tonConnectUI.openModal = originalOpenModal;
-      }
-    };
+      await tonConnectUI.connectWallet(telegramWalletConfig as any);
+      addDebugLog(`✅ Manual Telegram Wallet connection initiated`);
+    } catch (error: any) {
+      addDebugLog(`❌ Manual connection also failed: ${error.message}`);
+      throw new Error('Telegram Wallet not available. Please enable it in Settings → Wallet');
+    }
   }, [tonConnectUI]);
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -823,81 +830,33 @@ export default function MiniApp() {
     try {
       setLoading(true);
       
-      // Connect ONLY to Telegram Wallet
-      addDebugLog(`🔗 Connecting to Telegram Wallet only...`);
+      // Connect ONLY to Telegram Wallet using helper function
+      await connectToTelegramWallet();
       
-      // Telegram Wallet configuration
-      const telegramWalletConfig = {
-        name: 'Telegram Wallet',
-        imageUrl: 'https://telegram.org/img/ico/favicon.ico',
-        universalLink: 'https://t.me/wallet?startapp=tonconnect',
-        bridgeUrl: 'https://bridge.tonapi.io/bridge',
-        // Telegram Wallet app identifier
-        appName: 'wallet',
-        platforms: ['ios', 'android', 'macos', 'windows', 'linux']
-      };
+      // Wait a bit for connection to establish
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      try {
-        // Try to connect directly to Telegram Wallet
-        addDebugLog(`📱 Attempting direct Telegram Wallet connection...`);
-        await tonConnectUI.connectWallet(telegramWalletConfig as any);
-        
-        // Wait a bit for connection to establish
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Check if connection was successful
+      // Check if connection was successful
+      if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
+        const address = tonConnectUI.wallet.account.address;
+        addDebugLog(`✅ Successfully connected to Telegram Wallet`);
+        addDebugLog(`📍 Address: ${address}`);
+        setWalletAddress(address);
+        await loadWalletBalances(true);
+        setLoading(false);
+        return;
+      } else {
+        addDebugLog(`⚠️ Connection not established yet, waiting...`);
+        // Wait a bit more and check again
+        await new Promise(resolve => setTimeout(resolve, 2000));
         if (tonConnectUI.connected && tonConnectUI.wallet?.account?.address) {
           const address = tonConnectUI.wallet.account.address;
-          addDebugLog(`✅ Successfully connected to Telegram Wallet`);
-          addDebugLog(`📍 Address: ${address}`);
           setWalletAddress(address);
           await loadWalletBalances(true);
-          setLoading(false);
-          return;
         }
-      } catch (directConnectError: any) {
-        addDebugLog(`⚠️ Direct connection failed: ${directConnectError.message}`);
-        addDebugLog(`💡 Make sure Telegram Wallet is enabled in Settings → Wallet`);
       }
       
-      // Fallback: Try to find Telegram Wallet in wallet list
-      try {
-        const walletsList = await tonConnectUI.walletList;
-        if (walletsList && Array.isArray(walletsList)) {
-          // Look for Telegram Wallet by universalLink or name
-          const telegramWallet = walletsList.find((w: any) => 
-            w.universalLink?.includes('t.me/wallet') ||
-            w.universalLink?.includes('wallet?startapp') ||
-            w.name?.toLowerCase().includes('telegram') || 
-            w.appName?.toLowerCase().includes('telegram') ||
-            w.appName?.toLowerCase() === 'wallet'
-          );
-          
-          if (telegramWallet) {
-            addDebugLog(`🔗 Found Telegram Wallet in list: ${telegramWallet.name || telegramWallet.appName}`);
-            addDebugLog(`  UniversalLink: ${telegramWallet.universalLink}`);
-            await tonConnectUI.connectWallet(telegramWallet);
-            setLoading(false);
-            return;
-          } else {
-            addDebugLog(`❌ Telegram Wallet not found in wallet list`);
-            addDebugLog(`💡 Available wallets: ${walletsList.map((w: any) => w.name || w.appName).join(', ')}`);
-          }
-        }
-      } catch (walletListError: any) {
-        addDebugLog(`⚠️ Error getting wallet list: ${walletListError.message}`);
-      }
-      
-      // Last resort: Show error message
       setLoading(false);
-      alert(
-        'Telegram Wallet not found or not enabled.\n\n' +
-        'Please make sure:\n' +
-        '1. Telegram Wallet is enabled in Settings → Wallet\n' +
-        '2. You are using Telegram app (not browser)\n' +
-        '3. Try again after enabling Telegram Wallet'
-      );
-      return;
       
       // Track modal state to detect when it closes
       let connectionEstablished = false;
@@ -1114,9 +1073,22 @@ export default function MiniApp() {
 
     // Initialize TON Connect
     initTonConnect().then(() => {
+      // Check if connected wallet is Telegram Wallet
       if (isWalletConnected()) {
         const address = getWalletAddress();
-        if (address) {
+        const wallet = tonConnectUI.wallet;
+        const walletName = wallet?.name || wallet?.appName || '';
+        
+        // Check if it's Telegram Wallet
+        const isTelegramWallet = walletName.toLowerCase().includes('telegram') || 
+                                walletName.toLowerCase().includes('wallet') && isInTelegramWebApp();
+        
+        // If not Telegram Wallet, disconnect and clear
+        if (address && walletName && !isTelegramWallet) {
+          addDebugLog(`⚠️ Found non-Telegram wallet (${walletName}), disconnecting...`);
+          tonConnectUI.disconnect();
+          setWalletAddress(null);
+        } else if (address) {
           setWalletAddress(address);
           loadWalletBalances(true); // Force update on initial connection
         }
