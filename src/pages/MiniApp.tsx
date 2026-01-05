@@ -698,13 +698,24 @@ export default function MiniApp() {
 
   // Initialize Telegram WebApp
   useEffect(() => {
-    if (!isInTelegramWebApp()) {
-      console.warn('MiniApp rendered outside Telegram — this should not happen.');
+    const isInTelegram = isInTelegramWebApp();
+    const WebApp = (window as any).Telegram?.WebApp;
+    
+    // Если не в Telegram, устанавливаем десктопный режим
+    if (!isInTelegram || !WebApp) {
+      // Определяем, мобильное ли устройство по размеру экрана
+      const isMobileDevice = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
+      
+      // Устанавливаем viewport для десктопа
+      if (!isMobileDevice) {
+        setViewport({ height: window.innerHeight, width: window.innerWidth });
+      }
+      
+      // Загружаем активный розыгрыш даже вне Telegram
+      loadActiveDraw();
       return;
     }
-
-    const WebApp = (window as any).Telegram?.WebApp;
-    if (!WebApp) return;
 
     try {
       WebApp.ready();
@@ -1028,7 +1039,7 @@ export default function MiniApp() {
           {/* Header - только на десктопе */}
           <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0">
             <div className="px-4 py-4 min-h-[60px] flex justify-start items-center gap-3">
-              {telegramUser && (
+              {telegramUser ? (
                 <>
                   <div
                     className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -1065,6 +1076,11 @@ export default function MiniApp() {
                     )}
                   </div>
                 </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                  <h2 className="text-base font-display font-bold">CryptoLottery.today</h2>
+                </div>
               )}
             </div>
           </header>
