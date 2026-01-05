@@ -41,6 +41,7 @@ export default function MiniApp() {
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [showDebug, setShowDebug] = useState(false);
   const telegramLoginWidgetRef = useRef<HTMLDivElement>(null);
+  const widgetInitializedRef = useRef<boolean>(false);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -1074,9 +1075,10 @@ export default function MiniApp() {
     }, 2000);
   }, [loadUserData, sendWelcomeMessage]);
 
-  // Initialize Telegram Login Widget
+  // Initialize Telegram Login Widget (только один раз)
   useEffect(() => {
-    if (telegramUser || !telegramLoginWidgetRef.current) return;
+    // Если пользователь уже авторизован или виджет уже инициализирован, не делаем ничего
+    if (telegramUser || !telegramLoginWidgetRef.current || widgetInitializedRef.current) return;
 
     // Если уже в Telegram WebApp, используем существующие данные
     if (isInTelegramWebApp()) {
@@ -1097,6 +1099,7 @@ export default function MiniApp() {
             });
           }
         }
+        widgetInitializedRef.current = true;
         return;
       }
     }
@@ -1104,35 +1107,33 @@ export default function MiniApp() {
     // Устанавливаем callback в window для доступа из виджета
     (window as any).handleTelegramAuth = handleTelegramAuth;
 
-    // Очищаем контейнер перед добавлением виджета
-    if (telegramLoginWidgetRef.current) {
-      telegramLoginWidgetRef.current.innerHTML = '';
+    // Загружаем Telegram Login Widget скрипт (только если еще не загружен)
+    if (!telegramLoginWidgetRef.current.querySelector('script[src*="telegram-widget.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://telegram.org/js/telegram-widget.js?22';
+      script.setAttribute('data-telegram-login', 'cryptolotterytoday_bot');
+      script.setAttribute('data-size', 'medium');
+      script.setAttribute('data-radius', '10');
+      script.setAttribute('data-request-access', 'write');
+      script.setAttribute('data-userpic', 'false');
+      script.setAttribute('data-onauth', 'handleTelegramAuth(user)');
+      script.setAttribute('data-lang', 'en');
+      script.async = true;
+      
+      // Добавляем скрипт в контейнер
+      if (telegramLoginWidgetRef.current) {
+        telegramLoginWidgetRef.current.appendChild(script);
+      }
     }
 
-    // Загружаем Telegram Login Widget скрипт
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', 'cryptolotterytoday_bot');
-    script.setAttribute('data-size', 'medium');
-    script.setAttribute('data-radius', '10');
-    script.setAttribute('data-request-access', 'write');
-    script.setAttribute('data-userpic', 'false');
-    script.setAttribute('data-onauth', 'handleTelegramAuth(user)');
-    script.setAttribute('data-lang', 'en');
-    script.async = true;
-    
-    // Добавляем скрипт в контейнер
-    if (telegramLoginWidgetRef.current) {
-      telegramLoginWidgetRef.current.appendChild(script);
-    }
+    // Помечаем виджет как инициализированный
+    widgetInitializedRef.current = true;
 
     return () => {
-      if (telegramLoginWidgetRef.current && script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-      delete (window as any).handleTelegramAuth;
+      // Не удаляем виджет при размонтировании, чтобы избежать моргания
+      // delete (window as any).handleTelegramAuth;
     };
-  }, [telegramUser, handleTelegramAuth, loadUserData, sendWelcomeMessage]);
+  }, [telegramUser]); // Убрали лишние зависимости
 
   // Haptic feedback function
   const triggerHaptic = () => {
