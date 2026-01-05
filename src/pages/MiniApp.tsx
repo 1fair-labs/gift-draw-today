@@ -1032,6 +1032,8 @@ export default function MiniApp() {
 
   // Handle Telegram Login Widget callback
   const handleTelegramAuth = useCallback(async (userData: any) => {
+    console.log('Telegram Login Widget callback received:', userData);
+    
     if (!userData || !userData.id) {
       console.error('Invalid user data from Telegram Login Widget');
       return;
@@ -1050,8 +1052,26 @@ export default function MiniApp() {
     // Загружаем данные пользователя
     await loadUserData(userData.id);
     
-    // Отправляем приветственное сообщение в бот
-    await sendWelcomeMessage(userData.id);
+    // Открываем бота с параметром start для инициализации диалога
+    const botUsername = 'cryptolotterytoday_bot';
+    const startParam = `web_login_${Date.now()}`;
+    
+    // Пытаемся открыть через Telegram Desktop
+    try {
+      window.location.href = `tg://resolve?domain=${botUsername}&start=${startParam}`;
+      
+      // Fallback на обычную ссылку
+      setTimeout(() => {
+        window.open(`https://t.me/${botUsername}?start=${startParam}`, '_blank');
+      }, 500);
+    } catch (e) {
+      window.open(`https://t.me/${botUsername}?start=${startParam}`, '_blank');
+    }
+    
+    // Отправляем приветственное сообщение в бот (с небольшой задержкой, чтобы диалог успел инициализироваться)
+    setTimeout(async () => {
+      await sendWelcomeMessage(userData.id);
+    }, 2000);
   }, [loadUserData, sendWelcomeMessage]);
 
   // Initialize Telegram Login Widget
@@ -1084,6 +1104,11 @@ export default function MiniApp() {
     // Устанавливаем callback в window для доступа из виджета
     (window as any).handleTelegramAuth = handleTelegramAuth;
 
+    // Очищаем контейнер перед добавлением виджета
+    if (telegramLoginWidgetRef.current) {
+      telegramLoginWidgetRef.current.innerHTML = '';
+    }
+
     // Загружаем Telegram Login Widget скрипт
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
@@ -1096,7 +1121,10 @@ export default function MiniApp() {
     script.setAttribute('data-lang', 'en');
     script.async = true;
     
-    telegramLoginWidgetRef.current.appendChild(script);
+    // Добавляем скрипт в контейнер
+    if (telegramLoginWidgetRef.current) {
+      telegramLoginWidgetRef.current.appendChild(script);
+    }
 
     return () => {
       if (telegramLoginWidgetRef.current && script.parentNode) {
@@ -1204,9 +1232,10 @@ export default function MiniApp() {
               {!telegramUser && (
                 <div 
                   ref={telegramLoginWidgetRef}
-                  className="flex items-center"
+                  className="flex items-center justify-end"
                   style={{
-                    minHeight: '40px',
+                    minHeight: '36px',
+                    minWidth: '120px',
                   }}
                 />
               )}
