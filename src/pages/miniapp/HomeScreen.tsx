@@ -166,7 +166,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
             <div className="mb-3">
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">Jackpot Prize</p>
               <p className={`text-2xl md:text-3xl font-display font-black text-neon-gold transition-all duration-300 ${animatingValues.jackpot ? 'value-updated' : ''}`}>
-                {jackpot.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} <span className="text-sm md:text-base">GIFT</span>
+                {jackpot.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/,/g, ' ')} GIFT
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 ≈ ${jackpotUsd} USDT
