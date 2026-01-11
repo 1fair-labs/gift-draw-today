@@ -1,4 +1,6 @@
 // In-memory хранилище токенов с TTL
+import { randomBytes } from 'crypto';
+
 interface TokenData {
   userId?: number;
   username?: string;
@@ -12,26 +14,17 @@ class TokenStore {
 
   // Генерация криптостойкого токена
   generateToken(): string {
-    // Используем Node.js crypto для серверной генерации
     try {
-      // Используем динамический импорт для совместимости с Vercel
-      const crypto = typeof require !== 'undefined' 
-        ? require('crypto') 
-        : (globalThis as any).crypto || (globalThis as any).require?.('crypto');
-      
-      if (crypto && crypto.randomBytes) {
-        return crypto.randomBytes(32).toString('hex');
-      }
-      
-      // Fallback: используем Web Crypto API если доступен
+      // Используем Node.js crypto для серверной генерации
+      return randomBytes(32).toString('hex');
+    } catch (e) {
+      // Fallback: используем Web Crypto API если доступен (для браузера)
       if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
         const array = new Uint8Array(32);
         crypto.getRandomValues(array);
         return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
       }
       
-      throw new Error('Crypto not available');
-    } catch (e) {
       // Последний fallback: используем Math.random (менее безопасно, но работает)
       console.warn('Using Math.random fallback for token generation');
       let token = '';
