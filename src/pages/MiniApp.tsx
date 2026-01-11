@@ -1514,7 +1514,7 @@ export default function MiniApp() {
 
           {/* Bottom Navigation для мобильных */}
           <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
-            <div className="flex items-end justify-around px-4 h-16 pb-2">
+            <div className="flex items-end justify-around px-4 h-16 pb-3">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
