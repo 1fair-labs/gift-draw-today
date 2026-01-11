@@ -19,15 +19,22 @@ export default async function handler(
   }
 
   try {
+    console.log('Starting token generation...');
+    
     // Генерируем токен
+    console.log('Calling tokenStore.generateToken()...');
     const token = tokenStore.generateToken();
+    console.log('Token generated, length:', token?.length);
     
     if (!token || token.length < 32) {
+      console.error('Invalid token generated:', { token, length: token?.length });
       throw new Error('Failed to generate valid token');
     }
     
     // Сохраняем токен во временное хранилище
+    console.log('Saving token to store...');
     tokenStore.saveToken(token);
+    console.log('Token saved successfully');
 
     return response.status(200).json({
       success: true,
@@ -36,10 +43,13 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error('Error generating token:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
     return response.status(500).json({
       success: false,
       error: 'Internal server error',
       message: error.message || 'Failed to generate token',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 }
