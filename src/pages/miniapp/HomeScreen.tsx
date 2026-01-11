@@ -31,14 +31,14 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
   const hasAnimatedRef = useRef(false);
   const prevVisibleRef = useRef(false);
   
-  const lottoPrice = 0.0002; // Lotto/USDT
+  const darPrice = 0.0002; // DAR/USDT
   const hasDraw = currentDraw !== null;
   const jackpot = currentDraw?.jackpot ?? 0;
   const prizePool = currentDraw?.prize_pool ?? 0;
   const participants = currentDraw?.participants ?? 0;
   const winners = currentDraw?.winners ?? 0;
-  const jackpotUsd = (jackpot * lottoPrice).toFixed(2);
-  const prizePoolUsd = (prizePool * lottoPrice).toFixed(2);
+  const jackpotUsd = (jackpot * darPrice).toFixed(2);
+  const prizePoolUsd = (prizePool * darPrice).toFixed(2);
   
   // Data from database
   const totalEntries = currentDraw?.total_entries ?? 0;
