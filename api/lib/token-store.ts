@@ -16,12 +16,14 @@ class TokenStore {
   generateToken(): string {
     try {
       // Используем Node.js crypto для серверной генерации
+      // randomBytes должен быть доступен в Vercel serverless
       return randomBytes(32).toString('hex');
-    } catch (e) {
+    } catch (e: any) {
+      console.error('Error generating token with crypto:', e);
       // Fallback: используем Web Crypto API если доступен (для браузера)
-      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      if (typeof crypto !== 'undefined' && (crypto as any).getRandomValues) {
         const array = new Uint8Array(32);
-        crypto.getRandomValues(array);
+        (crypto as any).getRandomValues(array);
         return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
       }
       
@@ -105,10 +107,6 @@ class TokenStore {
 // Singleton instance
 export const tokenStore = new TokenStore();
 
-// Периодическая очистка каждые 5 минут
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    tokenStore.cleanup();
-  }, 5 * 60 * 1000);
-}
+// Примечание: Периодическая очистка отключена для serverless окружения
+// Очистка происходит автоматически при проверке TTL в методах getTokenData и attachUser
 
