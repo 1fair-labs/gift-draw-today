@@ -125,12 +125,12 @@ export default function ProfileScreen({
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {/* CLT Balance */}
+                  {/* Lotto Balance */}
                   <div>
                     <div className="text-xl font-display font-bold text-neon-gold min-h-[2.5rem] flex items-center">
                       {isBalanceVisible 
-                        ? `${cltBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CLT`
-                        : '•••••• CLT'}
+                        ? `${lottoBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Lotto`
+                        : '•••••• Lotto'}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
                       {isBalanceVisible ? `≈ ${usdBalance} USDT` : '≈ •••••• USDT'}
