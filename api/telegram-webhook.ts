@@ -41,17 +41,26 @@ export default async function handler(
   const WEB_APP_URL = process.env.WEB_APP_URL || 'https://1fairlabs.tech';
 
   try {
+    console.log('Webhook called:', {
+      method: request.method,
+      hasBody: !!request.body,
+      bodyKeys: request.body ? Object.keys(request.body) : [],
+    });
+
     // Для GET запроса - это проверка webhook от Telegram
     if (request.method === 'GET') {
+      console.log('GET request - webhook check');
       return response.status(200).json({ status: 'ok' });
     }
 
     // Для POST запроса - обработка обновлений от Telegram
     if (request.method === 'POST') {
       const update: TelegramUpdate = request.body;
+      console.log('POST request received:', JSON.stringify(update, null, 2));
 
       // Проверяем, что это сообщение
       if (!update.message || !update.message.text) {
+        console.log('No message or text in update');
         return response.status(200).json({ ok: true });
       }
 
@@ -62,8 +71,17 @@ export default async function handler(
       const firstName = message.from?.first_name || 'User';
       const chatId = message.chat.id;
 
+      console.log('Processing message:', {
+        text,
+        userId,
+        username,
+        firstName,
+        chatId,
+      });
+
       // Обработка команды /start
       if (text.startsWith('/start')) {
+        console.log('Processing /start command');
         const args = text.split(' ');
         
         // Проверяем, есть ли токен авторизации
@@ -127,6 +145,7 @@ export default async function handler(
           }
         } else {
           // Обычная команда /start
+          console.log('Sending regular /start response');
           await sendMessage(
             BOT_TOKEN,
             chatId,
@@ -134,8 +153,11 @@ export default async function handler(
             `Для авторизации на сайте перейдите по ссылке на сайте и нажмите "Connect via Telegram".`
           );
         }
+      } else {
+        console.log('Message is not /start command:', text);
       }
 
+      console.log('Webhook processing completed successfully');
       return response.status(200).json({ ok: true });
     }
 
