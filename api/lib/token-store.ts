@@ -1,5 +1,5 @@
 // In-memory хранилище токенов с TTL
-import { randomBytes } from 'crypto';
+import * as crypto from 'crypto';
 
 interface TokenData {
   userId?: number;
@@ -16,22 +16,30 @@ class TokenStore {
   generateToken(): string {
     try {
       // Используем Node.js crypto для серверной генерации
-      // randomBytes должен быть доступен в Vercel serverless
-      return randomBytes(32).toString('hex');
+      // В Vercel serverless crypto доступен как модуль Node.js
+      if (crypto && typeof crypto.randomBytes === 'function') {
+        return crypto.randomBytes(32).toString('hex');
+      }
+      throw new Error('crypto.randomBytes not available');
     } catch (e: any) {
       console.error('Error generating token with crypto:', e);
-      // Fallback: используем Web Crypto API если доступен (для браузера)
-      if (typeof crypto !== 'undefined' && (crypto as any).getRandomValues) {
-        const array = new Uint8Array(32);
-        (crypto as any).getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      // Fallback: используем Web Crypto API если доступен
+      try {
+        if (typeof globalThis !== 'undefined' && (globalThis as any).crypto && (globalThis as any).crypto.getRandomValues) {
+          const array = new Uint8Array(32);
+          (globalThis as any).crypto.getRandomValues(array);
+          return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        }
+      } catch (webCryptoError) {
+        console.error('Web Crypto API also failed:', webCryptoError);
       }
       
       // Последний fallback: используем Math.random (менее безопасно, но работает)
       console.warn('Using Math.random fallback for token generation');
       let token = '';
+      const chars = '0123456789abcdef';
       for (let i = 0; i < 64; i++) {
-        token += Math.floor(Math.random() * 16).toString(16);
+        token += chars[Math.floor(Math.random() * 16)];
       }
       return token;
     }
