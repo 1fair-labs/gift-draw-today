@@ -1372,52 +1372,71 @@ export default function MiniApp() {
         </div>
       ) : (
         <>
-          {/* Header - только на мобильных, с CryptoLottery.today и аватаром */}
+          {/* Header - только на мобильных, с логотипом и кнопкой подключения */}
           {isMobile && (
             <header 
-              className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50"
+              className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50 border-b border-border/50"
               style={{ 
                 paddingTop: `${Math.max(safeAreaTop, 0)}px`
               }}
             >
-              <div className="flex items-end gap-3 px-4 py-3 min-h-[160px]">
-                {telegramUser && (
-                  <>
-                    <div
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        triggerHaptic();
-                        handleNavigateToProfile();
-                      }}
-                    >
-                      {telegramUser.photo_url && (
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-                          <AvatarFallback className="text-sm">
-                            {telegramUser.first_name?.[0] || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+              <div className="px-4 py-3 min-h-[60px] flex justify-between items-center gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {telegramUser ? (
+                    <>
+                      <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          triggerHaptic();
+                          handleNavigateToProfile();
+                        }}
+                      >
+                        {telegramUser.photo_url && (
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                            <AvatarFallback className="text-sm">
+                              {telegramUser.first_name?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
+                      <div 
+                        className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity min-w-0"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          triggerHaptic();
+                          handleNavigateToProfile();
+                        }}
+                      >
+                        <h2 className="text-sm font-display font-bold truncate">
+                          {telegramUser?.first_name} {telegramUser?.last_name || ''}
+                        </h2>
+                        {user?.anon_id && (
+                          <p className="text-xs text-muted-foreground font-mono truncate">ID: {user.anon_id}</p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="w-5 h-5 text-primary" />
+                      <h2 className="text-sm font-display font-bold">CryptoLottery.today</h2>
                     </div>
-                    <div 
-                      className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        triggerHaptic();
-                        handleNavigateToProfile();
-                      }}
-                    >
-                      <h2 className="text-base font-display font-bold truncate">
-                        {telegramUser?.first_name} {telegramUser?.last_name || ''}
-                      </h2>
-                      {user?.anon_id && (
-                        <p className="text-xs text-muted-foreground font-mono">ID: {user.anon_id}</p>
-                      )}
-                    </div>
-                  </>
+                  )}
+                </div>
+                
+                {/* Telegram Login Widget */}
+                {!telegramUser && (
+                  <div 
+                    ref={telegramLoginWidgetRef}
+                    className="flex items-center justify-end"
+                    style={{
+                      minHeight: '36px',
+                      minWidth: '120px',
+                    }}
+                  />
                 )}
               </div>
             </header>
@@ -1428,12 +1447,12 @@ export default function MiniApp() {
             className="relative w-full overflow-hidden"
             style={isMobile ? {
               height: viewport?.height 
-                ? `${Math.max(viewport.height - 96 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
-                : `calc(100dvh - ${96 + 160 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
-              marginTop: `${160 + Math.max(safeAreaTop, 0)}px`,
+                ? `${Math.max(viewport.height - 96 - 60 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
+                : `calc(100dvh - ${96 + 60 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
+              marginTop: `${60 + Math.max(safeAreaTop, 0)}px`,
               overflow: 'hidden',
               maxHeight: viewport?.height 
-                ? `${Math.max(viewport.height - 96 - 160 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
+                ? `${Math.max(viewport.height - 96 - 60 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
                 : undefined,
             } : {}}
           >
