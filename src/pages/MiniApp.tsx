@@ -1072,12 +1072,12 @@ export default function MiniApp() {
     }, 2000);
   }, [loadUserData, sendWelcomeMessage]);
 
-  // Initialize Telegram Login Widget (только один раз)
+  // Initialize Telegram Login Widget (только для обычных веб-сайтов, не в Telegram)
   useEffect(() => {
     // Если пользователь уже авторизован или виджет уже инициализирован, не делаем ничего
     if (telegramUser || !telegramLoginWidgetRef.current || widgetInitializedRef.current) return;
 
-    // Если уже в Telegram WebApp, используем существующие данные
+    // Если уже в Telegram WebApp, используем существующие данные напрямую (без виджета)
     if (isInTelegramWebApp()) {
       const WebApp = (window as any).Telegram?.WebApp;
       if (WebApp?.initDataUnsafe?.user) {
@@ -1097,10 +1097,11 @@ export default function MiniApp() {
           }
         }
         widgetInitializedRef.current = true;
-        return;
+        return; // Не загружаем виджет для пользователей в Telegram
       }
     }
 
+    // Telegram Login Widget нужен только для обычных веб-сайтов (не в Telegram)
     // Устанавливаем callback в window для доступа из виджета
     (window as any).handleTelegramAuth = handleTelegramAuth;
 
@@ -1111,7 +1112,8 @@ export default function MiniApp() {
       script.setAttribute('data-telegram-login', 'cryptolotterytoday_bot');
       script.setAttribute('data-size', 'medium');
       script.setAttribute('data-radius', '10');
-      script.setAttribute('data-request-access', 'write');
+      // Убираем data-request-access, чтобы не было трех шагов авторизации
+      // Доступ к отправке сообщений запрашиваем отдельно через requestWriteAccess
       script.setAttribute('data-userpic', 'false');
       script.setAttribute('data-onauth', 'handleTelegramAuth(user)');
       script.setAttribute('data-auth-url', window.location.origin);
@@ -1227,8 +1229,8 @@ export default function MiniApp() {
                 )}
               </div>
               
-              {/* Telegram Login Widget */}
-              {!telegramUser && (
+              {/* Telegram Login Widget - только для обычных веб-сайтов (не в Telegram) */}
+              {!telegramUser && !isInTelegramWebApp() && (
                 <div 
                   ref={telegramLoginWidgetRef}
                   className="flex items-center justify-end"
@@ -1424,8 +1426,8 @@ export default function MiniApp() {
                   )}
                 </div>
                 
-                {/* Telegram Login Widget */}
-                {!telegramUser && (
+                {/* Telegram Login Widget - только для обычных веб-сайтов (не в Telegram) */}
+                {!telegramUser && !isInTelegramWebApp() && (
                   <div 
                     ref={telegramLoginWidgetRef}
                     className="flex items-center justify-end"
