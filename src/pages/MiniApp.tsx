@@ -1315,7 +1315,7 @@ export default function MiniApp() {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1333,7 +1333,7 @@ export default function MiniApp() {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1351,7 +1351,7 @@ export default function MiniApp() {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1514,12 +1514,12 @@ export default function MiniApp() {
 
           {/* Bottom Navigation для мобильных */}
           <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
-            <div className="flex items-center justify-around px-4 py-2 h-16">
+            <div className="flex items-center justify-around px-4 h-16">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1537,7 +1537,7 @@ export default function MiniApp() {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1555,7 +1555,7 @@ export default function MiniApp() {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
