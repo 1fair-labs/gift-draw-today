@@ -22,6 +22,10 @@ export default async function handler(
     // Генерируем токен
     const token = tokenStore.generateToken();
     
+    if (!token || token.length < 32) {
+      throw new Error('Failed to generate valid token');
+    }
+    
     // Сохраняем токен во временное хранилище
     tokenStore.saveToken(token);
 
@@ -33,8 +37,9 @@ export default async function handler(
   } catch (error: any) {
     console.error('Error generating token:', error);
     return response.status(500).json({
+      success: false,
       error: 'Internal server error',
-      message: error.message,
+      message: error.message || 'Failed to generate token',
     });
   }
 }

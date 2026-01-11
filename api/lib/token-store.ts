@@ -14,16 +14,31 @@ class TokenStore {
   generateToken(): string {
     // Используем Node.js crypto для серверной генерации
     try {
-      const crypto = require('crypto');
-      return crypto.randomBytes(32).toString('hex');
-    } catch (e) {
-      // Fallback для браузера (не должно использоваться на сервере)
-      const array = new Uint8Array(32);
+      // Используем динамический импорт для совместимости с Vercel
+      const crypto = typeof require !== 'undefined' 
+        ? require('crypto') 
+        : (globalThis as any).crypto || (globalThis as any).require?.('crypto');
+      
+      if (crypto && crypto.randomBytes) {
+        return crypto.randomBytes(32).toString('hex');
+      }
+      
+      // Fallback: используем Web Crypto API если доступен
       if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint8Array(32);
         crypto.getRandomValues(array);
         return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
       }
+      
       throw new Error('Crypto not available');
+    } catch (e) {
+      // Последний fallback: используем Math.random (менее безопасно, но работает)
+      console.warn('Using Math.random fallback for token generation');
+      let token = '';
+      for (let i = 0; i < 64; i++) {
+        token += Math.floor(Math.random() * 16).toString(16);
+      }
+      return token;
     }
   }
 
