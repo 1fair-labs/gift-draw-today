@@ -9,6 +9,7 @@ import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import Landing from "./pages/Landing";
 import MiniApp from "./pages/MiniApp";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ function App() {
               <Route path="/" element={<RootRedirect />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/miniapp" element={<MiniApp />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

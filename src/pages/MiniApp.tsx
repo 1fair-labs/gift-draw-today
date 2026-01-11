@@ -1027,23 +1027,37 @@ export default function MiniApp() {
   }, []);
 
   // Handle authorization through bot
-  const handleConnectViaBot = useCallback(() => {
-    const botUsername = 'cryptolotterytoday_bot';
-    const startParam = `auth_${Date.now()}`;
-    const authUrl = `${window.location.origin}?auth=true`;
-    
-    // Открываем бота с параметром start для авторизации
-    // Бот должен обработать команду и перенаправить пользователя обратно на сайт
+  const handleConnectViaBot = useCallback(async () => {
     try {
-      // Пытаемся открыть через Telegram Desktop
-      window.location.href = `tg://resolve?domain=${botUsername}&start=${startParam}`;
+      setLoading(true);
       
-      // Fallback на обычную ссылку
-      setTimeout(() => {
-        window.open(`https://t.me/${botUsername}?start=${startParam}`, '_blank');
-      }, 500);
-    } catch (e) {
-      window.open(`https://t.me/${botUsername}?start=${startParam}`, '_blank');
+      // Генерируем токен через API
+      const response = await fetch('/api/auth/generate-token');
+      const data = await response.json();
+      
+      if (!data.success || !data.token) {
+        throw new Error('Failed to generate token');
+      }
+      
+      // Открываем бота с токеном
+      const botUrl = data.botUrl || `https://t.me/cryptolotterytoday_bot?start=auth_${data.token}`;
+      
+      // Пытаемся открыть через Telegram Desktop
+      try {
+        window.location.href = `tg://resolve?domain=cryptolotterytoday_bot&start=auth_${data.token}`;
+        
+        // Fallback на обычную ссылку
+        setTimeout(() => {
+          window.open(botUrl, '_blank');
+        }, 500);
+      } catch (e) {
+        window.open(botUrl, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Error connecting via bot:', error);
+      alert('Failed to connect. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -1075,13 +1089,33 @@ export default function MiniApp() {
       }
     }
 
-    // Проверяем параметры URL для авторизации через бота
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('auth') === 'true') {
-      // Здесь можно обработать авторизацию через бота
-      // Бот должен был отправить данные пользователя через параметры или другим способом
-      console.log('Auth parameter detected');
-    }
+    // Проверяем сессию из cookie (для авторизации через бота)
+    const checkSession = async () => {
+      try {
+        // Проверяем cookie через API endpoint
+        const response = await fetch('/api/auth/check-session', {
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.authenticated && data.userId) {
+            // Восстанавливаем данные пользователя из сессии
+            setTelegramUser({
+              id: data.userId,
+              first_name: data.firstName || '',
+              username: data.username || '',
+            });
+            setTelegramId(data.userId);
+            await loadUserData(data.userId);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+
+    checkSession();
   }, [telegramUser, loadUserData, sendWelcomeMessage]);
 
   // Haptic feedback function
