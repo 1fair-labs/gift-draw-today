@@ -12,15 +12,19 @@ class TokenStore {
 
   // Генерация криптостойкого токена
   generateToken(): string {
-    const array = new Uint8Array(32);
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      crypto.getRandomValues(array);
-    } else {
-      // Fallback для Node.js
+    // Используем Node.js crypto для серверной генерации
+    try {
       const crypto = require('crypto');
       return crypto.randomBytes(32).toString('hex');
+    } catch (e) {
+      // Fallback для браузера (не должно использоваться на сервере)
+      const array = new Uint8Array(32);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      }
+      throw new Error('Crypto not available');
     }
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 
   // Сохранение токена
