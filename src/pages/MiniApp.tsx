@@ -38,8 +38,6 @@ export default function MiniApp() {
   const [safeAreaTop, setSafeAreaTop] = useState(0);
   const [safeAreaBottom, setSafeAreaBottom] = useState(0);
   const [currentDraw, setCurrentDraw] = useState<Draw | null>(null);
-  const telegramLoginWidgetRef = useRef<HTMLDivElement>(null);
-  const widgetInitializedRef = useRef<boolean>(false);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -1028,34 +1026,16 @@ export default function MiniApp() {
     }
   }, []);
 
-  // Handle Telegram Login Widget callback
-  const handleTelegramAuth = useCallback(async (userData: any) => {
-    console.log('Telegram Login Widget callback received:', userData);
-    
-    if (!userData || !userData.id) {
-      console.error('Invalid user data from Telegram Login Widget');
-      return;
-    }
-
-    // Сохраняем данные пользователя
-    setTelegramUser({
-      id: userData.id,
-      first_name: userData.first_name,
-      last_name: userData.last_name || '',
-      username: userData.username || '',
-      photo_url: userData.photo_url || '',
-    });
-    setTelegramId(userData.id);
-    
-    // Загружаем данные пользователя
-    await loadUserData(userData.id);
-    
-    // Открываем бота с параметром start для инициализации диалога
+  // Handle authorization through bot
+  const handleConnectViaBot = useCallback(() => {
     const botUsername = 'cryptolotterytoday_bot';
-    const startParam = `web_login_${Date.now()}`;
+    const startParam = `auth_${Date.now()}`;
+    const authUrl = `${window.location.origin}?auth=true`;
     
-    // Пытаемся открыть через Telegram Desktop
+    // Открываем бота с параметром start для авторизации
+    // Бот должен обработать команду и перенаправить пользователя обратно на сайт
     try {
+      // Пытаемся открыть через Telegram Desktop
       window.location.href = `tg://resolve?domain=${botUsername}&start=${startParam}`;
       
       // Fallback на обычную ссылку
@@ -1065,19 +1045,14 @@ export default function MiniApp() {
     } catch (e) {
       window.open(`https://t.me/${botUsername}?start=${startParam}`, '_blank');
     }
-    
-    // Отправляем приветственное сообщение в бот (с небольшой задержкой, чтобы диалог успел инициализироваться)
-    setTimeout(async () => {
-      await sendWelcomeMessage(userData.id);
-    }, 2000);
-  }, [loadUserData, sendWelcomeMessage]);
+  }, []);
 
-  // Initialize Telegram Login Widget (только для обычных веб-сайтов, не в Telegram)
+  // Initialize user from Telegram WebApp (if in Telegram)
   useEffect(() => {
-    // Если пользователь уже авторизован или виджет уже инициализирован, не делаем ничего
-    if (telegramUser || !telegramLoginWidgetRef.current || widgetInitializedRef.current) return;
+    // Если пользователь уже авторизован, не делаем ничего
+    if (telegramUser) return;
 
-    // Если уже в Telegram WebApp, используем существующие данные напрямую (без виджета)
+    // Если уже в Telegram WebApp, используем существующие данные напрямую
     if (isInTelegramWebApp()) {
       const WebApp = (window as any).Telegram?.WebApp;
       if (WebApp?.initDataUnsafe?.user) {
@@ -1096,44 +1071,18 @@ export default function MiniApp() {
             });
           }
         }
-        widgetInitializedRef.current = true;
-        return; // Не загружаем виджет для пользователей в Telegram
+        return;
       }
     }
 
-    // Telegram Login Widget нужен только для обычных веб-сайтов (не в Telegram)
-    // Устанавливаем callback в window для доступа из виджета
-    (window as any).handleTelegramAuth = handleTelegramAuth;
-
-    // Загружаем Telegram Login Widget скрипт (только если еще не загружен)
-    if (!telegramLoginWidgetRef.current.querySelector('script[src*="telegram-widget.js"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://telegram.org/js/telegram-widget.js?22';
-      script.setAttribute('data-telegram-login', 'cryptolotterytoday_bot');
-      script.setAttribute('data-size', 'medium');
-      script.setAttribute('data-radius', '10');
-      // Убираем data-request-access, чтобы не было трех шагов авторизации
-      // Доступ к отправке сообщений запрашиваем отдельно через requestWriteAccess
-      script.setAttribute('data-userpic', 'false');
-      script.setAttribute('data-onauth', 'handleTelegramAuth(user)');
-      script.setAttribute('data-auth-url', window.location.origin);
-      script.setAttribute('data-lang', 'en');
-      script.async = true;
-      
-      // Добавляем скрипт в контейнер
-      if (telegramLoginWidgetRef.current) {
-        telegramLoginWidgetRef.current.appendChild(script);
-      }
+    // Проверяем параметры URL для авторизации через бота
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auth') === 'true') {
+      // Здесь можно обработать авторизацию через бота
+      // Бот должен был отправить данные пользователя через параметры или другим способом
+      console.log('Auth parameter detected');
     }
-
-    // Помечаем виджет как инициализированный
-    widgetInitializedRef.current = true;
-
-    return () => {
-      // Не удаляем виджет при размонтировании, чтобы избежать моргания
-      // delete (window as any).handleTelegramAuth;
-    };
-  }, [telegramUser]); // Убрали лишние зависимости
+  }, [telegramUser, loadUserData, sendWelcomeMessage]);
 
   // Haptic feedback function
   const triggerHaptic = () => {
@@ -1229,16 +1178,15 @@ export default function MiniApp() {
                 )}
               </div>
               
-              {/* Telegram Login Widget - только для обычных веб-сайтов (не в Telegram) */}
-              {!telegramUser && !isInTelegramWebApp() && (
-                <div 
-                  ref={telegramLoginWidgetRef}
-                  className="flex items-center justify-end"
-                  style={{
-                    minHeight: '36px',
-                    minWidth: '120px',
-                  }}
-                />
+              {/* Кнопка подключения через бота */}
+              {!telegramUser && (
+                <Button
+                  onClick={handleConnectViaBot}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  size="sm"
+                >
+                  Connect via Telegram
+                </Button>
               )}
             </div>
           </header>
@@ -1426,16 +1374,15 @@ export default function MiniApp() {
                   )}
                 </div>
                 
-                {/* Telegram Login Widget - только для обычных веб-сайтов (не в Telegram) */}
-                {!telegramUser && !isInTelegramWebApp() && (
-                  <div 
-                    ref={telegramLoginWidgetRef}
-                    className="flex items-center justify-end"
-                    style={{
-                      minHeight: '36px',
-                      minWidth: '120px',
-                    }}
-                  />
+                {/* Кнопка подключения через бота */}
+                {!telegramUser && (
+                  <Button
+                    onClick={handleConnectViaBot}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    size="sm"
+                  >
+                    Connect via Telegram
+                  </Button>
                 )}
               </div>
             </header>
