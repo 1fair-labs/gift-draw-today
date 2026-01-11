@@ -1033,8 +1033,12 @@ export default function MiniApp() {
       
       console.log('Generating token...');
       
+      // Используем абсолютный URL для надежности
+      const apiUrl = `${window.location.origin}/api/auth/generate-token`;
+      console.log('Fetching from:', apiUrl);
+      
       // Генерируем токен через API
-      const response = await fetch('/api/auth/generate-token', {
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
