@@ -125,12 +125,12 @@ export default function ProfileScreen({
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {/* DAR Balance */}
+                  {/* GIFT Balance */}
                   <div>
                     <div className="text-xl font-display font-bold text-neon-gold min-h-[2.5rem] flex items-center">
                       {isBalanceVisible 
-                        ? `${darBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DAR`
-                        : '•••••• DAR'}
+                        ? `${giftBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} GIFT`
+                        : '•••••• GIFT'}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
                       {isBalanceVisible ? `≈ ${usdBalance} USDT` : '≈ •••••• USDT'}
