@@ -38,8 +38,6 @@ export default function MiniApp() {
   const [safeAreaTop, setSafeAreaTop] = useState(0);
   const [safeAreaBottom, setSafeAreaBottom] = useState(0);
   const [currentDraw, setCurrentDraw] = useState<Draw | null>(null);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-  const [showDebug, setShowDebug] = useState(false);
   const telegramLoginWidgetRef = useRef<HTMLDivElement>(null);
   const widgetInitializedRef = useRef<boolean>(false);
 
@@ -167,12 +165,11 @@ export default function MiniApp() {
     }
   };
 
-  // Helper function to add debug log
+  // Helper function to add debug log (only to console)
   const addDebugLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}`;
     console.log(logMessage);
-    setDebugLogs(prev => [...prev.slice(-49), logMessage]); // Keep last 50 logs
   }, []);
 
   // Load wallet balances
@@ -1447,12 +1444,12 @@ export default function MiniApp() {
             className="relative w-full overflow-hidden"
             style={isMobile ? {
               height: viewport?.height 
-                ? `${Math.max(viewport.height - 96 - 60 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
-                : `calc(100dvh - ${96 + 60 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
+                ? `${Math.max(viewport.height - 64 - 60 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
+                : `calc(100dvh - ${64 + 60 + Math.max(safeAreaTop, 0) + Math.max(safeAreaBottom, 0) + 16}px)`,
               marginTop: `${60 + Math.max(safeAreaTop, 0)}px`,
               overflow: 'hidden',
               maxHeight: viewport?.height 
-                ? `${Math.max(viewport.height - 96 - 60 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
+                ? `${Math.max(viewport.height - 64 - 60 - Math.max(safeAreaTop, 0) - Math.max(safeAreaBottom, 0) - 16, 0)}px`
                 : undefined,
             } : {}}
           >
@@ -1517,7 +1514,7 @@ export default function MiniApp() {
 
           {/* Bottom Navigation для мобильных */}
           <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
-            <div className="flex items-center justify-around px-4 py-4 h-24">
+            <div className="flex items-center justify-around px-4 py-2 h-16">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
@@ -1573,69 +1570,6 @@ export default function MiniApp() {
               </Button>
             </div>
           </footer>
-
-          {/* Debug Panel */}
-          {showDebug && (
-            <div className="fixed bottom-28 left-0 right-0 z-40 bg-black/95 text-green-400 text-xs p-3 max-h-64 overflow-y-auto border-t border-green-500/30 rounded-t-lg" style={{ marginBottom: `${80 + Math.max(safeAreaBottom, 0)}px` }}>
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-bold text-sm">Debug Logs</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDebug(false)}
-                  className="h-6 px-2 text-green-400 hover:text-green-300"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-              
-              {/* Current Balance Values */}
-              <div className="mb-2 p-2 bg-green-900/20 rounded border border-green-500/30">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="text-[10px] font-mono space-y-0.5">
-                    <div className="font-bold">💰 Current State:</div>
-                    <div>TON: {tonBalance.toFixed(4)}</div>
-                    <div>USDT: {usdtBalance.toFixed(6)}</div>
-                    <div>CLT: {cltBalance.toFixed(2)}</div>
-                    <div>Wallet: {walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}` : 'Not connected'}</div>
-                    <div>Visible: {isBalanceVisible ? 'Yes' : 'No'}</div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      addDebugLog('🔄 Manual balance reload triggered');
-                      loadWalletBalances();
-                    }}
-                    className="h-6 px-2 text-green-400 hover:text-green-300 text-[10px]"
-                  >
-                    Reload
-                  </Button>
-                </div>
-              </div>
-              
-              {debugLogs.length === 0 ? (
-                <div className="text-gray-500">No logs yet...</div>
-              ) : (
-                <div className="space-y-0.5 font-mono text-[10px] leading-tight">
-                  {debugLogs.map((log, idx) => (
-                    <div key={idx} className="break-words">{log}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Debug Toggle Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDebug(!showDebug)}
-            className="fixed bottom-32 right-2 z-50 bg-black/70 text-green-400 hover:bg-black/90 text-xs px-2 py-1 h-7 rounded"
-            style={{ marginBottom: `${80 + Math.max(safeAreaBottom, 0)}px` }}
-          >
-            {showDebug ? 'Hide Debug' : 'Debug'}
-          </Button>
         </>
       )}
     </div>
