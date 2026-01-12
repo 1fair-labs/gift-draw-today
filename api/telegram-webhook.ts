@@ -57,6 +57,7 @@ export default async function handler(
     if (request.method === 'POST') {
       const update: TelegramUpdate = request.body;
       console.log('POST request received:', JSON.stringify(update, null, 2));
+      console.log('WEB_APP_URL:', WEB_APP_URL);
 
       // Проверяем, что это сообщение
       if (!update.message) {
