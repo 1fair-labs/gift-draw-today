@@ -20,7 +20,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWe
 ### Шаг 2: Проверьте webhook
 
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWebhookInfo
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
 ```
 
 **Ожидаемый ответ:**
@@ -50,7 +50,7 @@ https://giftdraw.today/api/telegram-webhook
 
 1. Откройте Vercel Dashboard
 2. Settings → Environment Variables
-3. Проверьте, что есть `TELEGRAM_BOT_TOKEN` = `8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U`
+3. Проверьте, что есть `TELEGRAM_BOT_TOKEN` = `8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc`
 4. Если нет - добавьте и перезапустите деплой
 
 ### Шаг 5: Протестируйте
@@ -67,7 +67,7 @@ https://giftdraw.today/api/telegram-webhook
 
 **Удалить webhook:**
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/deleteWebhook
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/deleteWebhook
 ```
 
 **Установить заново:**

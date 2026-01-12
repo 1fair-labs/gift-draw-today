@@ -23,12 +23,12 @@ curl -X POST "https://giftdraw.today/api/send-message" \
 
 1. Проверьте, установлен ли webhook:
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWebhookInfo
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
 ```
 
 2. Если webhook не установлен, установите его:
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 3. Проверьте endpoint:

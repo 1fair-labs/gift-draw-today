@@ -11,7 +11,7 @@
 2. Перейдите в **Settings** → **Environment Variables**
 3. Добавьте переменную:
    - **Name**: `TELEGRAM_BOT_TOKEN`
-   - **Value**: `8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U`
+   - **Value**: `8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc`
    - **Environment**: Production, Preview, Development (выберите все)
 4. Нажмите **Save**
 5. Перезапустите деплой (Redeploy)
@@ -22,7 +22,7 @@
 
 Откройте эту ссылку в браузере:
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 Должен вернуться JSON:
@@ -33,7 +33,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWe
 ### Вариант B: Через curl (в терминале)
 
 ```bash
-curl -X POST "https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook" \
+curl -X POST "https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://giftdraw.today/api/telegram-webhook"}'
 ```
@@ -42,7 +42,7 @@ curl -X POST "https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxA
 
 Откройте эту ссылку:
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWebhookInfo
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
 ```
 
 Должен вернуться JSON с информацией о webhook:
@@ -82,6 +82,6 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWe
 ### Удалить webhook (если нужно)
 
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/deleteWebhook
+https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/deleteWebhook
 ```
 
