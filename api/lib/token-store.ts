@@ -119,6 +119,17 @@ class TokenStore {
       }
     }
   }
+
+  // Поиск активного токена без привязанного пользователя
+  findAvailableToken(): string | null {
+    this.cleanup();
+    for (const [token, data] of this.tokens.entries()) {
+      if (!data.userId) {
+        return token;
+      }
+    }
+    return null;
+  }
 }
 
 // Singleton instance

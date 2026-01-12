@@ -17,6 +17,23 @@ interface TelegramUpdate {
     date: number;
     text?: string;
   };
+  callback_query?: {
+    id: string;
+    from: {
+      id: number;
+      is_bot: boolean;
+      first_name: string;
+      username?: string;
+    };
+    message?: {
+      message_id: number;
+      chat: {
+        id: number;
+        type: string;
+      };
+    };
+    data: string;
+  };
 }
 
 export default async function handler(
@@ -67,6 +84,98 @@ export default async function handler(
       const update: TelegramUpdate = request.body;
       console.log('POST request received:', JSON.stringify(update, null, 2));
       console.log('WEB_APP_URL:', WEB_APP_URL);
+
+      // Обработка callback_query (нажатие кнопки)
+      if (update.callback_query) {
+        console.log('=== CALLBACK QUERY RECEIVED ===');
+        const callback = update.callback_query;
+        const userId = callback.from.id;
+        const username = callback.from.username;
+        const firstName = callback.from.first_name || 'User';
+        const chatId = callback.message?.chat.id;
+        const callbackData = callback.data;
+        
+        console.log('Callback data:', callbackData);
+        console.log('User:', { userId, username, firstName, chatId });
+
+        if (!chatId) {
+          console.error('No chatId in callback_query');
+          return response.status(200).json({ ok: true });
+        }
+
+        // Обработка кнопки авторизации
+        if (callbackData === 'auth_check') {
+          console.log('Processing auth check button click');
+          
+          try {
+            // Импортируем tokenStore
+            const { tokenStore } = await import('../lib/token-store.js');
+            
+            // Ищем активный токен без привязанного пользователя
+            const availableToken = tokenStore.findAvailableToken();
+            
+            if (!availableToken) {
+              console.log('No available token found');
+              await answerCallbackQuery(BOT_TOKEN, callback.id, '❌ No active authorization request found. Please try again from the website.');
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                '❌ Authorization failed.\n\n' +
+                'No active authorization request found. Please return to the website and click "Connect via Telegram" again.\n\n' +
+                'If the problem persists, please contact support.'
+              );
+              return response.status(200).json({ ok: true });
+            }
+
+            console.log('Found available token:', availableToken.substring(0, 10) + '...');
+
+            // Привязываем пользователя к токену
+            const success = tokenStore.attachUser(availableToken, userId, username, firstName);
+            
+            if (!success) {
+              console.error('Failed to attach user to token');
+              await answerCallbackQuery(BOT_TOKEN, callback.id, '❌ Authorization failed');
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                '❌ Authorization failed.\n\n' +
+                'Failed to process authorization. Please try again from the website.\n\n' +
+                'If the problem persists, please contact support.'
+              );
+              return response.status(200).json({ ok: true });
+            }
+
+            // Отправляем подтверждение
+            await answerCallbackQuery(BOT_TOKEN, callback.id, '✅ Authorization successful!');
+            await sendMessage(
+              BOT_TOKEN,
+              chatId,
+              `✅ Authorization successful!\n\n` +
+              `You are authorized as: ${firstName || username || `ID: ${userId}`}\n\n` +
+              `Please return to the website to continue.`
+            );
+            console.log('Authorization successful for user:', userId);
+            
+            return response.status(200).json({ ok: true });
+          } catch (error: any) {
+            console.error('Error processing auth check:', error);
+            console.error('Error stack:', error.stack);
+            await answerCallbackQuery(BOT_TOKEN, callback.id, '❌ Error occurred');
+            await sendMessage(
+              BOT_TOKEN,
+              chatId,
+              '❌ Error during authorization.\n\n' +
+              'An error occurred while processing your authorization. Please try again from the website.\n\n' +
+              'If the problem persists, please contact support.'
+            );
+            return response.status(200).json({ ok: true });
+          }
+        }
+
+        // Если callback_data не распознан, просто отвечаем
+        await answerCallbackQuery(BOT_TOKEN, callback.id);
+        return response.status(200).json({ ok: true });
+      }
 
       // Проверяем, что это сообщение
       if (!update.message) {
@@ -180,15 +289,44 @@ export default async function handler(
           // Обычная команда /start без токена
           console.log('Regular /start without token');
           try {
-            await sendMessage(
-              BOT_TOKEN,
-              chatId,
-              `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
-              `To authorize, please use the "Connect via Telegram" button on the website.`
-            );
+            // Импортируем tokenStore для проверки активных токенов
+            const { tokenStore } = await import('../lib/token-store.js');
+            const availableToken = tokenStore.findAvailableToken();
+            
+            if (availableToken) {
+              // Есть активный токен - показываем кнопку авторизации
+              console.log('Found available token, showing auth button');
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
+                `Click the button below to authorize:`,
+                [[{ text: '🔐 Authorize', callback_data: 'auth_check' }]]
+              );
+            } else {
+              // Нет активного токена - обычное сообщение
+              console.log('No available token, showing regular message');
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
+                `To authorize, please use the "Connect via Telegram" button on the website.`
+              );
+            }
             console.log('Regular /start message sent successfully');
           } catch (error: any) {
             console.error('Error sending regular /start message:', error);
+            // Fallback на обычное сообщение без кнопки
+            try {
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
+                `To authorize, please use the "Connect via Telegram" button on the website.`
+              );
+            } catch (fallbackError: any) {
+              console.error('Error sending fallback message:', fallbackError);
+            }
           }
         }
       } else {
@@ -265,6 +403,49 @@ async function sendMessage(
   }
 
   console.log('Message sent successfully:', responseData);
+  return responseData;
+}
+
+// Вспомогательная функция для ответа на callback query
+async function answerCallbackQuery(
+  botToken: string,
+  callbackQueryId: string,
+  text?: string,
+  showAlert: boolean = false
+) {
+  console.log('Answering callback query:', {
+    callbackQueryId,
+    text,
+    showAlert
+  });
+
+  const url = `https://api.telegram.org/bot${botToken}/answerCallbackQuery`;
+  console.log('Sending to Telegram API:', url.replace(botToken, 'TOKEN_HIDDEN'));
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      callback_query_id: callbackQueryId,
+      text: text,
+      show_alert: showAlert,
+    }),
+  });
+
+  const responseData = await response.json();
+  
+  if (!response.ok) {
+    console.error('Telegram API error response:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: responseData
+    });
+    throw new Error(`Telegram API error: ${JSON.stringify(responseData)}`);
+  }
+
+  console.log('Callback query answered successfully:', responseData);
   return responseData;
 }
 
