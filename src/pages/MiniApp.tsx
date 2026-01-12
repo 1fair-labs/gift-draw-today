@@ -1087,34 +1087,34 @@ export default function MiniApp() {
         throw new Error(data.error || 'Failed to generate token');
       }
       
-      // Открываем бота с токеном - используем формат, который автоматически отправляет /start
+      // Открываем бота с токеном
+      // Используем веб-версию Telegram, которая автоматически отправляет команду /start
       const startParam = `auth_${data.token}`;
       const botUrl = `https://t.me/giftdrawtodaybot?start=${startParam}`;
       console.log('Opening bot URL:', botUrl);
       
-      // Пытаемся открыть через Telegram Desktop (deep link)
-      // Используем формат tg://resolve который должен автоматически отправить команду
+      // Пытаемся открыть через Telegram Desktop (deep link) сначала
       try {
         const deepLink = `tg://resolve?domain=giftdrawtodaybot&start=${startParam}`;
         console.log('Trying deep link:', deepLink);
         
-        // Сначала пытаемся открыть через deep link
-        window.location.href = deepLink;
+        // Создаем скрытую ссылку для deep link
+        const link = document.createElement('a');
+        link.href = deepLink;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
-        // Если через 500ms ничего не произошло, открываем веб-версию
-        // Веб-версия https://t.me/bot?start=... должна автоматически отправить команду
+        // Fallback: если deep link не сработал, открываем веб-версию
+        // Веб-версия https://t.me/bot?start=... автоматически отправляет команду при первом открытии
         setTimeout(() => {
           console.log('Fallback: opening web URL');
-          // Используем window.location для веб-версии, чтобы она открылась в текущей вкладке
-          // или window.open для новой вкладки
-          if (window.location.protocol === 'https:') {
-            window.open(botUrl, '_blank');
-          } else {
-            window.location.href = botUrl;
-          }
-        }, 500);
+          window.open(botUrl, '_blank');
+        }, 1000);
       } catch (e) {
         console.log('Error with deep link, opening web URL:', e);
+        // Открываем веб-версию напрямую
         window.open(botUrl, '_blank');
       }
     } catch (error: any) {
