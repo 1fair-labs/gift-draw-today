@@ -47,7 +47,7 @@ export default async function handler(
   // Логируем первые и последние символы токена для отладки (безопасно)
   console.log('BOT_TOKEN configured:', BOT_TOKEN ? `${BOT_TOKEN.substring(0, 10)}...${BOT_TOKEN.substring(BOT_TOKEN.length - 5)}` : 'NOT SET');
 
-  const WEB_APP_URL = process.env.WEB_APP_URL || 'https://crypto-lottery-today.vercel.app';
+  const WEB_APP_URL = (process.env.WEB_APP_URL || 'https://crypto-lottery-today.vercel.app').replace(/\/$/, '');
 
   try {
     console.log('Webhook called:', {
@@ -114,6 +114,8 @@ export default async function handler(
 
           try {
             console.log('Verifying token with API...');
+            console.log('WEB_APP_URL:', WEB_APP_URL);
+            console.log('Full verify URL:', `${WEB_APP_URL}/api/auth/verify-token`);
             // Отправляем данные на API для привязки пользователя к токену
             const verifyResponse = await fetch(`${WEB_APP_URL}/api/auth/verify-token`, {
               method: 'POST',
