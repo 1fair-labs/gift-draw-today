@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+// @ts-ignore - ESM import works in Vercel runtime
 import { tokenStore } from '../lib/token-store.js';
 
 interface TelegramUpdate {
