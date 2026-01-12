@@ -5,7 +5,7 @@
 Откройте в браузере (замените YOUR_CHAT_ID на ваш Telegram ID):
 
 ```
-https://1fairlabs.tech/api/send-message
+https://giftdraw.today/api/send-message
 ```
 
 Или используйте curl:
