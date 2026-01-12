@@ -1155,14 +1155,20 @@ export default function MiniApp() {
     // Проверяем сессию из cookie (для авторизации через бота)
     const checkSession = async () => {
       try {
+        console.log('Checking session...');
         // Проверяем cookie через API endpoint
         const response = await fetch('/api/auth/check-session', {
           credentials: 'include',
         });
         
+        console.log('Session check response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('Session check data:', data);
+          
           if (data.authenticated && data.userId) {
+            console.log('User authenticated, setting user data');
             // Восстанавливаем данные пользователя из сессии
             setTelegramUser({
               id: data.userId,
@@ -1171,6 +1177,8 @@ export default function MiniApp() {
             });
             setTelegramId(data.userId);
             await loadUserData(data.userId);
+          } else {
+            console.log('User not authenticated');
           }
         }
       } catch (error) {
@@ -1179,6 +1187,19 @@ export default function MiniApp() {
     };
 
     checkSession();
+    
+    // Периодически проверяем сессию (каждые 2 секунды) для авторизации через бота
+    const sessionCheckInterval = setInterval(() => {
+      if (!telegramUser) {
+        checkSession();
+      } else {
+        clearInterval(sessionCheckInterval);
+      }
+    }, 2000);
+    
+    return () => {
+      clearInterval(sessionCheckInterval);
+    };
   }, [telegramUser, loadUserData, sendWelcomeMessage]);
 
   // Haptic feedback function
