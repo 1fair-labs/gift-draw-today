@@ -64,13 +64,13 @@ export default async function handler(
 
       // Проверяем, что это сообщение
       if (!update.message) {
-        console.log('No message in update');
+        console.log('No message in update, update keys:', Object.keys(update));
         return response.status(200).json({ ok: true });
       }
 
       // Если нет текста, но есть сообщение - это может быть другой тип сообщения
       if (!update.message.text) {
-        console.log('No text in message, message type:', update.message);
+        console.log('No text in message, message keys:', Object.keys(update.message));
         return response.status(200).json({ ok: true });
       }
 
@@ -156,9 +156,19 @@ export default async function handler(
             );
           }
         } else {
-          // Обычная команда /start без токена - просто игнорируем или отправляем минимальное сообщение
-          console.log('Regular /start without token - ignoring');
-          // Не отправляем сообщение, чтобы не мешать пользователю
+          // Обычная команда /start без токена
+          console.log('Regular /start without token');
+          try {
+            await sendMessage(
+              BOT_TOKEN,
+              chatId,
+              `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
+              `To authorize, please use the "Connect via Telegram" button on the website.`
+            );
+            console.log('Regular /start message sent successfully');
+          } catch (error: any) {
+            console.error('Error sending regular /start message:', error);
+          }
         }
       } else {
         console.log('Message is not /start command:', text);
