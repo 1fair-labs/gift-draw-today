@@ -23,12 +23,18 @@ export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
+  console.log('=== WEBHOOK HANDLER STARTED ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Method:', request.method);
+  console.log('URL:', request.url);
+  
   // Разрешаем CORS
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (request.method === 'OPTIONS') {
+    console.log('OPTIONS request - returning 200');
     return response.status(200).end();
   }
 
