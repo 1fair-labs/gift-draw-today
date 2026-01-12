@@ -9,7 +9,7 @@
 ### Шаг 1: Установите webhook (откройте в браузере)
 
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://1fairlabs.tech/api/telegram-webhook
+https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 **Ожидаемый ответ:**
@@ -28,7 +28,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWe
 {
   "ok": true,
   "result": {
-    "url": "https://1fairlabs.tech/api/telegram-webhook",
+    "url": "https://giftdraw.today/api/telegram-webhook",
     "has_custom_certificate": false,
     "pending_update_count": 0
   }
@@ -38,7 +38,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWe
 ### Шаг 3: Проверьте endpoint
 
 ```
-https://1fairlabs.tech/api/telegram-webhook
+https://giftdraw.today/api/telegram-webhook
 ```
 
 **Ожидаемый ответ:**
@@ -72,6 +72,6 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/delet
 
 **Установить заново:**
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://1fairlabs.tech/api/telegram-webhook
+https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 

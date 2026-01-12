@@ -41,7 +41,7 @@ export default async function handler(
 
     return response.status(200).json({
       success: true,
-      callbackUrl: `${process.env.WEB_APP_URL || 'https://1fairlabs.tech'}/auth/callback?token=${token}`,
+      callbackUrl: `${process.env.WEB_APP_URL || 'https://giftdraw.today'}/auth/callback?token=${token}`,
     });
   } catch (error: any) {
     console.error('Error verifying token:', error);

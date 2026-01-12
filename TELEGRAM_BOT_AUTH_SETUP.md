@@ -35,7 +35,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN!);
-const WEB_APP_URL = process.env.WEB_APP_URL || 'https://1fairlabs.tech';
+const WEB_APP_URL = process.env.WEB_APP_URL || 'https://giftdraw.today';
 
 // Обработка команды /start с токеном
 bot.start(async (ctx: Context) => {
@@ -121,7 +121,7 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 ```env
 BOT_TOKEN=your_telegram_bot_token
-WEB_APP_URL=https://1fairlabs.tech
+WEB_APP_URL=https://giftdraw.today
 ```
 
 ### 5. package.json
@@ -180,7 +180,7 @@ WEB_APP_URL=https://1fairlabs.tech
 ```json
 {
   "success": true,
-  "callbackUrl": "https://1fairlabs.tech/auth/callback?token=a1b2c3d4e5f6..."
+  "callbackUrl": "https://giftdraw.today/auth/callback?token=a1b2c3d4e5f6..."
 }
 ```
 
@@ -188,7 +188,7 @@ WEB_APP_URL=https://1fairlabs.tech
 
 Проверяет токен, создает сессию и перенаправляет на главную страницу.
 
-**Redirect:** `https://1fairlabs.tech`
+**Redirect:** `https://giftdraw.today`
 
 ## Безопасность
 
@@ -212,12 +212,12 @@ WEB_APP_URL=https://1fairlabs.tech
 ```bash
 curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://1fairlabs.tech/api/telegram-webhook"}'
+  -d '{"url": "https://giftdraw.today/api/telegram-webhook"}'
 ```
 
 Или используйте браузер:
 ```
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://1fairlabs.tech/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 3. Проверьте webhook:
@@ -250,7 +250,7 @@ pm2 save
 
 ## Тестирование
 
-1. Откройте сайт `https://1fairlabs.tech`
+1. Откройте сайт `https://giftdraw.today`
 2. Нажмите "Connect via Telegram"
 3. Откроется бот с командой `/start auth_{token}`
 4. Бот обработает команду и покажет кнопку "Вернуться на сайт"

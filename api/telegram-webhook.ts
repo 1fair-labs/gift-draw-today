@@ -38,7 +38,7 @@ export default async function handler(
     return response.status(500).json({ error: 'Bot token not configured' });
   }
 
-  const WEB_APP_URL = process.env.WEB_APP_URL || 'https://1fairlabs.tech';
+  const WEB_APP_URL = process.env.WEB_APP_URL || 'https://giftdraw.today';
 
   try {
     console.log('Webhook called:', {

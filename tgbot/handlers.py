@@ -6,7 +6,7 @@ from aiogram.filters import Command
 
 router = Router()
 
-WEB_APP_URL = os.getenv('WEB_APP_URL', 'https://1fairlabs.tech')
+WEB_APP_URL = os.getenv('WEB_APP_URL', 'https://giftdraw.today')
 
 @router.message(Command("start"))
 async def cmd_start(message: Message):

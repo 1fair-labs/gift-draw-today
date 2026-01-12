@@ -21,8 +21,8 @@
 В Vercel Dashboard → Settings → Environment Variables добавьте:
 
 - `TELEGRAM_BOT_TOKEN` = `8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U`
-- `WEB_APP_URL` = `https://1fairlabs.tech`
-- `WEBHOOK_URL` = `https://1fairlabs.tech/api/bot`
+- `WEB_APP_URL` = `https://giftdraw.today`
+- `WEBHOOK_URL` = `https://giftdraw.today/api/bot`
 - `DEBUG` = `False` (или не добавляйте, по умолчанию False)
 
 ### 2. Установите Python runtime
@@ -51,7 +51,7 @@ Vercel автоматически определит Python из `requirements.t
 После деплоя установите webhook:
 
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://1fairlabs.tech/api/bot
+https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://giftdraw.today/api/bot
 ```
 
 ### 5. Проверьте webhook
@@ -62,7 +62,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWe
 
 ## Как это работает
 
-1. Telegram отправляет обновление на `https://1fairlabs.tech/api/bot`
+1. Telegram отправляет обновление на `https://giftdraw.today/api/bot`
 2. Vercel перенаправляет запрос на `/api/index.py` (FastAPI)
 3. FastAPI вызывает `tgbot.update_bot(update_dict)`
 4. aiogram обрабатывает обновление через handlers

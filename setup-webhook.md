@@ -22,7 +22,7 @@
 
 Откройте эту ссылку в браузере:
 ```
-https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://1fairlabs.tech/api/telegram-webhook
+https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 Должен вернуться JSON:
@@ -35,7 +35,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWe
 ```bash
 curl -X POST "https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/setWebhook" \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://1fairlabs.tech/api/telegram-webhook"}'
+  -d '{"url": "https://giftdraw.today/api/telegram-webhook"}'
 ```
 
 ## Шаг 3: Проверьте Webhook
@@ -50,7 +50,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWe
 {
   "ok": true,
   "result": {
-    "url": "https://1fairlabs.tech/api/telegram-webhook",
+    "url": "https://giftdraw.today/api/telegram-webhook",
     "has_custom_certificate": false,
     "pending_update_count": 0
   }
@@ -59,7 +59,7 @@ https://api.telegram.org/bot8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U/getWe
 
 ## Шаг 4: Протестируйте
 
-1. Откройте сайт `https://1fairlabs.tech`
+1. Откройте сайт `https://giftdraw.today`
 2. Нажмите "Connect via Telegram"
 3. Бот должен автоматически обработать команду `/start auth_{token}`
 4. Бот отправит сообщение с кнопкой "🔗 Вернуться на сайт"

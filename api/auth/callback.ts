@@ -56,7 +56,7 @@ export default async function handler(
     tokenStore.deleteToken(token);
 
     // Перенаправляем на главную страницу
-    const redirectUrl = process.env.WEB_APP_URL || 'https://1fairlabs.tech';
+    const redirectUrl = process.env.WEB_APP_URL || 'https://giftdraw.today';
     return response.redirect(302, redirectUrl);
   } catch (error: any) {
     console.error('Error in auth callback:', error);

@@ -22,7 +22,7 @@ cp .env.example .env
 
 ```env
 TELEGRAM_BOT_TOKEN=8393561507:AAEwle_Ao5qjr8-sq0icOnqEzxAOxct_r6U
-WEB_APP_URL=https://1fairlabs.tech
+WEB_APP_URL=https://giftdraw.today
 PORT=8000
 ```
 
@@ -108,7 +108,7 @@ heroku create your-bot-name
 
 ```bash
 heroku config:set TELEGRAM_BOT_TOKEN=your_token
-heroku config:set WEB_APP_URL=https://1fairlabs.tech
+heroku config:set WEB_APP_URL=https://giftdraw.today
 ```
 
 4. Задеплойте:

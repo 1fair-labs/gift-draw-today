@@ -1,15 +1,15 @@
-# Настройка домена 1fairlabs.tech
+# Настройка домена giftdraw.today
 
 ## Что было сделано:
 
-1. ✅ Обновлены все ссылки в коде на новый домен `https://1fairlabs.tech`
+1. ✅ Обновлены все ссылки в коде на новый домен `https://giftdraw.today`
 2. ✅ Исправлена шапка для Telegram WebApp (уменьшены размеры, добавлены настройки цвета)
 3. ✅ Добавлен username бота `@cryptolotterytoday_bot` в функцию редиректа
 4. ✅ Обновлен TON Connect Manifest с новым доменом
 
 ## Что нужно сделать в Vercel:
 
-### ⚠️ ВАЖНО: Добавить кастомный домен 1fairlabs.tech
+### ⚠️ ВАЖНО: Добавить кастомный домен giftdraw.today
 
 **Перед настройкой Telegram бота необходимо добавить домен в Vercel:**
 
@@ -17,7 +17,7 @@
 2. Найдите проект `crypto-lottery-today`
 3. Перейдите в **Settings** → **Domains**
 4. Нажмите **Add Domain**
-5. Введите: `1fairlabs.tech`
+5. Введите: `giftdraw.today`
 6. Следуйте инструкциям для настройки DNS записей у вашего регистратора домена
 
 **Подробные инструкции см. в файле `VERCEL_CUSTOM_DOMAIN_SETUP.md`**
@@ -49,7 +49,7 @@
 4. Выберите вашего бота
 5. Выберите "Bot Settings" → "Menu Button"
 6. Или используйте команду `/newapp` для создания/обновления мини-приложения
-7. Укажите новый URL: `https://1fairlabs.tech`
+7. Укажите новый URL: `https://giftdraw.today`
 
 ### 4. Настроить домен для Telegram Login Widget
 
@@ -58,7 +58,7 @@
 1. Откройте @BotFather в Telegram
 2. Введите команду `/setdomain`
 3. Выберите вашего бота `@cryptolotterytoday_bot`
-4. Введите домен **без протокола и слеша**: `1fairlabs.tech`
+4. Введите домен **без протокола и слеша**: `giftdraw.today`
 5. После успешной настройки вы получите подтверждение от BotFather
 
 **Примечание:** Если вы видите ошибку "Bot domain invalid" на странице, это означает, что домен не настроен в BotFather или указан неправильно.
@@ -66,7 +66,7 @@
 ### 5. Обновить TON Connect Manifest
 
 Файл `public/tonconnect-manifest.json` уже обновлен с новым доменом. После деплоя он будет доступен по адресу:
-- `https://1fairlabs.tech/tonconnect-manifest.json`
+- `https://giftdraw.today/tonconnect-manifest.json`
 
 ### 6. Проверить работу
 
@@ -98,8 +98,8 @@
 
 ## После деплоя:
 
-1. Проверьте доступность сайта: `https://1fairlabs.tech`
-2. Проверьте доступность манифеста: `https://1fairlabs.tech/tonconnect-manifest.json`
+1. Проверьте доступность сайта: `https://giftdraw.today`
+2. Проверьте доступность манифеста: `https://giftdraw.today/tonconnect-manifest.json`
 3. Обновите URL мини-приложения в @BotFather
 4. **Настройте домен для Telegram Login Widget через `/setdomain` в @BotFather**
 5. Протестируйте мини-приложение в Telegram
