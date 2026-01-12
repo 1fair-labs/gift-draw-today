@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { tokenStore } from '../lib/token-store.js';
 
 interface TelegramUpdate {
   update_id: number;
@@ -108,11 +109,6 @@ export default async function handler(
           console.log('Processing auth check button click');
           
           try {
-            // Импортируем tokenStore
-            // @ts-ignore - dynamic import for serverless
-            const tokenStoreModule = await import('../lib/token-store.js');
-            const tokenStore = tokenStoreModule.tokenStore;
-            
             // Ищем активный токен без привязанного пользователя
             const availableToken = tokenStore.findAvailableToken();
             
@@ -291,10 +287,7 @@ export default async function handler(
           // Обычная команда /start без токена
           console.log('Regular /start without token');
           try {
-            // Импортируем tokenStore для проверки активных токенов
-            // @ts-ignore - dynamic import for serverless
-            const tokenStoreModule = await import('../lib/token-store.js');
-            const tokenStore = tokenStoreModule.tokenStore;
+            // Проверяем активные токены
             const availableToken = tokenStore.findAvailableToken();
             
             if (availableToken) {
