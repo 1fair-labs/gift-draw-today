@@ -156,7 +156,7 @@ export default async function handler(
             await sendMessage(
               BOT_TOKEN,
               chatId,
-              `👋 Привет! Я бот для CryptoDraw.today.\n\n` +
+              `👋 Привет! Я бот для GiftDraw.today.\n\n` +
               `Для авторизации на сайте перейдите по ссылке на сайте и нажмите "Connect via Telegram".`
             );
             console.log('Regular /start message sent successfully');
