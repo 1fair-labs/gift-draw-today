@@ -109,7 +109,8 @@ export default async function handler(
           
           try {
             // Импортируем tokenStore
-            const { tokenStore } = await import('../lib/token-store.js');
+            const tokenStoreModule = await import('../lib/token-store.js');
+            const tokenStore = tokenStoreModule.tokenStore;
             
             // Ищем активный токен без привязанного пользователя
             const availableToken = tokenStore.findAvailableToken();
@@ -290,7 +291,8 @@ export default async function handler(
           console.log('Regular /start without token');
           try {
             // Импортируем tokenStore для проверки активных токенов
-            const { tokenStore } = await import('../lib/token-store.js');
+            const tokenStoreModule = await import('../lib/token-store.js');
+            const tokenStore = tokenStoreModule.tokenStore;
             const availableToken = tokenStore.findAvailableToken();
             
             if (availableToken) {
@@ -422,16 +424,21 @@ async function answerCallbackQuery(
   const url = `https://api.telegram.org/bot${botToken}/answerCallbackQuery`;
   console.log('Sending to Telegram API:', url.replace(botToken, 'TOKEN_HIDDEN'));
 
+  const body: any = {
+    callback_query_id: callbackQueryId,
+    show_alert: showAlert,
+  };
+  
+  if (text) {
+    body.text = text;
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      callback_query_id: callbackQueryId,
-      text: text,
-      show_alert: showAlert,
-    }),
+    body: JSON.stringify(body),
   });
 
   const responseData = await response.json();
