@@ -20,24 +20,42 @@ export default async function handler(
   }
 
   try {
+    console.log('=== VERIFY TOKEN API CALLED ===');
     const { token, userId, username, firstName } = request.body;
+    console.log('Request body:', {
+      token: token ? token.substring(0, 10) + '...' : 'MISSING',
+      userId,
+      username,
+      firstName
+    });
 
     if (!token || !userId) {
+      console.error('Missing token or userId');
       return response.status(400).json({ error: 'Token and userId are required' });
     }
 
     // Проверяем, существует ли токен
+    console.log('Checking token in store...');
+    tokenStore.cleanup(); // Очищаем истекшие токены перед проверкой
     const tokenData = tokenStore.getTokenData(token);
+    console.log('Token data from store:', tokenData ? 'FOUND' : 'NOT FOUND');
+    
     if (!tokenData) {
+      console.error('Token not found in store');
       return response.status(400).json({ error: 'Invalid or expired token' });
     }
 
     // Привязываем пользователя к токену
+    console.log('Attaching user to token...');
     const success = tokenStore.attachUser(token, userId, username, firstName);
+    console.log('Attach result:', success);
 
     if (!success) {
+      console.error('Failed to attach user');
       return response.status(400).json({ error: 'Failed to attach user to token' });
     }
+    
+    console.log('User attached successfully');
 
     return response.status(200).json({
       success: true,

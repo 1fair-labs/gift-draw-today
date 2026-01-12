@@ -26,16 +26,26 @@ export default async function handler(
     }
 
     // Проверяем токен
+    console.log('=== CALLBACK API CALLED ===');
+    console.log('Token from query:', token ? token.substring(0, 10) + '...' : 'MISSING');
+    
+    tokenStore.cleanup(); // Очищаем истекшие токены перед проверкой
     const tokenData = tokenStore.getTokenData(token);
+    console.log('Token data:', tokenData ? 'FOUND' : 'NOT FOUND');
+    console.log('Token data details:', tokenData);
 
     if (!tokenData) {
+      console.error('Token not found');
       return response.status(400).json({ error: 'Invalid or expired token' });
     }
 
     // Проверяем, привязан ли пользователь
     if (!tokenData.userId) {
+      console.error('Token not authorized yet (no userId)');
       return response.status(400).json({ error: 'Token not authorized yet' });
     }
+    
+    console.log('Token authorized, creating session for userId:', tokenData.userId);
 
     // Создаем сессию через cookie
     const sessionData = {

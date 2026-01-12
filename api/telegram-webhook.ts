@@ -104,7 +104,11 @@ export default async function handler(
         // Проверяем, есть ли токен авторизации
         if (args.length > 1 && args[1].startsWith('auth_')) {
           const token = args[1].replace('auth_', '');
-          console.log('Auth token received:', token.substring(0, 10) + '...');
+          console.log('=== AUTH TOKEN PROCESSING ===');
+          console.log('Full command:', text);
+          console.log('Args:', args);
+          console.log('Token (first 10 chars):', token.substring(0, 10));
+          console.log('Token length:', token.length);
 
           if (!userId) {
             console.error('No userId in message');
@@ -113,9 +117,16 @@ export default async function handler(
           }
 
           try {
-            console.log('Verifying token with API...');
+            console.log('=== CALLING VERIFY TOKEN API ===');
             console.log('WEB_APP_URL:', WEB_APP_URL);
             console.log('Full verify URL:', `${WEB_APP_URL}/api/auth/verify-token`);
+            console.log('Request body:', {
+              token: token.substring(0, 10) + '...',
+              userId,
+              username,
+              firstName
+            });
+            
             // Отправляем данные на API для привязки пользователя к токену
             const verifyResponse = await fetch(`${WEB_APP_URL}/api/auth/verify-token`, {
               method: 'POST',
@@ -131,6 +142,8 @@ export default async function handler(
             });
 
             console.log('Verify response status:', verifyResponse.status);
+            console.log('Verify response headers:', Object.fromEntries(verifyResponse.headers.entries()));
+            
             const verifyData = await verifyResponse.json();
             console.log('Verify response data:', verifyData);
 
