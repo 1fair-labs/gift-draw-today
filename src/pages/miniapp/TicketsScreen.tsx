@@ -62,7 +62,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
   if (tickets.length === 0) {
     return (
       <div className="h-full overflow-y-auto">
-        <div className="p-4 pt-2 pb-20 md:pb-6">
+        <div className="p-4 pt-2 pb-16 md:pb-6">
           <Card className="glass-card p-6 text-center">
             <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
             <p className="text-lg text-muted-foreground mb-4">No tickets yet</p>
@@ -93,7 +93,7 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
 
   return (
     <div className="h-full w-full overflow-y-auto">
-      <div className="p-4 pt-2 pb-20 md:pb-6 space-y-4">
+      <div className="p-4 pt-2 pb-16 md:pb-6 space-y-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Ticket className="w-6 h-6 text-primary" />
