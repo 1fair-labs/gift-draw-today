@@ -78,7 +78,7 @@ export default function ProfileScreen({
 
   return (
     <div className="h-full w-full overflow-y-auto">
-      <div className="p-4 pt-2 space-y-6">
+      <div className="p-4 pt-2 pb-20 md:pb-6 space-y-6">
         {/* Profile Header */}
         <Card className="glass-card p-6">
           {/* Wallet Connection */}

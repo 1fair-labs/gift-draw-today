@@ -152,7 +152,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
   return (
     <div className="h-full w-full overflow-y-auto">
-      <div className="p-4 pt-2 space-y-6">
+      <div className="p-4 pt-2 pb-20 md:pb-6 space-y-6">
         {/* Current Draw Card */}
         <Card className="glass-card overflow-hidden relative">
           <div className="p-6">
@@ -212,12 +212,12 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
             <div className="text-center mb-4 -mt-2">
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
-              <p className={`text-xl font-display font-bold text-neon-pink tabular-nums transition-all duration-300 ${animatingValues.timer ? 'value-updated' : ''}`}>
-                <span className="inline-block w-8 text-center">{timeRemaining.hours}</span>
-                <span className="text-base mx-1">:</span>
-                <span className="inline-block w-8 text-center">{timeRemaining.minutes}</span>
-                <span className="text-base mx-1">:</span>
-                <span className="inline-block w-8 text-center">{timeRemaining.seconds}</span>
+              <p className={`text-2xl md:text-3xl font-display font-bold text-neon-pink tabular-nums transition-all duration-300 ${animatingValues.timer ? 'value-updated' : ''}`}>
+                <span className="inline-block w-10 md:w-12 text-center">{timeRemaining.hours}</span>
+                <span className="text-xl md:text-2xl mx-1">:</span>
+                <span className="inline-block w-10 md:w-12 text-center">{timeRemaining.minutes}</span>
+                <span className="text-xl md:text-2xl mx-1">:</span>
+                <span className="inline-block w-10 md:w-12 text-center">{timeRemaining.seconds}</span>
               </p>
             </div>
 
