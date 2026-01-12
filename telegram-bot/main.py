@@ -129,7 +129,7 @@ async def webhook_post(request: Request):
                 logger.info("Sending regular /start response")
                 await send_message(
                     chat_id,
-                    "👋 Привет! Я бот для CryptoLottery.today.\n\n"
+                    "👋 Привет! Я бот для GiftDraw.today.\n\n"
                     "Для авторизации на сайте перейдите по ссылке на сайте и нажмите \"Connect via Telegram\"."
                 )
         else:
