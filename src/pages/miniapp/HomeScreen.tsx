@@ -152,7 +152,7 @@ export default function HomeScreen({ currentDraw, onEnterDraw, isVisible = true 
 
   return (
     <div className="h-full w-full overflow-y-auto">
-      <div className="p-4 pt-2 pb-16 md:pb-6 space-y-6">
+      <div className="p-4 pt-2 pb-10 md:pb-6 space-y-6">
         {/* Current Draw Card */}
         <Card className="glass-card overflow-hidden relative">
           <div className="p-6">
