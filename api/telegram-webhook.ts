@@ -184,10 +184,16 @@ export default async function handler(
       return response.status(200).json({ ok: true });
     }
 
+    console.log('Method not allowed:', request.method);
     return response.status(405).json({ error: 'Method not allowed' });
   } catch (error: any) {
-    console.error('Error in webhook:', error);
+    console.error('=== ERROR IN WEBHOOK ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
     return response.status(500).json({ error: 'Internal server error' });
+  } finally {
+    console.log('=== WEBHOOK HANDLER FINISHED ===');
   }
 }
 
