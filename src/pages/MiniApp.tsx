@@ -1364,8 +1364,14 @@ export default function MiniApp() {
                       )}
                     </div>
                   </>
-                ) : (
+                ) : !isCheckingSession ? (
                   <div className="flex items-center gap-2">
+                    <Wand2 className="w-6 h-6 text-primary" />
+                    <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
+                  </div>
+                ) : (
+                  // Показываем залогиненное состояние во время проверки сессии (чтобы не мигало)
+                  <div className="flex items-center gap-2 opacity-50">
                     <Wand2 className="w-6 h-6 text-primary" />
                     <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
                   </div>
@@ -1578,7 +1584,7 @@ export default function MiniApp() {
                 </div>
                 
                 {/* Кнопка подключения через бота или иконка выхода */}
-                {!telegramUser ? (
+                {!telegramUser && !isCheckingSession ? (
                   <Button
                     onClick={handleConnectViaBot}
                     className="bg-[#0088cc] hover:bg-[#0077b5] text-white px-3 py-1.5"
@@ -1587,7 +1593,7 @@ export default function MiniApp() {
                     <TelegramIcon className="w-5 h-5 mr-1" />
                     <span className="text-xs">Connect via Telegram</span>
                   </Button>
-                ) : (
+                ) : telegramUser ? (
                   <button
                     onClick={handleLogout}
                     className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
