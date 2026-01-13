@@ -227,6 +227,16 @@ export default async function handler(
         const args = text.split(' ');
         console.log('Args:', args);
         
+        // Удаляем сообщение пользователя с командой /start
+        const userMessageId = message.message_id;
+        try {
+          await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+          console.log('User /start message deleted:', userMessageId);
+        } catch (error: any) {
+          console.warn('Failed to delete user message:', error);
+          // Не прерываем выполнение, если не удалось удалить сообщение
+        }
+        
         // Проверяем, есть ли токен авторизации (теперь без префикса auth_)
         if (args.length > 1 && args[1]) {
           const token = args[1]; // Токен идет напрямую без префикса

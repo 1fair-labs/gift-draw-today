@@ -1193,6 +1193,13 @@ export default function MiniApp() {
     const SESSION_CHECK_COOLDOWN = 3000; // Минимум 3 секунды между проверками
     
     const checkSession = async () => {
+      // Не проверяем сессию если пользователь только что разлогинился
+      const justLoggedOut = localStorage.getItem('just_logged_out');
+      if (justLoggedOut === 'true') {
+        localStorage.removeItem('just_logged_out');
+        return false;
+      }
+      
       // Ограничиваем частоту проверок
       const now = Date.now();
       if (now - lastSessionCheck < SESSION_CHECK_COOLDOWN) {
@@ -1233,6 +1240,12 @@ export default function MiniApp() {
     // Проверяем сессию при видимости страницы (когда пользователь возвращается на вкладку)
     // Используем только visibilitychange, так как focus может срабатывать слишком часто
     const handleVisibilityChange = async () => {
+      // Не проверяем сессию если пользователь только что разлогинился
+      const justLoggedOut = localStorage.getItem('just_logged_out');
+      if (justLoggedOut === 'true') {
+        return;
+      }
+      
       if (document.visibilityState === 'visible' && !telegramUser) {
         await checkSession();
       }
