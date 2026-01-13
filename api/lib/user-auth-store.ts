@@ -117,7 +117,7 @@ class UserAuthStore {
           has_refresh_token: !!existingUser.refresh_token,
         });
         
-        const updateData = {
+        const updateData: any = {
           refresh_token: refreshToken,
           refresh_expires_at: refreshExpiresAt.toISOString(),
           last_login_at: now.toISOString(),
@@ -126,6 +126,13 @@ class UserAuthStore {
           first_name: firstName || existingUser.first_name || null,
           is_revoked: false, // Сбрасываем флаг отзыва при новом логине
         };
+        
+        // Если у пользователя нет anon_id, генерируем его
+        if (!existingUser.anon_id) {
+          const anonId = this.generateToken().substring(0, 16);
+          updateData.anon_id = anonId;
+          console.log('Generating missing anon_id for existing user:', anonId);
+        }
         
         console.log('Update data:', {
           ...updateData,
