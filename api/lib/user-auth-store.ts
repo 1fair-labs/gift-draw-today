@@ -184,7 +184,7 @@ class UserAuthStore {
       const accessToken = this.generateAccessToken(telegramId, username, firstName);
       const accessExpiresAt = new Date(Date.now() + this.ACCESS_TOKEN_TTL);
 
-      // Обновляем access token в БД
+      // Обновляем access token в БД (опционально, если колонки существуют)
       const { error: updateAccessTokenError } = await this.supabase
         .from('users')
         .update({
@@ -195,7 +195,13 @@ class UserAuthStore {
 
       if (updateAccessTokenError) {
         console.error('Error updating access token:', updateAccessTokenError);
-        // Продолжаем, это не критично
+        console.error('Access token update error code:', updateAccessTokenError.code);
+        console.error('Access token update error message:', updateAccessTokenError.message);
+        // Продолжаем, это не критично - access token можно генерировать на лету
+        // Но если это ошибка "column does not exist", значит миграция не выполнена
+        if (updateAccessTokenError.message?.includes('column') || updateAccessTokenError.message?.includes('does not exist')) {
+          console.warn('⚠️ Access token columns may not exist. Please run database migration.');
+        }
       }
 
       return {

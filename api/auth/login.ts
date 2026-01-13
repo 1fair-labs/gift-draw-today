@@ -55,9 +55,13 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error('Error in login:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
     return response.status(500).json({
+      success: false,
       error: 'Internal server error',
-      message: error.message,
+      message: error.message || 'Unknown error occurred',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 }
