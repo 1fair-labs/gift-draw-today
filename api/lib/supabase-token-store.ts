@@ -263,6 +263,35 @@ class SupabaseTokenStore {
       return null;
     }
   }
+
+  // Поиск активного токена для конкретного пользователя
+  async findActiveTokenByUserId(userId: number): Promise<string | null> {
+    if (!this.supabase) {
+      return null;
+    }
+
+    try {
+      await this.cleanup();
+
+      const { data: tokens, error } = await this.supabase
+        .from('auth_tokens')
+        .select('token')
+        .eq('user_id', userId)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error || !tokens || tokens.length === 0) {
+        return null;
+      }
+
+      console.log('Found active token for userId:', userId);
+      return tokens[0].token;
+    } catch (error: any) {
+      console.error('Exception finding active token by userId:', error);
+      return null;
+    }
+  }
 }
 
 // Singleton instance

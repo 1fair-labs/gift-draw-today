@@ -1,6 +1,32 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseTokenStore } from '../lib/supabase-token-store.js';
 
+// Функция для получения userId из сессии
+async function getUserIdFromSession(request: VercelRequest): Promise<number | null> {
+  try {
+    const cookies = request.headers.cookie || '';
+    const sessionCookie = cookies
+      .split(';')
+      .find(c => c.trim().startsWith('telegram_session='));
+
+    if (!sessionCookie) {
+      return null;
+    }
+
+    const sessionValue = sessionCookie.split('=')[1];
+    const sessionData = JSON.parse(
+      Buffer.from(sessionValue, 'base64').toString()
+    );
+
+    if (sessionData.authenticated && sessionData.userId) {
+      return sessionData.userId;
+    }
+  } catch (error) {
+    console.error('Error parsing session:', error);
+  }
+  return null;
+}
+
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
@@ -21,7 +47,31 @@ export default async function handler(
   try {
     console.log('Starting token generation...');
     
-    // Генерируем токен
+    // Проверяем, есть ли активная сессия пользователя
+    const userId = await getUserIdFromSession(request);
+    
+    if (userId) {
+      console.log('User already authenticated, checking for existing active token, userId:', userId);
+      
+      // Ищем активный токен для этого пользователя
+      const existingToken = await supabaseTokenStore.findActiveTokenByUserId(userId);
+      
+      if (existingToken) {
+        console.log('Found existing active token for user, reusing it');
+        const botUrl = `https://t.me/giftdrawtodaybot?start=${existingToken}`;
+        
+        return response.status(200).json({
+          success: true,
+          token: existingToken,
+          botUrl,
+          deepLink: `tg://resolve?domain=giftdrawtodaybot&start=${existingToken}`,
+          reused: true, // Флаг, что токен переиспользован
+        });
+      }
+    }
+    
+    // Если активного токена нет, генерируем новый
+    console.log('No active token found, generating new token...');
     console.log('Calling supabaseTokenStore.generateToken()...');
     const token = supabaseTokenStore.generateToken();
     console.log('Token generated, length:', token?.length);
