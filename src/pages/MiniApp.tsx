@@ -1265,19 +1265,26 @@ export default function MiniApp() {
 
   // Haptic feedback function
   const triggerHaptic = () => {
-    // Try Telegram WebApp haptic feedback first
-    const WebApp = (window as any).Telegram?.WebApp;
-    if (WebApp?.HapticFeedback?.impactOccurred) {
-      try {
-        WebApp.HapticFeedback.impactOccurred('light');
-      } catch (e) {
-        // Fallback to navigator.vibrate
-        if (navigator.vibrate) {
-          navigator.vibrate(10);
+    try {
+      const WebApp = (window as any).Telegram?.WebApp;
+      
+      // Проверяем версию WebApp и наличие HapticFeedback
+      // HapticFeedback поддерживается только в версиях 6.1+
+      if (WebApp?.version && parseFloat(WebApp.version) >= 6.1 && WebApp?.HapticFeedback?.impactOccurred) {
+        try {
+          WebApp.HapticFeedback.impactOccurred('light');
+          return;
+        } catch (e) {
+          // Если HapticFeedback не поддерживается, используем fallback
         }
       }
-    } else if (navigator.vibrate) {
-      navigator.vibrate(10);
+      
+      // Fallback to navigator.vibrate
+      if (navigator.vibrate) {
+        navigator.vibrate(10);
+      }
+    } catch (error) {
+      // Игнорируем ошибки haptic feedback
     }
   };
 
