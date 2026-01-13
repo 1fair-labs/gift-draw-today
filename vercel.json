@@ -27,7 +27,7 @@
         },
         {
           "key": "X-Frame-Options",
-          "value": "ALLOWALL"
+          "value": "ALLOW-FROM *"
         },
         {
           "key": "X-XSS-Protection",
