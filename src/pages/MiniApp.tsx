@@ -1046,16 +1046,7 @@ export default function MiniApp() {
     try {
       triggerHaptic();
       
-      // Отключаем кошелек если подключен
-      if (tonConnectUI.connected) {
-        try {
-          await tonConnectUI.disconnect();
-        } catch (error) {
-          console.error('Error disconnecting wallet:', error);
-        }
-      }
-      
-      // Очищаем состояние пользователя
+      // Сначала очищаем состояние пользователя немедленно (для плавного UI)
       setTelegramUser(null);
       setTelegramId(null);
       setUser(null);
@@ -1064,6 +1055,15 @@ export default function MiniApp() {
       setUsdtBalance(0);
       setTonBalance(0);
       setTickets([]);
+      
+      // Отключаем кошелек если подключен
+      if (tonConnectUI.connected) {
+        try {
+          await tonConnectUI.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting wallet:', error);
+        }
+      }
       
       // Очищаем cookie сессии через API
       try {
@@ -1078,10 +1078,19 @@ export default function MiniApp() {
       // Очищаем localStorage
       localStorage.removeItem('balance_visible');
       
-      // Обновляем страницу для полного сброса состояния
-      window.location.href = '/';
+      // Устанавливаем флаг, что пользователь только что разлогинился
+      // Это предотвратит проверку сессии при следующей загрузке
+      localStorage.setItem('just_logged_out', 'true');
+      
+      // Небольшая задержка перед перезагрузкой для плавности
+      setTimeout(() => {
+        // Используем replace вместо href для избежания истории
+        window.location.replace('/');
+      }, 100);
     } catch (error) {
       console.error('Error during logout:', error);
+      // В случае ошибки все равно перезагружаем страницу
+      window.location.replace('/');
     }
   }, [tonConnectUI]);
 

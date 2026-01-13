@@ -29,14 +29,28 @@ export default function AuthCallback() {
 
         console.log('Callback response status:', response.status);
         console.log('Callback response ok:', response.ok);
-        console.log('Callback response redirected:', response.redirected);
 
-        if (response.ok || response.redirected) {
-          // Если успешно или был редирект, переходим на главную
-          // Cookie уже установлен сервером
-          console.log('Authorization successful, redirecting to home...');
-          // Используем полный редирект для обновления состояния
-          window.location.href = '/';
+        if (response.ok) {
+          // Пытаемся получить JSON ответ
+          try {
+            const data = await response.json();
+            console.log('Callback response data:', data);
+            
+            if (data.success && data.redirectUrl) {
+              // Cookie уже установлен сервером, переходим на главную
+              console.log('Authorization successful, redirecting to home...');
+              // Используем полный редирект для обновления состояния
+              window.location.href = data.redirectUrl || '/';
+            } else {
+              // Если нет redirectUrl, просто переходим на главную
+              console.log('Authorization successful, redirecting to home...');
+              window.location.href = '/';
+            }
+          } catch (e) {
+            // Если не JSON, возможно это HTML (для WebView), просто переходим на главную
+            console.log('Response is not JSON, assuming success, redirecting...');
+            window.location.href = '/';
+          }
         } else {
           // Пытаемся получить текст ошибки
           let errorText = 'Authorization failed';
