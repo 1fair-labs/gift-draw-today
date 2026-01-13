@@ -98,31 +98,50 @@ class UserAuthStore {
       if (existingUser) {
         // Обновляем существующего пользователя
         console.log('Updating existing user:', telegramId);
+        console.log('Existing user data:', {
+          id: existingUser.id,
+          telegram_id: existingUser.telegram_id,
+          has_refresh_token: !!existingUser.refresh_token,
+        });
+        
+        const updateData = {
+          refresh_token: refreshToken,
+          refresh_expires_at: refreshExpiresAt.toISOString(),
+          last_login_at: now.toISOString(),
+          last_used_at: now.toISOString(),
+          username: username || existingUser.username || null,
+          first_name: firstName || existingUser.first_name || null,
+          is_revoked: false, // Сбрасываем флаг отзыва при новом логине
+        };
+        
+        console.log('Update data:', {
+          ...updateData,
+          refresh_token: refreshToken.substring(0, 10) + '...',
+        });
+        
         const { data: updatedUser, error: updateError } = await this.supabase
           .from('users')
-          .update({
-            refresh_token: refreshToken,
-            refresh_expires_at: refreshExpiresAt.toISOString(),
-            last_login_at: now.toISOString(),
-            last_used_at: now.toISOString(),
-            username: username || existingUser.username || null,
-            first_name: firstName || existingUser.first_name || null,
-            is_revoked: false, // Сбрасываем флаг отзыва при новом логине
-          })
+          .update(updateData)
           .eq('telegram_id', telegramId)
           .select()
           .single();
 
         if (updateError) {
-          console.error('Error updating user:', updateError);
+          console.error('❌ Error updating user:', updateError);
           console.error('Update error code:', updateError.code);
           console.error('Update error message:', updateError.message);
           console.error('Update error details:', updateError.details);
           console.error('Update error hint:', updateError.hint);
+          console.error('Full update error:', JSON.stringify(updateError, null, 2));
           return null;
         }
 
-        console.log('User updated with new refresh token:', telegramId);
+        if (!updatedUser) {
+          console.error('❌ Updated user is null after update operation');
+          return null;
+        }
+
+        console.log('✅ User updated with new refresh token:', telegramId);
       } else {
         // Создаем нового пользователя
         // Генерируем anon_id
@@ -163,15 +182,21 @@ class UserAuthStore {
           .single();
 
         if (insertError) {
-          console.error('Error creating user:', insertError);
+          console.error('❌ Error creating user:', insertError);
           console.error('Insert error code:', insertError.code);
           console.error('Insert error message:', insertError.message);
           console.error('Insert error details:', insertError.details);
           console.error('Insert error hint:', insertError.hint);
+          console.error('Full insert error:', JSON.stringify(insertError, null, 2));
           return null;
         }
 
-        console.log('New user created with refresh token:', telegramId);
+        if (!newUser) {
+          console.error('❌ New user is null after insert operation');
+          return null;
+        }
+
+        console.log('✅ New user created with refresh token:', telegramId);
         
         // Возвращаем токены
         return {
@@ -209,7 +234,10 @@ class UserAuthStore {
         accessToken,
       };
     } catch (error: any) {
-      console.error('Exception in loginOrUpdateUser:', error);
+      console.error('❌ Exception in loginOrUpdateUser:', error);
+      console.error('Exception message:', error.message);
+      console.error('Exception stack:', error.stack);
+      console.error('Full exception:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
       return null;
     }
   }
