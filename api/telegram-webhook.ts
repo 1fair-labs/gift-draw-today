@@ -147,7 +147,9 @@ export default async function handler(
                 chatId,
                 '❌ Authorization failed.\n\n' +
                 'Failed to create session. Please try again from the website.\n\n' +
-                'If the problem persists, please contact support.'
+                'If the problem persists, please contact support.',
+                undefined,
+                userId
               );
               return response.status(200).json({ ok: true });
             }
@@ -164,7 +166,8 @@ export default async function handler(
               `You are authorized as: ${firstName || username || `ID: ${userId}`}\n\n` +
               `Click the link below to return to the website.\n` +
               `(Tap and hold, then select "Open in browser" if needed)`,
-              [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]]
+              [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
+              userId
             );
             console.log('Authorization successful for user:', userId);
             
@@ -333,7 +336,9 @@ export default async function handler(
                 BOT_TOKEN,
                 chatId,
                 `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
-                `To authorize, please use the "Connect via Telegram" button on the website.`
+                `To authorize, please use the "Connect via Telegram" button on the website.`,
+                undefined,
+                undefined
               );
               return response.status(200).json({ ok: true });
             }
@@ -374,7 +379,9 @@ export default async function handler(
                 BOT_TOKEN,
                 chatId,
                 `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
-                `To authorize, please use the "Connect via Telegram" button on the website.`
+                `To authorize, please use the "Connect via Telegram" button on the website.`,
+                undefined,
+                userId
               );
             } catch (fallbackError: any) {
               console.error('Error sending fallback message:', fallbackError);

@@ -460,7 +460,7 @@ class UserAuthStore {
         return null;
       }
 
-      return {
+      const userData: any = {
         telegramId: user.telegram_id,
         username: user.username,
         firstName: user.first_name,
@@ -470,6 +470,13 @@ class UserAuthStore {
         lastLoginAt: user.last_login_at ? new Date(user.last_login_at) : undefined,
         isRevoked: user.is_revoked,
       };
+      
+      // Добавляем last_bot_message_id если он есть
+      if (user.last_bot_message_id !== undefined) {
+        userData.last_bot_message_id = user.last_bot_message_id;
+      }
+      
+      return userData;
     } catch (error: any) {
       console.error('Exception getting user by telegram_id:', error);
       return null;
