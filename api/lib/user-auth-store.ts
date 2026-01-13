@@ -112,7 +112,6 @@ class UserAuthStore {
           username: username || existingUser.username || null,
           first_name: firstName || existingUser.first_name || null,
           is_revoked: false, // Сбрасываем флаг отзыва при новом логине
-          updated_at: now.toISOString(), // Добавляем updated_at для триггера
         };
         
         console.log('Update data:', {
@@ -216,7 +215,6 @@ class UserAuthStore {
         .update({
           access_token: accessToken,
           access_expires_at: accessExpiresAt.toISOString(),
-          updated_at: new Date().toISOString(), // Добавляем updated_at для триггера
         })
         .eq('telegram_id', telegramId);
 
