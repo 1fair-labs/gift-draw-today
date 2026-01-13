@@ -19,6 +19,7 @@ export default function AuthCallback() {
     // Это избежит блокировки браузером URL с токеном
     const processRefreshToken = async () => {
       try {
+        console.log('Processing refresh token...');
         // Используем GET запрос к callback API, но через fetch
         const response = await fetch(`/api/auth/callback?refreshToken=${encodeURIComponent(refreshToken)}`, {
           method: 'GET',
@@ -26,24 +27,40 @@ export default function AuthCallback() {
           redirect: 'follow', // Следуем редиректам
         });
 
+        console.log('Callback response status:', response.status);
+        console.log('Callback response ok:', response.ok);
+        console.log('Callback response redirected:', response.redirected);
+
         if (response.ok || response.redirected) {
           // Если успешно или был редирект, переходим на главную
           // Cookie уже установлен сервером
+          console.log('Authorization successful, redirecting to home...');
+          // Используем полный редирект для обновления состояния
           window.location.href = '/';
         } else {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          setError(errorData.error || 'Authorization failed');
+          // Пытаемся получить текст ошибки
+          let errorText = 'Authorization failed';
+          try {
+            const errorData = await response.json();
+            errorText = errorData.error || errorData.message || 'Authorization failed';
+            console.error('Callback error:', errorData);
+          } catch (e) {
+            const text = await response.text().catch(() => '');
+            errorText = text || 'Authorization failed';
+            console.error('Callback error text:', text);
+          }
+          setError(errorText);
           // Через 3 секунды редиректим на главную даже при ошибке
           setTimeout(() => {
-            navigate('/', { replace: true });
+            window.location.href = '/';
           }, 3000);
         }
       } catch (err: any) {
         console.error('Error processing refresh token:', err);
-        setError(err.message || 'Authorization failed');
+        setError(err.message || 'Failed to fetch');
         // Через 3 секунды редиректим на главную даже при ошибке
         setTimeout(() => {
-          navigate('/', { replace: true });
+          window.location.href = '/';
         }, 3000);
       }
     };

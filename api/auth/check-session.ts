@@ -39,10 +39,13 @@ export default async function handler(
         Buffer.from(sessionValue, 'base64').toString()
       );
 
-      if (sessionData.authenticated && sessionData.userId) {
+      // Поддерживаем оба варианта: userId и telegramId
+      const userId = sessionData.userId || sessionData.telegramId;
+      
+      if (sessionData.authenticated && userId) {
         return response.status(200).json({
           authenticated: true,
-          userId: sessionData.userId,
+          userId: userId,
           username: sessionData.username,
           firstName: sessionData.firstName,
         });

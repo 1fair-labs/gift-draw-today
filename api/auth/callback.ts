@@ -51,7 +51,8 @@ export default async function handler(
 
     // Создаем сессию через cookie с refresh token
     const sessionData = {
-      telegramId: userData.telegramId,
+      userId: userData.telegramId, // Используем userId для совместимости с check-session
+      telegramId: userData.telegramId, // Также сохраняем telegramId
       username: userData.username,
       firstName: userData.firstName,
       refreshToken: refreshToken, // Сохраняем refresh token в cookie
