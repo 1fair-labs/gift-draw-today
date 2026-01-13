@@ -1082,11 +1082,9 @@ export default function MiniApp() {
       // Это предотвратит проверку сессии при следующей загрузке
       localStorage.setItem('just_logged_out', 'true');
       
-      // Небольшая задержка перед перезагрузкой для плавности
-      setTimeout(() => {
-        // Используем replace вместо href для избежания истории
-        window.location.replace('/');
-      }, 100);
+      // Сразу перезагружаем страницу без задержки, чтобы избежать мигания
+      // Используем replace вместо href для избежания истории
+      window.location.replace('/');
     } catch (error) {
       console.error('Error during logout:', error);
       // В случае ошибки все равно перезагружаем страницу
@@ -1162,6 +1160,13 @@ export default function MiniApp() {
 
   // Initialize user from Telegram WebApp (if in Telegram)
   useEffect(() => {
+    // Не проверяем сессию если пользователь только что разлогинился
+    const justLoggedOut = localStorage.getItem('just_logged_out');
+    if (justLoggedOut === 'true') {
+      // Флаг будет удален при следующей проверке сессии или при перезагрузке
+      return;
+    }
+    
     // Если пользователь уже авторизован, не делаем ничего
     if (telegramUser) return;
 
