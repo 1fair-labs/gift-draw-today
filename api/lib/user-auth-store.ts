@@ -482,6 +482,39 @@ class UserAuthStore {
       return null;
     }
   }
+
+  // Сохранение last_bot_message_id для пользователя
+  async saveLastBotMessageId(telegramId: number, messageId: number): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('Supabase not available, cannot save message ID');
+      return false;
+    }
+
+    try {
+      const { error } = await this.supabase
+        .from('users')
+        .update({ last_bot_message_id: messageId })
+        .eq('telegram_id', telegramId);
+
+      if (error) {
+        // Если колонка не существует, просто логируем предупреждение
+        if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+          console.warn('Column last_bot_message_id does not exist in users table. Please run migration.');
+        } else {
+          console.error('Error saving last bot message ID:', error);
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+        }
+        return false;
+      }
+
+      console.log('Last bot message ID saved successfully:', messageId, 'for telegramId:', telegramId);
+      return true;
+    } catch (error: any) {
+      console.error('Exception saving last bot message ID:', error);
+      return false;
+    }
+  }
 }
 
 // Singleton instance

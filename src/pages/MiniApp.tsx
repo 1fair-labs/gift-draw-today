@@ -1227,17 +1227,8 @@ export default function MiniApp() {
     // Проверяем сессию сразу при загрузке
     checkSession();
       
-    // Периодически проверяем сессию (каждые 2 секунды) для авторизации через бота
-    const sessionCheckInterval = setInterval(async () => {
-      if (!telegramUser) {
-        const found = await checkSession();
-        if (found) {
-          clearInterval(sessionCheckInterval);
-        }
-      } else {
-        clearInterval(sessionCheckInterval);
-      }
-    }, 2000);
+    // Убрали частые проверки сессии - теперь проверяем только при фокусе/видимости
+    // Это уменьшает нагрузку и убирает задержки при авторизации
     
     // Также проверяем сессию при фокусе окна (когда пользователь возвращается на вкладку)
     const handleFocus = async () => {
@@ -1259,7 +1250,6 @@ export default function MiniApp() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(sessionCheckInterval);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

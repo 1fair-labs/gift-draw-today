@@ -474,29 +474,12 @@ async function saveLastBotMessageId(
   messageId: number
 ): Promise<void> {
   try {
-    if (!userAuthStore['supabase']) {
-      console.warn('Supabase not available, cannot save message ID');
-      return;
-    }
-
-    // Обновляем last_bot_message_id в таблице users
-    const { error } = await userAuthStore['supabase']
-      .from('users')
-      .update({ last_bot_message_id: messageId })
-      .eq('telegram_id', telegramId);
-
-    if (error) {
-      // Если колонка не существует, просто логируем предупреждение
-      if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-        console.warn('Column last_bot_message_id does not exist in users table. Please run migration.');
-      } else {
-        console.error('Error saving last bot message ID:', error);
-      }
-    } else {
-      console.log('Last bot message ID saved:', messageId);
+    const success = await userAuthStore.saveLastBotMessageId(telegramId, messageId);
+    if (!success) {
+      console.warn('Failed to save last bot message ID');
     }
   } catch (error: any) {
-    console.error('Exception saving last bot message ID:', error);
+    console.error('Exception in saveLastBotMessageId wrapper:', error);
   }
 }
 
