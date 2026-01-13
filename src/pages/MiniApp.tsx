@@ -1237,26 +1237,37 @@ export default function MiniApp() {
       }
     }
 
+    // Проверяем, пришли ли мы с callback страницы авторизации
+    const urlParams = new URLSearchParams(window.location.search);
+    const authSuccess = urlParams.get('auth') === 'success';
+    
+    // Если пришли после авторизации, очищаем параметр из URL
+    if (authSuccess) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    
     // Проверяем сессию из cookie (для авторизации через бота)
     let lastSessionCheck = 0;
     const SESSION_CHECK_COOLDOWN = 3000; // Минимум 3 секунды между проверками
     
-    const checkSession = async () => {
+    const checkSession = async (force = false) => {
       // Не проверяем сессию если пользователь только что разлогинился
       const justLoggedOut = localStorage.getItem('just_logged_out');
-      if (justLoggedOut === 'true') {
+      if (justLoggedOut === 'true' && !force) {
         localStorage.removeItem('just_logged_out');
         setIsCheckingSession(false);
         return false;
       }
       
-      // Ограничиваем частоту проверок
-      const now = Date.now();
-      if (now - lastSessionCheck < SESSION_CHECK_COOLDOWN) {
-        setIsCheckingSession(false);
-        return false;
+      // Ограничиваем частоту проверок (если не принудительная проверка)
+      if (!force) {
+        const now = Date.now();
+        if (now - lastSessionCheck < SESSION_CHECK_COOLDOWN) {
+          setIsCheckingSession(false);
+          return false;
+        }
+        lastSessionCheck = now;
       }
-      lastSessionCheck = now;
       
       setIsCheckingSession(true);
       
@@ -1300,14 +1311,13 @@ export default function MiniApp() {
       return false; // Сессия не найдена
     };
 
-    // Если состояние уже восстановлено из localStorage, проверяем сессию в фоне
-    // Если нет - проверяем сразу
-    if (telegramUser) {
+    // Если пришли после авторизации или состояние не восстановлено, проверяем сессию принудительно
+    if (authSuccess || !telegramUser) {
+      // Принудительно проверяем сессию после авторизации или если состояние не восстановлено
+      checkSession(authSuccess).catch(console.error);
+    } else if (telegramUser) {
       // Состояние уже восстановлено, проверяем сессию в фоне для синхронизации
-      checkSession().catch(console.error);
-    } else {
-      // Состояние не восстановлено, проверяем сразу
-      checkSession();
+      checkSession(false).catch(console.error);
     }
       
     // Проверяем сессию при видимости страницы (когда пользователь возвращается на вкладку)

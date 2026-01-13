@@ -39,17 +39,19 @@ export default function AuthCallback() {
             if (data.success && data.redirectUrl) {
               // Cookie уже установлен сервером, переходим на главную
               console.log('Authorization successful, redirecting to home...');
-              // Используем полный редирект для обновления состояния
-              window.location.href = data.redirectUrl || '/';
+              // Добавляем параметр для принудительной проверки сессии
+              const redirectUrl = new URL(data.redirectUrl || '/', window.location.origin);
+              redirectUrl.searchParams.set('auth', 'success');
+              window.location.href = redirectUrl.toString();
             } else {
-              // Если нет redirectUrl, просто переходим на главную
+              // Если нет redirectUrl, просто переходим на главную с параметром
               console.log('Authorization successful, redirecting to home...');
-              window.location.href = '/';
+              window.location.href = '/?auth=success';
             }
           } catch (e) {
-            // Если не JSON, возможно это HTML (для WebView), просто переходим на главную
+            // Если не JSON, возможно это HTML (для WebView), просто переходим на главную с параметром
             console.log('Response is not JSON, assuming success, redirecting...');
-            window.location.href = '/';
+            window.location.href = '/?auth=success';
           }
         } else {
           // Пытаемся получить текст ошибки
