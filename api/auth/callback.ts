@@ -129,6 +129,7 @@ export default async function handler(
           <h2>Authorization successful!</h2>
           <p>Opening in your browser...</p>
           <a href="${redirectUrl}" class="link" id="redirectLink">Open GiftDraw.today</a>
+          <p style="margin-top: 20px; font-size: 14px; color: #888;">If the page doesn't open automatically, click the button above</p>
           <script>
             // Пытаемся открыть во внешнем браузере
             const link = document.getElementById('redirectLink');
