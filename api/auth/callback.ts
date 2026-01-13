@@ -40,12 +40,17 @@ export default async function handler(
     }
 
     // Проверяем, привязан ли пользователь
+    // Если токен уже имеет user_id, разрешаем его использование (повторная авторизация с другого устройства)
     if (!tokenData.userId) {
       console.error('Token not authorized yet (no userId)');
-      return response.status(400).json({ error: 'Token not authorized yet' });
+      return response.status(400).json({ 
+        error: 'Token not authorized yet',
+        message: 'Please authorize this token first by clicking /start in the Telegram bot'
+      });
     }
     
     console.log('Token authorized, creating session for userId:', tokenData.userId);
+    console.log('Token reuse detected - allowing authorization from different device');
 
     // Создаем сессию через cookie
     const sessionData = {

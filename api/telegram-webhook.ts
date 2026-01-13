@@ -231,6 +231,48 @@ export default async function handler(
           }
 
           try {
+            // Сначала проверяем, не привязан ли уже токен к пользователю
+            // Если токен уже имеет user_id, разрешаем его повторное использование
+            const existingTokenData = await supabaseTokenStore.getTokenData(token);
+            
+            if (existingTokenData && existingTokenData.userId) {
+              // Токен уже привязан к пользователю - разрешаем повторное использование
+              console.log('Token already authorized, allowing reuse for userId:', existingTokenData.userId);
+              
+              // Если токен привязан к другому пользователю, обновляем его
+              if (existingTokenData.userId !== userId) {
+                console.log('Token attached to different user, updating to new user:', userId);
+                const updateSuccess = await supabaseTokenStore.attachUser(token, userId, username, firstName);
+                if (!updateSuccess) {
+                  console.error('Failed to update token with new user');
+                  await sendMessage(
+                    BOT_TOKEN,
+                    chatId,
+                    '❌ Authorization failed. Could not update token. Please try again from the website.'
+                  );
+                  return response.status(200).json({ ok: true });
+                }
+              }
+              
+              // Формируем ссылку на callback для авторизации на сайте
+              const callbackUrl = `${WEB_APP_URL}/auth?token=${encodeURIComponent(token)}`;
+              
+              // Отправляем подтверждение со ссылкой для перехода на сайт
+              console.log('Sending success message with callback URL (reuse)...');
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                `✅ Authorization successful!\n\n` +
+                `You are authorized as: ${firstName || username || `ID: ${userId}`}\n\n` +
+                `Click the link below to return to the website.\n` +
+                `(Tap and hold, then select "Open in browser" if needed)`,
+                [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]]
+              );
+              console.log('Success message sent with callback URL (reuse)');
+              return response.status(200).json({ ok: true });
+            }
+            
+            // Если токен еще не привязан, привязываем пользователя
             console.log('=== CALLING VERIFY TOKEN API ===');
             console.log('WEB_APP_URL:', WEB_APP_URL);
             console.log('Full verify URL:', `${WEB_APP_URL}/api/auth/verify-token`);
