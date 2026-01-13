@@ -1189,22 +1189,27 @@ export default function MiniApp() {
     }
 
     // Проверяем сессию из cookie (для авторизации через бота)
+    let lastSessionCheck = 0;
+    const SESSION_CHECK_COOLDOWN = 3000; // Минимум 3 секунды между проверками
+    
     const checkSession = async () => {
+      // Ограничиваем частоту проверок
+      const now = Date.now();
+      if (now - lastSessionCheck < SESSION_CHECK_COOLDOWN) {
+        return false;
+      }
+      lastSessionCheck = now;
+      
       try {
-        console.log('Checking session...');
         // Проверяем cookie через API endpoint
         const response = await fetch('/api/auth/check-session', {
           credentials: 'include',
         });
         
-        console.log('Session check response status:', response.status);
-        
         if (response.ok) {
           const data = await response.json();
-          console.log('Session check data:', data);
           
           if (data.authenticated && data.userId) {
-            console.log('User authenticated, setting user data');
             // Восстанавливаем данные пользователя из сессии
             setTelegramUser({
               id: data.userId,
@@ -1214,8 +1219,6 @@ export default function MiniApp() {
             setTelegramId(data.userId);
             await loadUserData(data.userId);
             return true; // Сессия найдена
-          } else {
-            console.log('User not authenticated');
           }
         }
       } catch (error) {
@@ -1224,33 +1227,20 @@ export default function MiniApp() {
       return false; // Сессия не найдена
     };
 
-    // Проверяем сессию сразу при загрузке
+    // Проверяем сессию сразу при загрузке (только один раз)
     checkSession();
       
-    // Убрали частые проверки сессии - теперь проверяем только при фокусе/видимости
-    // Это уменьшает нагрузку и убирает задержки при авторизации
-    
-    // Также проверяем сессию при фокусе окна (когда пользователь возвращается на вкладку)
-    const handleFocus = async () => {
-      console.log('Window focused, re-checking session...');
-      if (!telegramUser) {
-        await checkSession();
-      }
-    };
-
     // Проверяем сессию при видимости страницы (когда пользователь возвращается на вкладку)
+    // Используем только visibilitychange, так как focus может срабатывать слишком часто
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && !telegramUser) {
-        console.log('Page visible, re-checking session...');
         await checkSession();
       }
     };
 
-    window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [telegramUser, loadUserData, sendWelcomeMessage]);
