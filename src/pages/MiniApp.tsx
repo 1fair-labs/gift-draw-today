@@ -1379,7 +1379,15 @@ export default function MiniApp() {
               </div>
               
               {/* Кнопка подключения через бота или иконка выхода */}
-              {!telegramUser && !isCheckingSession ? (
+              {telegramUser ? (
+                <button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                </button>
+              ) : !isCheckingSession ? (
                 <Button
                   onClick={handleConnectViaBot}
                   className="bg-[#0088cc] hover:bg-[#0077b5] text-white px-3 py-1.5"
@@ -1388,15 +1396,7 @@ export default function MiniApp() {
                   <TelegramIcon className="w-5 h-5 mr-1" />
                   <span className="text-xs">Connect via Telegram</span>
                 </Button>
-              ) : telegramUser ? (
-                <button
-                  onClick={handleLogout}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground" />
-                </button>
-              )}
+              ) : null}
             </div>
           </header>
 
