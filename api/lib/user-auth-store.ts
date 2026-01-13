@@ -485,33 +485,52 @@ class UserAuthStore {
 
   // Сохранение last_bot_message_id для пользователя
   async saveLastBotMessageId(telegramId: number, messageId: number): Promise<boolean> {
+    console.log('UserAuthStore.saveLastBotMessageId called:', { telegramId, messageId });
+    
     if (!this.supabase) {
-      console.warn('Supabase not available, cannot save message ID');
+      console.error('❌ Supabase not available, cannot save message ID');
+      console.error('Supabase client is null');
       return false;
     }
 
     try {
-      const { error } = await this.supabase
+      console.log('Updating users table with last_bot_message_id:', {
+        telegramId,
+        messageId,
+        updateData: { last_bot_message_id: messageId }
+      });
+      
+      const { data, error } = await this.supabase
         .from('users')
         .update({ last_bot_message_id: messageId })
-        .eq('telegram_id', telegramId);
+        .eq('telegram_id', telegramId)
+        .select();
 
       if (error) {
+        console.error('❌ Error saving last bot message ID:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        
         // Если колонка не существует, просто логируем предупреждение
         if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-          console.warn('Column last_bot_message_id does not exist in users table. Please run migration.');
-        } else {
-          console.error('Error saving last bot message ID:', error);
-          console.error('Error code:', error.code);
-          console.error('Error message:', error.message);
+          console.error('❌ Column last_bot_message_id does not exist in users table. Please run migration:');
+          console.error('Run this SQL in Supabase: ALTER TABLE users ADD COLUMN IF NOT EXISTS last_bot_message_id INTEGER;');
         }
         return false;
       }
 
-      console.log('Last bot message ID saved successfully:', messageId, 'for telegramId:', telegramId);
+      console.log('✅ Last bot message ID saved successfully:', {
+        messageId,
+        telegramId,
+        updatedRows: data?.length || 0,
+        updatedData: data
+      });
       return true;
     } catch (error: any) {
-      console.error('Exception saving last bot message ID:', error);
+      console.error('❌ Exception saving last bot message ID:', error);
+      console.error('Exception stack:', error.stack);
       return false;
     }
   }

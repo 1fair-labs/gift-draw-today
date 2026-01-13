@@ -473,13 +473,17 @@ async function saveLastBotMessageId(
   telegramId: number,
   messageId: number
 ): Promise<void> {
+  console.log('saveLastBotMessageId called:', { telegramId, messageId });
   try {
     const success = await userAuthStore.saveLastBotMessageId(telegramId, messageId);
-    if (!success) {
-      console.warn('Failed to save last bot message ID');
+    if (success) {
+      console.log('✅ Successfully saved last_bot_message_id:', messageId, 'for user:', telegramId);
+    } else {
+      console.error('❌ Failed to save last bot message ID:', { telegramId, messageId });
     }
   } catch (error: any) {
-    console.error('Exception in saveLastBotMessageId wrapper:', error);
+    console.error('❌ Exception in saveLastBotMessageId wrapper:', error);
+    console.error('Error stack:', error.stack);
   }
 }
 
@@ -543,10 +547,26 @@ async function sendMessage(
   }
 
   console.log('Message sent successfully:', responseData);
+  console.log('Message response data:', {
+    hasResult: !!responseData.result,
+    messageId: responseData.result?.message_id,
+    telegramId: telegramId,
+    willSave: !!(telegramId && responseData.result?.message_id)
+  });
   
   // Сохраняем message_id нового сообщения в базе данных
   if (telegramId && responseData.result?.message_id) {
+    console.log('Attempting to save last_bot_message_id:', {
+      telegramId,
+      messageId: responseData.result.message_id
+    });
     await saveLastBotMessageId(telegramId, responseData.result.message_id);
+  } else {
+    console.warn('Cannot save last_bot_message_id:', {
+      hasTelegramId: !!telegramId,
+      hasMessageId: !!responseData.result?.message_id,
+      responseData: responseData
+    });
   }
   
   return responseData;
