@@ -62,8 +62,9 @@ export default async function handler(
     response.setHeader('Set-Cookie', cookieString);
     console.log('Cookie set for userId:', tokenData.userId);
 
-    // Удаляем токен (одноразовый)
-    await supabaseTokenStore.deleteToken(token);
+    // НЕ удаляем токен - разрешаем повторное использование с разных устройств
+    // Токен будет действителен в течение 24 часов и может использоваться многократно
+    console.log('Token kept for reuse (valid for 24 hours)');
 
     // Перенаправляем на главную страницу
     const redirectUrl = process.env.WEB_APP_URL || 'https://giftdraw.today';

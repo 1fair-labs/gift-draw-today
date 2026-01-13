@@ -12,7 +12,7 @@ interface TokenData {
 
 class SupabaseTokenStore {
   private supabase: SupabaseClient | null = null;
-  private readonly TTL = 5 * 60 * 1000; // 5 минут в миллисекундах
+  private readonly TTL = 24 * 60 * 60 * 1000; // 24 часа (1 день) в миллисекундах
 
   constructor() {
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -126,7 +126,16 @@ class SupabaseTokenStore {
         return false;
       }
 
-      // Обновляем токен с данными пользователя
+      // Если токен уже привязан к пользователю, разрешаем повторное использование
+      // (например, если пользователь авторизуется с другого устройства)
+      if (tokenData.user_id && tokenData.user_id !== userId) {
+        console.log('Token already attached to different user, updating to new user:', userId);
+      } else if (tokenData.user_id && tokenData.user_id === userId) {
+        console.log('Token already attached to same user, allowing reuse:', userId);
+        return true; // Токен уже привязан к этому пользователю, разрешаем использование
+      }
+
+      // Обновляем токен с данными пользователя (или обновляем существующие данные)
       const { error: updateError } = await this.supabase
         .from('auth_tokens')
         .update({
