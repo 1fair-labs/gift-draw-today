@@ -1311,10 +1311,17 @@ export default function MiniApp() {
       return false; // Сессия не найдена
     };
 
-    // Если пришли после авторизации или состояние не восстановлено, проверяем сессию принудительно
-    if (authSuccess || !telegramUser) {
-      // Принудительно проверяем сессию после авторизации или если состояние не восстановлено
-      checkSession(authSuccess).catch(console.error);
+    // Если пришли после авторизации, состояние уже должно быть в localStorage
+    // Но все равно проверяем сессию для синхронизации
+    if (authSuccess) {
+      // После авторизации данные уже в localStorage, но проверяем сессию для уверенности
+      // Небольшая задержка чтобы cookie успел установиться
+      setTimeout(() => {
+        checkSession(true).catch(console.error);
+      }, 100);
+    } else if (!telegramUser) {
+      // Состояние не восстановлено, проверяем сессию
+      checkSession(false).catch(console.error);
     } else if (telegramUser) {
       // Состояние уже восстановлено, проверяем сессию в фоне для синхронизации
       checkSession(false).catch(console.error);

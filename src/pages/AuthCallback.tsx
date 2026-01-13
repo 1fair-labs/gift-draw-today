@@ -37,6 +37,13 @@ export default function AuthCallback() {
             console.log('Callback response data:', data);
             
             if (data.success && data.redirectUrl) {
+              // Сохраняем данные пользователя в localStorage перед редиректом
+              if (data.user) {
+                localStorage.setItem('auth_telegram_id', data.user.id.toString());
+                localStorage.setItem('auth_user', JSON.stringify(data.user));
+                console.log('User data saved to localStorage:', data.user);
+              }
+              
               // Cookie уже установлен сервером, переходим на главную
               console.log('Authorization successful, redirecting to home...');
               // Добавляем параметр для принудительной проверки сессии
