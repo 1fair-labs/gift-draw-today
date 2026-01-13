@@ -1,6 +1,6 @@
 // src/pages/MiniApp.tsx - New Mini App architecture
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Info, Sparkles, Ticket, X, Wand2 } from 'lucide-react';
+import { Info, Sparkles, Ticket, X, Wand2, LogOut } from 'lucide-react';
 
 // Telegram icon component (airplane only, no circle)
 const TelegramIcon = ({ className }: { className?: string }) => (
@@ -1041,6 +1041,50 @@ export default function MiniApp() {
     }
   }, []);
 
+  // Handle logout
+  const handleLogout = useCallback(async () => {
+    try {
+      triggerHaptic();
+      
+      // Отключаем кошелек если подключен
+      if (tonConnectUI.connected) {
+        try {
+          await tonConnectUI.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting wallet:', error);
+        }
+      }
+      
+      // Очищаем состояние пользователя
+      setTelegramUser(null);
+      setTelegramId(null);
+      setUser(null);
+      setWalletAddress(null);
+      setGiftBalance(0);
+      setUsdtBalance(0);
+      setTonBalance(0);
+      setTickets([]);
+      
+      // Очищаем cookie сессии через API
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch (error) {
+        console.error('Error clearing session:', error);
+      }
+      
+      // Очищаем localStorage
+      localStorage.removeItem('balance_visible');
+      
+      // Обновляем страницу для полного сброса состояния
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }, [tonConnectUI]);
+
   // Handle authorization through bot
   const handleConnectViaBot = useCallback(async () => {
     try {
@@ -1329,8 +1373,8 @@ export default function MiniApp() {
                 )}
               </div>
               
-              {/* Кнопка подключения через бота */}
-              {!telegramUser && (
+              {/* Кнопка подключения через бота или иконка выхода */}
+              {!telegramUser ? (
                 <Button
                   onClick={handleConnectViaBot}
                   className="bg-[#0088cc] hover:bg-[#0077b5] text-white px-3 py-1.5"
@@ -1339,6 +1383,14 @@ export default function MiniApp() {
                   <TelegramIcon className="w-5 h-5 mr-1" />
                   <span className="text-xs">Connect via Telegram</span>
                 </Button>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                </button>
               )}
             </div>
           </header>
@@ -1526,8 +1578,8 @@ export default function MiniApp() {
                   )}
                 </div>
                 
-                {/* Кнопка подключения через бота */}
-                {!telegramUser && (
+                {/* Кнопка подключения через бота или иконка выхода */}
+                {!telegramUser ? (
                   <Button
                     onClick={handleConnectViaBot}
                     className="bg-[#0088cc] hover:bg-[#0077b5] text-white px-3 py-1.5"
@@ -1536,6 +1588,14 @@ export default function MiniApp() {
                     <TelegramIcon className="w-5 h-5 mr-1" />
                     <span className="text-xs">Connect via Telegram</span>
                   </Button>
+                ) : (
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    title="Logout"
+                  >
+                    <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                  </button>
                 )}
               </div>
             </header>
