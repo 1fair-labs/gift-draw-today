@@ -1307,7 +1307,8 @@ export default function MiniApp() {
             localStorage.setItem('auth_telegram_id', data.userId.toString());
             localStorage.setItem('auth_user', JSON.stringify(userData));
             
-            await loadUserData(data.userId);
+            const loadedUser = await loadUserData(data.userId);
+            console.log('User data loaded after session check:', loadedUser ? 'User loaded' : 'User not loaded');
             setIsCheckingSession(false);
             return true; // Сессия найдена
           } else {
