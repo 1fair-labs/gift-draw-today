@@ -1575,8 +1575,14 @@ export default function MiniApp() {
                       )}
                     </div>
                   </>
-                  ) : (
+                  ) : !isCheckingSession ? (
                     <div className="flex items-center gap-2">
+                      <Wand2 className="w-5 h-5 text-primary" />
+                      <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
+                    </div>
+                  ) : (
+                    // Показываем залогиненное состояние во время проверки сессии (чтобы не мигало)
+                    <div className="flex items-center gap-2 opacity-50">
                       <Wand2 className="w-5 h-5 text-primary" />
                       <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
                     </div>
