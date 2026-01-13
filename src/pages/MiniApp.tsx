@@ -1176,11 +1176,37 @@ export default function MiniApp() {
     const justLoggedOut = localStorage.getItem('just_logged_out');
     if (justLoggedOut === 'true') {
       // Флаг будет удален при следующей проверке сессии или при перезагрузке
+      setIsCheckingSession(false);
       return;
     }
     
-    // Если пользователь уже авторизован, не делаем ничего
-    if (telegramUser) return;
+    // Если пользователь уже авторизован (из localStorage или состояния), проверяем сессию в фоне
+    if (telegramUser) {
+      // Состояние уже восстановлено, проверяем сессию в фоне для синхронизации
+      setIsCheckingSession(false);
+      // Проверяем сессию в фоне, но не блокируем UI
+      const checkSession = async () => {
+        try {
+          const response = await fetch('/api/auth/check-session', {
+            credentials: 'include',
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (!data.authenticated) {
+              // Сессия истекла, очищаем состояние
+              setTelegramUser(null);
+              setTelegramId(null);
+              localStorage.removeItem('auth_telegram_id');
+              localStorage.removeItem('auth_user');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking session in background:', error);
+        }
+      };
+      checkSession();
+      return;
+    }
 
     // Если уже в Telegram WebApp, используем существующие данные напрямую
     if (isInTelegramWebApp()) {
