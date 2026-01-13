@@ -79,8 +79,16 @@ export default function ProfileScreen({
       <div className="p-4 pt-2 pb-10 md:pb-6 space-y-6">
         {/* Profile Header */}
         <Card className="glass-card p-6">
-          {/* Wallet Connection - Removed, will be added for Solana later */}
-          {walletAddress && (
+          {/* Wallet Connection */}
+          {!walletAddress ? (
+            <Button
+              disabled={true}
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-primary-foreground font-display font-bold opacity-50 cursor-not-allowed"
+            >
+              <Wallet className="w-4 h-4 mr-2" />
+              Connect Wallet (Solana coming soon)
+            </Button>
+          ) : (
             <>
               {/* Balances */}
               <div>
