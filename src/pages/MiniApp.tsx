@@ -1059,6 +1059,10 @@ export default function MiniApp() {
       setTelegramId(null);
       setUser(null);
       setWalletAddress(null);
+      
+      // Очищаем localStorage
+      localStorage.removeItem('auth_telegram_id');
+      localStorage.removeItem('auth_user');
       setGiftBalance(0);
       setUsdtBalance(0);
       setTonBalance(0);
@@ -1186,6 +1190,11 @@ export default function MiniApp() {
         setTelegramUser(user);
         if (user.id) {
           setTelegramId(user.id);
+          
+          // Сохраняем в localStorage для предотвращения мигания
+          localStorage.setItem('auth_telegram_id', user.id.toString());
+          localStorage.setItem('auth_user', JSON.stringify(user));
+          
           loadUserData(user.id);
           
           // Запрашиваем разрешение на отправку сообщений
@@ -1197,6 +1206,7 @@ export default function MiniApp() {
             });
           }
         }
+        setIsCheckingSession(false);
         return;
       }
     }
