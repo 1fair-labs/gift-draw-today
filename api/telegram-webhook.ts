@@ -144,14 +144,18 @@ export default async function handler(
               return response.status(200).json({ ok: true });
             }
 
-            // Отправляем подтверждение
+            // Формируем ссылку на callback для авторизации на сайте
+            const callbackUrl = `${WEB_APP_URL}/api/auth/callback?token=${encodeURIComponent(availableToken)}`;
+            
+            // Отправляем подтверждение со ссылкой для перехода на сайт
             await answerCallbackQuery(BOT_TOKEN, callback.id, '✅ Authorization successful!');
             await sendMessage(
               BOT_TOKEN,
               chatId,
               `✅ Authorization successful!\n\n` +
               `You are authorized as: ${firstName || username || `ID: ${userId}`}\n\n` +
-              `Please return to the website to continue.`
+              `Click the link below to return to the website:`,
+              [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]]
             );
             console.log('Authorization successful for user:', userId);
             
@@ -209,9 +213,9 @@ export default async function handler(
         const args = text.split(' ');
         console.log('Args:', args);
         
-        // Проверяем, есть ли токен авторизации
-        if (args.length > 1 && args[1].startsWith('auth_')) {
-          const token = args[1].replace('auth_', '');
+        // Проверяем, есть ли токен авторизации (теперь без префикса auth_)
+        if (args.length > 1 && args[1]) {
+          const token = args[1]; // Токен идет напрямую без префикса
           console.log('=== AUTH TOKEN PROCESSING ===');
           console.log('Full command:', text);
           console.log('Args:', args);
@@ -265,16 +269,20 @@ export default async function handler(
               return response.status(200).json({ ok: true });
             }
 
-            // Отправляем подтверждение без кнопки
-            console.log('Sending success message...');
+            // Формируем ссылку на callback для авторизации на сайте
+            const callbackUrl = `${WEB_APP_URL}/api/auth/callback?token=${encodeURIComponent(token)}`;
+            
+            // Отправляем подтверждение со ссылкой для перехода на сайт
+            console.log('Sending success message with callback URL...');
             await sendMessage(
               BOT_TOKEN,
               chatId,
               `✅ Authorization successful!\n\n` +
               `You are authorized as: ${firstName || username || `ID: ${userId}`}\n\n` +
-              `Please return to the website to continue.`
+              `Click the link below to return to the website:`,
+              [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]]
             );
-            console.log('Success message sent');
+            console.log('Success message sent with callback URL');
           } catch (error: any) {
             console.error('Error verifying token:', error);
             console.error('Error stack:', error.stack);

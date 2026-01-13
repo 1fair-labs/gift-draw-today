@@ -1087,11 +1087,11 @@ export default function MiniApp() {
         throw new Error(data.error || 'Failed to generate token');
       }
       
-      // Открываем бота с токеном
-      const startParam = `auth_${data.token}`;
+      // Открываем бота с токеном (теперь без префикса auth_)
+      const startParam = data.token;
       const botUrl = `https://t.me/giftdrawtodaybot?start=${startParam}`;
       console.log('Opening bot URL:', botUrl);
-      
+    
       // Используем правильный формат deep link для Telegram
       // Формат: tg://resolve?domain=username&start=parameter
       const deepLink = `tg://resolve?domain=giftdrawtodaybot&start=${startParam}`;
@@ -1103,7 +1103,7 @@ export default function MiniApp() {
         console.log('Using Telegram WebApp API');
         try {
           window.Telegram.WebApp.openTelegramLink(botUrl);
-        } catch (e) {
+    } catch (e) {
           console.log('Error with Telegram WebApp API, using fallback:', e);
           window.open(botUrl, '_blank', 'noopener,noreferrer');
         }
@@ -1120,8 +1120,8 @@ export default function MiniApp() {
           console.log('Deep link clicked');
         } catch (e) {
           console.log('Error clicking deep link:', e);
-        }
-        
+    }
+    
         // Удаляем ссылку после клика
         setTimeout(() => {
           document.body.removeChild(link);
@@ -1206,7 +1206,7 @@ export default function MiniApp() {
     };
 
     checkSession();
-    
+      
     // Периодически проверяем сессию (каждые 2 секунды) для авторизации через бота
     const sessionCheckInterval = setInterval(() => {
       if (!telegramUser) {
@@ -1215,7 +1215,7 @@ export default function MiniApp() {
         clearInterval(sessionCheckInterval);
       }
     }, 2000);
-    
+
     return () => {
       clearInterval(sessionCheckInterval);
     };
@@ -1468,42 +1468,42 @@ export default function MiniApp() {
               <div className="px-4 py-4 h-[66px] flex justify-between items-center gap-3">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {telegramUser ? (
-                    <>
-                      <div
+                  <>
+                    <div
                         className="cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          triggerHaptic();
-                          handleNavigateToProfile();
-                        }}
-                      >
-                        {telegramUser.photo_url && (
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
-                            <AvatarFallback className="text-sm">
-                              {telegramUser.first_name?.[0] || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                      <div 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        triggerHaptic();
+                        handleNavigateToProfile();
+                      }}
+                    >
+                      {telegramUser.photo_url && (
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={telegramUser.photo_url} alt={telegramUser.first_name || 'User'} />
+                          <AvatarFallback className="text-sm">
+                            {telegramUser.first_name?.[0] || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                    <div 
                         className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity min-w-0"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          triggerHaptic();
-                          handleNavigateToProfile();
-                        }}
-                      >
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        triggerHaptic();
+                        handleNavigateToProfile();
+                      }}
+                    >
                         <h2 className="text-sm font-display font-bold truncate">
-                          {telegramUser?.first_name} {telegramUser?.last_name || ''}
-                        </h2>
-                        {user?.anon_id && (
+                        {telegramUser?.first_name} {telegramUser?.last_name || ''}
+                      </h2>
+                      {user?.anon_id && (
                           <p className="text-xs text-muted-foreground font-mono truncate">ID: {user.anon_id}</p>
-                        )}
-                      </div>
-                    </>
+                      )}
+                    </div>
+                  </>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Wand2 className="w-5 h-5 text-primary" />
