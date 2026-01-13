@@ -1314,7 +1314,11 @@ export default function MiniApp() {
             localStorage.setItem('auth_user', JSON.stringify(userData));
             
             const loadedUser = await loadUserData(data.userId);
-            console.log('User data loaded after session check:', loadedUser ? { hasAnonId: !!loadedUser.anon_id, anon_id: loadedUser.anon_id } : 'User not loaded');
+            console.log('User data loaded after session check:', loadedUser ? { 
+              hasAnonId: !!loadedUser.anon_id, 
+              anon_id: loadedUser.anon_id,
+              fullUser: loadedUser 
+            } : 'User not loaded');
             setIsCheckingSession(false);
             return true; // Сессия найдена
           } else {
