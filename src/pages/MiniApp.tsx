@@ -1092,12 +1092,16 @@ export default function MiniApp() {
       
       console.log('Opening Telegram bot...');
       
-      // В новой системе просто открываем бота, логин произойдет при /start
-      const botUrl = `https://t.me/giftdrawtodaybot`;
+      // Генерируем простой идентификатор для отслеживания запроса авторизации
+      // Это не токен, а просто маркер того, что запрос пришел с сайта
+      const authId = `auth_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      
+      // В новой системе открываем бота с параметром auth, логин произойдет при /start
+      const botUrl = `https://t.me/giftdrawtodaybot?start=${authId}`;
       console.log('Opening bot URL:', botUrl);
     
       // Используем правильный формат deep link для Telegram
-      const deepLink = `tg://resolve?domain=giftdrawtodaybot`;
+      const deepLink = `tg://resolve?domain=giftdrawtodaybot&start=${authId}`;
       console.log('Using deep link:', deepLink);
       
       // Пытаемся открыть через Telegram (приложение или веб)
