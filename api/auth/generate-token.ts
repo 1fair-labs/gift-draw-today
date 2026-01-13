@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { tokenStore } from '../lib/token-store.js';
+import { supabaseTokenStore } from '../lib/supabase-token-store.js';
 
 export default async function handler(
   request: VercelRequest,
@@ -22,8 +22,8 @@ export default async function handler(
     console.log('Starting token generation...');
     
     // Генерируем токен
-    console.log('Calling tokenStore.generateToken()...');
-    const token = tokenStore.generateToken();
+    console.log('Calling supabaseTokenStore.generateToken()...');
+    const token = supabaseTokenStore.generateToken();
     console.log('Token generated, length:', token?.length);
     
     if (!token || token.length < 32) {
@@ -31,18 +31,22 @@ export default async function handler(
       throw new Error('Failed to generate valid token');
     }
     
-    // Сохраняем токен во временное хранилище
-    console.log('Saving token to store...');
-    tokenStore.saveToken(token);
-    console.log('Token saved successfully, length:', token.length);
+    // Сохраняем токен в Supabase
+    console.log('Saving token to Supabase...');
+    const saved = await supabaseTokenStore.saveToken(token);
+    if (!saved) {
+      console.error('WARNING: Token was not saved to Supabase!');
+      throw new Error('Failed to save token to Supabase');
+    }
+    console.log('Token saved successfully to Supabase, length:', token.length);
     
     // Проверяем, что токен действительно сохранен
-    const checkToken = tokenStore.getTokenData(token);
+    const checkToken = await supabaseTokenStore.getTokenData(token);
     if (!checkToken) {
       console.error('WARNING: Token was not saved correctly!');
-      throw new Error('Failed to save token to store');
+      throw new Error('Failed to save token to Supabase');
     }
-    console.log('Token verified in store');
+    console.log('Token verified in Supabase');
 
     // Возвращаем URL для открытия бота
     // Используем правильный формат: https://t.me/botusername?start=parameter

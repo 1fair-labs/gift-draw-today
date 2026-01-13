@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { tokenStore } from '../lib/token-store.js';
+import { supabaseTokenStore } from '../lib/supabase-token-store.js';
 
 // API для бота: проверка и привязка пользователя к токену
 export default async function handler(
@@ -35,19 +35,19 @@ export default async function handler(
     }
 
     // Проверяем, существует ли токен
-    console.log('Checking token in store...');
-    tokenStore.cleanup(); // Очищаем истекшие токены перед проверкой
-    const tokenData = tokenStore.getTokenData(token);
-    console.log('Token data from store:', tokenData ? 'FOUND' : 'NOT FOUND');
+    console.log('Checking token in Supabase...');
+    await supabaseTokenStore.cleanup(); // Очищаем истекшие токены перед проверкой
+    const tokenData = await supabaseTokenStore.getTokenData(token);
+    console.log('Token data from Supabase:', tokenData ? 'FOUND' : 'NOT FOUND');
     
     if (!tokenData) {
-      console.error('Token not found in store');
+      console.error('Token not found in Supabase');
       return response.status(400).json({ error: 'Invalid or expired token' });
     }
 
     // Привязываем пользователя к токену
     console.log('Attaching user to token...');
-    const success = tokenStore.attachUser(token, userId, username, firstName);
+    const success = await supabaseTokenStore.attachUser(token, userId, username, firstName);
     console.log('Attach result:', success);
 
     if (!success) {

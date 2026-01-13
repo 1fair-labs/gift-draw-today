@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 // @ts-ignore - ESM import works in Vercel runtime
-import { tokenStore } from './lib/token-store.js';
+import { supabaseTokenStore } from './lib/supabase-token-store.js';
 
 interface TelegramUpdate {
   update_id: number;
@@ -111,7 +111,7 @@ export default async function handler(
           
           try {
             // Ищем активный токен без привязанного пользователя
-            const availableToken = tokenStore.findAvailableToken();
+            const availableToken = await supabaseTokenStore.findAvailableToken();
             
             if (!availableToken) {
               console.log('No available token found');
@@ -129,7 +129,7 @@ export default async function handler(
             console.log('Found available token:', availableToken.substring(0, 10) + '...');
 
             // Привязываем пользователя к токену
-            const success = tokenStore.attachUser(availableToken, userId, username, firstName);
+            const success = await supabaseTokenStore.attachUser(availableToken, userId, username, firstName);
             
             if (!success) {
               console.error('Failed to attach user to token');
@@ -297,7 +297,7 @@ export default async function handler(
           console.log('Regular /start without token');
           try {
             // Проверяем активные токены
-            const availableToken = tokenStore.findAvailableToken();
+            const availableToken = await supabaseTokenStore.findAvailableToken();
             
             if (availableToken) {
               // Есть активный токен - показываем кнопку авторизации

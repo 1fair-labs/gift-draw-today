@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { tokenStore } from '../lib/token-store.js';
+import { supabaseTokenStore } from '../lib/supabase-token-store.js';
 
 export default async function handler(
   request: VercelRequest,
@@ -29,8 +29,8 @@ export default async function handler(
     console.log('=== CALLBACK API CALLED ===');
     console.log('Token from query:', token ? token.substring(0, 10) + '...' : 'MISSING');
     
-    tokenStore.cleanup(); // Очищаем истекшие токены перед проверкой
-    const tokenData = tokenStore.getTokenData(token);
+    await supabaseTokenStore.cleanup(); // Очищаем истекшие токены перед проверкой
+    const tokenData = await supabaseTokenStore.getTokenData(token);
     console.log('Token data:', tokenData ? 'FOUND' : 'NOT FOUND');
     console.log('Token data details:', tokenData);
 
@@ -63,7 +63,7 @@ export default async function handler(
     );
 
     // Удаляем токен (одноразовый)
-    tokenStore.deleteToken(token);
+    await supabaseTokenStore.deleteToken(token);
 
     // Перенаправляем на главную страницу
     const redirectUrl = process.env.WEB_APP_URL || 'https://giftdraw.today';
