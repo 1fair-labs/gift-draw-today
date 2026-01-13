@@ -1458,10 +1458,8 @@ export default function MiniApp() {
                       <h2 className="text-base font-display font-bold truncate">
                         {telegramUser?.first_name} {telegramUser?.last_name || ''}
                       </h2>
-                      {user?.anon_id ? (
+                      {user?.anon_id && (
                         <p className="text-xs text-muted-foreground font-mono truncate">ID: {user.anon_id}</p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground font-mono truncate">Loading ID...</p>
                       )}
                     </div>
                   </>
@@ -1670,10 +1668,8 @@ export default function MiniApp() {
                       <h2 className="text-base font-display font-bold truncate">
                         {telegramUser?.first_name} {telegramUser?.last_name || ''}
                       </h2>
-                      {user?.anon_id ? (
+                      {user?.anon_id && (
                         <p className="text-xs text-muted-foreground font-mono truncate">ID: {user.anon_id}</p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground font-mono truncate">Loading ID...</p>
                       )}
                     </div>
                   </>
