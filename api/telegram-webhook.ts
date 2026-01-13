@@ -310,7 +310,8 @@ export default async function handler(
               `You are authorized as: ${firstName || username || `ID: ${userId}`}\n\n` +
               `Click the link below to return to the website.\n` +
               `(Tap and hold, then select "Open in browser" if needed)`,
-              [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]]
+              [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
+              userId
             );
             console.log('Success message sent with callback URL');
           } catch (error: any) {
