@@ -227,15 +227,8 @@ export default async function handler(
         const args = text.split(' ');
         console.log('Args:', args);
         
-        // Удаляем сообщение пользователя с командой /start
+        // Сохраняем message_id сообщения пользователя для удаления после обработки
         const userMessageId = message.message_id;
-        try {
-          await deleteMessage(BOT_TOKEN, chatId, userMessageId);
-          console.log('User /start message deleted:', userMessageId);
-        } catch (error: any) {
-          console.warn('Failed to delete user message:', error);
-          // Не прерываем выполнение, если не удалось удалить сообщение
-        }
         
         // Проверяем, есть ли токен авторизации (теперь без префикса auth_)
         if (args.length > 1 && args[1]) {
@@ -324,6 +317,14 @@ export default async function handler(
               userId
             );
             console.log('Success message sent with callback URL');
+            
+            // Удаляем команду пользователя после успешной отправки ответа
+            try {
+              await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+              console.log('User /start message deleted after successful response:', userMessageId);
+            } catch (error: any) {
+              console.warn('Failed to delete user message:', error);
+            }
           } catch (error: any) {
             console.error('Error verifying token:', error);
             console.error('Error stack:', error.stack);
@@ -334,6 +335,14 @@ export default async function handler(
               undefined,
               userId
             );
+            
+            // Удаляем команду пользователя даже при ошибке
+            try {
+              await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+              console.log('User /start message deleted after error response:', userMessageId);
+            } catch (deleteError: any) {
+              console.warn('Failed to delete user message after error:', deleteError);
+            }
           }
         } else {
           // Обычная команда /start без токена
