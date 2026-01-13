@@ -360,6 +360,15 @@ export default async function handler(
                 undefined,
                 undefined
               );
+              
+              // Удаляем команду пользователя
+              try {
+                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+                console.log('User /start message deleted (no userId):', userMessageId);
+              } catch (deleteError: any) {
+                console.warn('Failed to delete user message:', deleteError);
+              }
+              
               return response.status(200).json({ ok: true });
             }
             
