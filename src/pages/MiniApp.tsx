@@ -1106,69 +1106,48 @@ export default function MiniApp() {
       
       // Пытаемся открыть через Telegram (приложение или веб)
       const WebApp = (window as any).Telegram?.WebApp;
-      if (WebApp) {
-        // Если мы в Telegram Mini App, используем Telegram API
-        console.log('Using Telegram WebApp API');
-        try {
-          // Используем openLink для более надежной работы с параметром start
-          // Это должно автоматически отправить команду /start с параметром
-          if (WebApp.openLink) {
-            WebApp.openLink(botUrl);
-            console.log('Opened bot via openLink:', botUrl);
-          } else if (WebApp.openTelegramLink) {
-            WebApp.openTelegramLink(botUrl);
-            console.log('Opened bot via openTelegramLink:', botUrl);
-          } else {
-            // Fallback: используем deep link
-            const link = document.createElement('a');
-            link.href = deepLink;
-            link.target = '_self';
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => document.body.removeChild(link), 100);
-            console.log('Opened bot via deep link fallback');
-          }
-        } catch (e) {
-          console.log('Error with Telegram WebApp API, using fallback:', e);
-          // Fallback: используем deep link
+      
+      // Всегда используем deep link для открытия в том же окне Telegram
+      // Deep link автоматически отправляет команду /start с параметром
+      console.log('Opening bot via deep link:', deepLink);
+      
+      const link = document.createElement('a');
+      link.href = deepLink;
+      link.target = '_self';
+      document.body.appendChild(link);
+      
+      try {
+        link.click();
+        console.log('Deep link clicked successfully');
+      } catch (e) {
+        console.log('Error clicking deep link:', e);
+        // Если deep link не сработал, пробуем через Telegram API
+        if (WebApp) {
           try {
-            const link = document.createElement('a');
-            link.href = deepLink;
-            link.target = '_self';
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => document.body.removeChild(link), 100);
-            console.log('Opened bot via deep link after error');
-          } catch (fallbackError) {
-            console.log('Error with deep link, using web URL:', fallbackError);
+            if (WebApp.openTelegramLink) {
+              WebApp.openTelegramLink(botUrl);
+              console.log('Opened bot via openTelegramLink:', botUrl);
+            } else if (WebApp.openLink) {
+              WebApp.openLink(botUrl);
+              console.log('Opened bot via openLink:', botUrl);
+            }
+          } catch (apiError) {
+            console.log('Error with Telegram API, using web URL:', apiError);
+            // В крайнем случае используем веб-версию
             window.location.href = botUrl;
           }
-        }
-      } else {
-        // Для обычного браузера: сначала пробуем deep link, потом веб-версию
-        const link = document.createElement('a');
-        link.href = deepLink;
-        link.target = '_self';
-        document.body.appendChild(link);
-        
-        try {
-          link.click();
-          console.log('Deep link clicked');
-        } catch (e) {
-          console.log('Error clicking deep link:', e);
-        }
-        
-        // Удаляем ссылку после клика
-        setTimeout(() => {
-          document.body.removeChild(link);
-        }, 100);
-        
-        // Также открываем веб-версию в том же окне
-        setTimeout(() => {
-          console.log('Opening web URL in same window');
+        } else {
+          // Для обычного браузера используем веб-версию
           window.location.href = botUrl;
-        }, 300);
+        }
       }
+      
+      // Удаляем ссылку после клика
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 100);
     } catch (error: any) {
       console.error('Error connecting via bot:', error);
       console.error('Error stack:', error.stack);
