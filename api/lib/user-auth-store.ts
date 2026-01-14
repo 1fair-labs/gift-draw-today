@@ -544,6 +544,92 @@ class UserAuthStore {
       return false;
     }
   }
+
+  // Получение и сохранение аватара пользователя через Telegram Bot API
+  async fetchAndSaveAvatar(telegramId: number, botToken: string): Promise<string | null> {
+    if (!this.supabase) {
+      console.error('Supabase client not initialized');
+      return null;
+    }
+
+    try {
+      // Проверяем, есть ли уже аватар в БД
+      const { data: existingUser } = await this.supabase
+        .from('users')
+        .select('avatar_url')
+        .eq('telegram_id', telegramId)
+        .single();
+
+      // Если аватар уже есть, не запрашиваем снова
+      if (existingUser?.avatar_url) {
+        console.log('Avatar already exists for user:', telegramId);
+        return existingUser.avatar_url;
+      }
+
+      console.log('Fetching avatar for user:', telegramId);
+
+      // Шаг 1: Получаем список фото профиля
+      const photosUrl = `https://api.telegram.org/bot${botToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`;
+      const photosResponse = await fetch(photosUrl);
+      const photosData = await photosResponse.json();
+
+      if (!photosData.ok || !photosData.result?.photos || photosData.result.photos.length === 0) {
+        console.log('No profile photos found for user:', telegramId);
+        return null;
+      }
+
+      // Получаем первый файл (самое большое фото)
+      const photoSizes = photosData.result.photos[0];
+      if (!photoSizes || photoSizes.length === 0) {
+        console.log('No photo sizes found for user:', telegramId);
+        return null;
+      }
+
+      // Берем самое большое фото (последний элемент в массиве размеров)
+      const largestPhoto = photoSizes[photoSizes.length - 1];
+      const fileId = largestPhoto.file_id;
+
+      if (!fileId) {
+        console.log('No file_id found in photo:', telegramId);
+        return null;
+      }
+
+      // Шаг 2: Получаем путь к файлу
+      const fileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
+      const fileResponse = await fetch(fileUrl);
+      const fileData = await fileResponse.json();
+
+      if (!fileData.ok || !fileData.result?.file_path) {
+        console.error('Failed to get file path:', fileData);
+        return null;
+      }
+
+      // Шаг 3: Формируем URL аватара
+      const avatarUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
+      console.log('Avatar URL generated:', avatarUrl.substring(0, 50) + '...');
+
+      // Шаг 4: Сохраняем URL в БД
+      const { error: updateError } = await this.supabase
+        .from('users')
+        .update({ avatar_url: avatarUrl })
+        .eq('telegram_id', telegramId);
+
+      if (updateError) {
+        console.error('❌ Error saving avatar URL:', updateError);
+        console.error('Update error code:', updateError.code);
+        console.error('Update error message:', updateError.message);
+        return null;
+      }
+
+      console.log('✅ Avatar URL saved successfully for user:', telegramId);
+      return avatarUrl;
+    } catch (error: any) {
+      console.error('❌ Exception fetching avatar:', error);
+      console.error('Exception message:', error.message);
+      console.error('Exception stack:', error.stack);
+      return null;
+    }
+  }
 }
 
 // Singleton instance
