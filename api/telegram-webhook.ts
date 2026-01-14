@@ -227,7 +227,10 @@ export default async function handler(
 
       // Обработка команды /start
       if (text && text.startsWith('/start')) {
+        console.log('=== /START COMMAND DETECTED ===');
         console.log('Processing /start command, text:', text);
+        console.log('Full message object:', JSON.stringify(message, null, 2));
+        
         // Используем более надежный способ парсинга - удаляем /start и берем остальное
         const param = text.substring(6).trim(); // Удаляем '/start' и пробелы
         console.log('Start parameter:', param);
@@ -235,6 +238,7 @@ export default async function handler(
         
         // Сохраняем message_id сообщения пользователя для удаления после отправки ответа
         const userMessageId = message.message_id;
+        console.log('User message ID:', userMessageId);
         
         // Проверяем, есть ли параметр после /start
         if (param) {
@@ -443,12 +447,16 @@ export default async function handler(
           }
         } else {
           // Обычная команда /start без токена
+          console.log('=== REGULAR /START WITHOUT TOKEN ===');
           console.log('Regular /start without token');
+          console.log('User info:', { userId, username, firstName, lastName, chatId });
+          
           try {
             // В новой системе просто логиним пользователя при /start
             // Проверяем, есть ли уже пользователь с таким telegram_id
             if (!userId) {
-              console.error('userId is undefined');
+              console.error('❌ userId is undefined');
+              console.error('Message from object:', message.from);
               await sendMessage(
                 BOT_TOKEN,
                 chatId,
@@ -460,7 +468,9 @@ export default async function handler(
               return response.status(200).json({ ok: true });
             }
             
+            console.log('Checking for existing user with telegramId:', userId);
             const existingUser = await userAuthStore.getUserByTelegramId(userId);
+            console.log('Existing user result:', existingUser ? 'Found' : 'Not found');
             
             if (existingUser && existingUser.refreshToken && !existingUser.isRevoked) {
               // Пользователь уже существует и имеет активный refresh token
@@ -499,9 +509,13 @@ export default async function handler(
               }
             }, 1000);
           } catch (error: any) {
-            console.error('Error sending regular /start message:', error);
+            console.error('❌ Error sending regular /start message:', error);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            console.error('Error name:', error.name);
             // Fallback на обычное сообщение без кнопки
             try {
+              console.log('Attempting fallback message...');
               await sendMessage(
                 BOT_TOKEN,
                 chatId,
@@ -510,8 +524,11 @@ export default async function handler(
                 undefined,
                 userId
               );
+              console.log('Fallback message sent successfully');
             } catch (fallbackError: any) {
-              console.error('Error sending fallback message:', fallbackError);
+              console.error('❌ Error sending fallback message:', fallbackError);
+              console.error('Fallback error message:', fallbackError.message);
+              console.error('Fallback error stack:', fallbackError.stack);
             }
             
             // Удаляем команду пользователя даже при ошибке fallback
