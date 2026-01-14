@@ -33,7 +33,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.tod
 ### Вариант B: Через curl (в терминале)
 
 ```bash
-curl -X POST "https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook" \
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://giftdraw.today/api/telegram-webhook"}'
 ```
