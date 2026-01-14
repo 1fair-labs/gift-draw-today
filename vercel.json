@@ -6,7 +6,7 @@
     },
     {
       "source": "/api/telegram-webhook",
-      "destination": "/api/telegram-webhook"
+      "destination": "/api/telegram-webhook.ts"
     },
     {
       "source": "/api/(.*)",
