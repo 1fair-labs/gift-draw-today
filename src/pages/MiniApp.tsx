@@ -1141,7 +1141,7 @@ export default function MiniApp() {
             console.log('Opened bot via deep link after error');
           } catch (fallbackError) {
             console.log('Error with deep link, using web URL:', fallbackError);
-            window.open(botUrl, '_blank', 'noopener,noreferrer');
+            window.location.href = botUrl;
           }
         }
       } else {
@@ -1163,10 +1163,10 @@ export default function MiniApp() {
           document.body.removeChild(link);
         }, 100);
         
-        // Также открываем веб-версию
+        // Также открываем веб-версию в том же окне
         setTimeout(() => {
-          console.log('Opening web URL');
-          window.open(botUrl, '_blank', 'noopener,noreferrer');
+          console.log('Opening web URL in same window');
+          window.location.href = botUrl;
         }, 300);
       }
     } catch (error: any) {
