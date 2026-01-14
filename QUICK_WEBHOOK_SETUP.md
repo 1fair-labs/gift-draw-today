@@ -9,7 +9,7 @@
 ### Шаг 1: Установите webhook (откройте в браузере)
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 **Ожидаемый ответ:**
@@ -20,7 +20,7 @@ https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWe
 ### Шаг 2: Проверьте webhook
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 **Ожидаемый ответ:**
@@ -50,7 +50,7 @@ https://giftdraw.today/api/telegram-webhook
 
 1. Откройте Vercel Dashboard
 2. Settings → Environment Variables
-3. Проверьте, что есть `TELEGRAM_BOT_TOKEN` = `8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc`
+3. Проверьте, что есть `TELEGRAM_BOT_TOKEN` = `<YOUR_BOT_TOKEN>` (получите у @BotFather)
 4. Если нет - добавьте и перезапустите деплой
 
 ### Шаг 5: Протестируйте
@@ -67,11 +67,11 @@ https://giftdraw.today/api/telegram-webhook
 
 **Удалить webhook:**
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/deleteWebhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook
 ```
 
 **Установить заново:**
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 

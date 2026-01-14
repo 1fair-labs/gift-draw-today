@@ -21,7 +21,7 @@ cp .env.example .env
 Или создайте `.env` файл:
 
 ```env
-TELEGRAM_BOT_TOKEN=8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc
+TELEGRAM_BOT_TOKEN=<YOUR_BOT_TOKEN>
 WEB_APP_URL=https://giftdraw.today
 PORT=8000
 ```
@@ -57,18 +57,18 @@ ngrok http 8000
 Замените `YOUR_PUBLIC_URL` на ваш публичный URL:
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=YOUR_PUBLIC_URL/webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=YOUR_PUBLIC_URL/webhook
 ```
 
 Например:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://your-bot.railway.app/webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-bot.railway.app/webhook
 ```
 
 ### 3. Проверьте webhook
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 ## Деплой

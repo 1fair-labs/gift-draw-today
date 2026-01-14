@@ -22,14 +22,14 @@
 
 В Vercel Dashboard → Settings → Environment Variables должны быть:
 
-- `TELEGRAM_BOT_TOKEN` = `8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc`
+- `TELEGRAM_BOT_TOKEN` = `<YOUR_BOT_TOKEN>` (получите у @BotFather)
 - `WEB_APP_URL` = `https://crypto-lottery-today.vercel.app` (или ваш кастомный домен)
 
 ### 3. Проверьте webhook
 
 Выполните в браузере:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 Должен вернуться:
@@ -61,7 +61,7 @@ https://crypto-lottery-today.vercel.app/api/telegram-webhook
 Попробуйте отправить тестовое сообщение через Telegram Bot API:
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/sendMessage?chat_id=YOUR_CHAT_ID&text=Test
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage?chat_id=YOUR_CHAT_ID&text=Test
 ```
 
 Замените `YOUR_CHAT_ID` на ваш Telegram ID (можно узнать через @userinfobot).
@@ -75,8 +75,8 @@ https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/sendM
 **Симптомы:** В логах Vercel нет записей при отправке `/start`
 
 **Решение:**
-1. Удалите webhook: `https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/deleteWebhook`
-2. Установите заново: `https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://crypto-lottery-today.vercel.app/api/telegram-webhook`
+1. Удалите webhook: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook`
+2. Установите заново: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://crypto-lottery-today.vercel.app/api/telegram-webhook`
 
 ### Проблема 2: Ошибка в коде webhook
 

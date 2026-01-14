@@ -8,7 +8,7 @@ Webhook не установлен (URL пустой), есть 3 необраб�
 ### 1. Установите webhook (откройте в браузере):
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://crypto-lottery-today.vercel.app/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 **Ожидаемый ответ:**
@@ -19,7 +19,7 @@ https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWe
 ### 2. Проверьте webhook:
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 **Должен вернуться:**

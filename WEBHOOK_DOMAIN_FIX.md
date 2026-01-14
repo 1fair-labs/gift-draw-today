@@ -24,18 +24,18 @@
 Замените `YOUR_VERCEL_DOMAIN` на ваш домен Vercel:
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://YOUR_VERCEL_DOMAIN.vercel.app/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://YOUR_VERCEL_DOMAIN.vercel.app/api/telegram-webhook
 ```
 
 Например, если ваш проект называется `crypto-lottery-today`:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://crypto-lottery-today.vercel.app/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://crypto-lottery-today.vercel.app/api/telegram-webhook
 ```
 
 ### Шаг 3: Проверьте webhook
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 Должен вернуться:
@@ -68,12 +68,12 @@ https://YOUR_VERCEL_DOMAIN.vercel.app/api/telegram-webhook
 
 1. Удалите старый webhook:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/deleteWebhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook
 ```
 
 2. Установите новый webhook с кастомным доменом:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 ## Настройка кастомного домена в Vercel

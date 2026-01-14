@@ -18,10 +18,43 @@ export default async function handler(
   }
 
   try {
+    // ПРОВЕРКА АВТОРИЗАЦИИ: только авторизованные пользователи могут отправлять сообщения
+    const cookies = request.headers.cookie || '';
+    const sessionCookie = cookies
+      .split(';')
+      .find(c => c.trim().startsWith('telegram_session='));
+
+    if (!sessionCookie) {
+      console.error('Unauthorized attempt to send message');
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const sessionValue = sessionCookie.split('=')[1];
+    let sessionData;
+    try {
+      sessionData = JSON.parse(
+        Buffer.from(sessionValue, 'base64').toString()
+      );
+    } catch (e) {
+      console.error('Invalid session cookie');
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!sessionData.authenticated || !sessionData.telegramId) {
+      console.error('Session not authenticated');
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
     const { chatId, text, buttons } = request.body;
 
     if (!chatId || !text) {
       return response.status(400).json({ error: 'chatId and text are required' });
+    }
+
+    // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: пользователь может отправлять сообщения только самому себе
+    if (chatId !== sessionData.telegramId) {
+      console.error(`User ${sessionData.telegramId} attempted to send message to ${chatId}`);
+      return response.status(403).json({ error: 'Forbidden: can only send messages to yourself' });
     }
 
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;

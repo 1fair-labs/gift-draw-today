@@ -2,7 +2,7 @@
 
 ## Токен бота
 ```
-8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc
+Получите токен у @BotFather в Telegram
 ```
 
 ## Шаг 1: Добавьте токен в Vercel
@@ -11,7 +11,7 @@
 2. Перейдите в **Settings** → **Environment Variables**
 3. Добавьте переменную:
    - **Name**: `TELEGRAM_BOT_TOKEN`
-   - **Value**: `8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc`
+   - **Value**: `<YOUR_BOT_TOKEN>` (получите у @BotFather)
    - **Environment**: Production, Preview, Development (выберите все)
 4. Нажмите **Save**
 5. Перезапустите деплой (Redeploy)
@@ -22,7 +22,7 @@
 
 Откройте эту ссылку в браузере:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
 ```
 
 Должен вернуться JSON:
@@ -42,7 +42,7 @@ curl -X POST "https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjC
 
 Откройте эту ссылку:
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 Должен вернуться JSON с информацией о webhook:
@@ -82,6 +82,6 @@ https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWe
 ### Удалить webhook (если нужно)
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/deleteWebhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook
 ```
 

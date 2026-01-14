@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Telegram Bot Webhook")
 
 # Получаем переменные окружения
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN environment variable is required")
 WEB_APP_URL = os.getenv("WEB_APP_URL", "https://giftdraw.today")
 
 if not BOT_TOKEN:

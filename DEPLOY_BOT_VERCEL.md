@@ -20,7 +20,7 @@
 
 В Vercel Dashboard → Settings → Environment Variables добавьте:
 
-- `TELEGRAM_BOT_TOKEN` = `8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc`
+- `TELEGRAM_BOT_TOKEN` = `<YOUR_BOT_TOKEN>` (получите у @BotFather)
 - `WEB_APP_URL` = `https://giftdraw.today`
 - `WEBHOOK_URL` = `https://giftdraw.today/api/bot`
 - `DEBUG` = `False` (или не добавляйте, по умолчанию False)
@@ -51,13 +51,13 @@ Vercel автоматически определит Python из `requirements.t
 После деплоя установите webhook:
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/setWebhook?url=https://giftdraw.today/api/bot
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/bot
 ```
 
 ### 5. Проверьте webhook
 
 ```
-https://api.telegram.org/bot8021828260:AAEuC7TMoCthDeslQfvQy0saIjCibvOxfvc/getWebhookInfo
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 ## Как это работает
