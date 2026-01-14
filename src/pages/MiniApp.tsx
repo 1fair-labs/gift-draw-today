@@ -1218,6 +1218,7 @@ export default function MiniApp() {
             setTelegramUser({
               id: data.userId,
               first_name: data.firstName || '',
+              last_name: data.lastName || '',
               username: data.username || '',
             });
             setTelegramId(data.userId);

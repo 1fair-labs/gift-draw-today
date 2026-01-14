@@ -48,6 +48,7 @@ export default async function handler(
           userId: userId,
           username: sessionData.username,
           firstName: sessionData.firstName,
+          lastName: sessionData.lastName,
         });
       }
     } catch (e) {

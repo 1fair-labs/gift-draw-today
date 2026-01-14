@@ -7,6 +7,7 @@ export default function AuthCallback() {
   const [searchParams] = useSearchParams();
   const refreshToken = searchParams.get('refreshToken');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!refreshToken) {
@@ -18,6 +19,7 @@ export default function AuthCallback() {
     // Обрабатываем refresh token через API, используя fetch вместо прямого редиректа
     // Это избежит блокировки браузером URL с токеном
     const processRefreshToken = async () => {
+      setIsLoading(true);
       try {
         console.log('Processing refresh token...');
         // Используем GET запрос к callback API, но через fetch
@@ -64,6 +66,7 @@ export default function AuthCallback() {
             console.error('Callback error text:', text);
           }
           setError(errorText);
+          setIsLoading(false);
           // Через 3 секунды редиректим на главную даже при ошибке
           setTimeout(() => {
             window.location.href = '/';
@@ -72,6 +75,7 @@ export default function AuthCallback() {
       } catch (err: any) {
         console.error('Error processing refresh token:', err);
         setError(err.message || 'Failed to fetch');
+        setIsLoading(false);
         // Через 3 секунды редиректим на главную даже при ошибке
         setTimeout(() => {
           window.location.href = '/';
@@ -82,6 +86,7 @@ export default function AuthCallback() {
     processRefreshToken();
   }, [refreshToken, navigate]);
 
+  // Показываем индикатор загрузки сразу, даже если isLoading еще не установлен
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">

@@ -6,6 +6,7 @@ interface UserAuthData {
   telegramId: number;
   username?: string;
   firstName?: string;
+  lastName?: string;
   refreshToken?: string;
   refreshExpiresAt?: Date;
   lastUsedAt?: Date;
@@ -70,7 +71,8 @@ class UserAuthStore {
   async loginOrUpdateUser(
     telegramId: number,
     username?: string,
-    firstName?: string
+    firstName?: string,
+    lastName?: string
   ): Promise<{ refreshToken: string; accessToken: string } | null> {
     if (!this.supabase) {
       console.error('Supabase client not initialized');
@@ -124,6 +126,7 @@ class UserAuthStore {
           last_used_at: now.toISOString(),
           username: username || existingUser.username || null,
           first_name: firstName || existingUser.first_name || null,
+          last_name: lastName || existingUser.last_name || null,
           is_revoked: false, // Сбрасываем флаг отзыва при новом логине
         };
         
@@ -173,6 +176,7 @@ class UserAuthStore {
           access_expires_at: accessExpiresAt.toISOString(),
           username: username || null,
           first_name: firstName || null,
+          last_name: lastName || null,
           anon_id: anonId,
         });
         
@@ -188,6 +192,7 @@ class UserAuthStore {
             last_used_at: now.toISOString(),
             username: username || null,
             first_name: firstName || null,
+            last_name: lastName || null,
             anon_id: anonId,
             is_revoked: false,
           })
@@ -431,6 +436,7 @@ class UserAuthStore {
         telegramId: user.telegram_id,
         username: user.username,
         firstName: user.first_name,
+        lastName: user.last_name,
         refreshToken: user.refresh_token,
         refreshExpiresAt: user.refresh_expires_at ? new Date(user.refresh_expires_at) : undefined,
         lastUsedAt: user.last_used_at ? new Date(user.last_used_at) : undefined,
@@ -464,6 +470,7 @@ class UserAuthStore {
         telegramId: user.telegram_id,
         username: user.username,
         firstName: user.first_name,
+        lastName: user.last_name,
         refreshToken: user.refresh_token,
         refreshExpiresAt: user.refresh_expires_at ? new Date(user.refresh_expires_at) : undefined,
         lastUsedAt: user.last_used_at ? new Date(user.last_used_at) : undefined,

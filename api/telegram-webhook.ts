@@ -102,6 +102,7 @@ export default async function handler(
         const userId = callback.from.id;
         const username = callback.from.username;
         const firstName = callback.from.first_name || 'User';
+        const lastName = callback.from.last_name;
         const chatId = callback.message?.chat.id;
         const callbackData = callback.data;
         
@@ -133,6 +134,7 @@ export default async function handler(
                 telegramId: userId,
                 username,
                 firstName,
+                lastName,
               }),
             });
 
@@ -211,6 +213,7 @@ export default async function handler(
       const userId = message.from?.id;
       const username = message.from?.username;
       const firstName = message.from?.first_name || 'User';
+      const lastName = message.from?.last_name;
       const chatId = message.chat.id;
 
       console.log('Processing message:', {
@@ -218,6 +221,7 @@ export default async function handler(
         userId,
         username,
         firstName,
+        lastName,
         chatId,
       });
 
@@ -253,7 +257,8 @@ export default async function handler(
             console.log('Request body:', {
               telegramId: userId,
               username,
-              firstName
+              firstName,
+              lastName
             });
             
             // Вызываем login API для создания/обновления пользователя и получения refresh token
@@ -266,6 +271,7 @@ export default async function handler(
                 telegramId: userId,
                 username,
                 firstName,
+                lastName,
               }),
             });
 

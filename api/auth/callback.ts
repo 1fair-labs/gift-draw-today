@@ -55,6 +55,7 @@ export default async function handler(
       telegramId: userData.telegramId, // Также сохраняем telegramId
       username: userData.username,
       firstName: userData.firstName,
+      lastName: userData.lastName,
       refreshToken: refreshToken, // Сохраняем refresh token в cookie
       authenticated: true,
     };
