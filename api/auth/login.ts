@@ -59,10 +59,10 @@ export default async function handler(
       console.warn('TELEGRAM_BOT_TOKEN not set, cannot fetch avatar');
     }
 
-    // Принудительно используем giftdraw.today
-    let webAppUrl = process.env.WEB_APP_URL || 'https://giftdraw.today';
-    if (webAppUrl.includes('crypto-lottery-today') || webAppUrl.includes('1fairlabs')) {
-      webAppUrl = 'https://giftdraw.today';
+    // Принудительно используем www.giftdraw.today (с www для правильной работы)
+    let webAppUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+    if (webAppUrl.includes('crypto-lottery-today') || webAppUrl.includes('1fairlabs') || !webAppUrl.includes('www.')) {
+      webAppUrl = 'https://www.giftdraw.today';
     }
     const callbackUrl = `${webAppUrl}/auth?refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
 

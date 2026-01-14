@@ -70,9 +70,9 @@ export default async function handler(
 
     // Перенаправляем на главную страницу
     // Принудительно используем giftdraw.today
-    let redirectUrl = process.env.WEB_APP_URL || 'https://giftdraw.today';
-    if (redirectUrl.includes('crypto-lottery-today') || redirectUrl.includes('1fairlabs')) {
-      redirectUrl = 'https://giftdraw.today';
+    let redirectUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+    if (redirectUrl.includes('crypto-lottery-today') || redirectUrl.includes('1fairlabs') || !redirectUrl.includes('www.')) {
+      redirectUrl = 'https://www.giftdraw.today';
     }
     
     // Проверяем User-Agent, чтобы определить, открывается ли из Telegram WebView

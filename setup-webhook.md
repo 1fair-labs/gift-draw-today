@@ -22,7 +22,7 @@
 
 Откройте эту ссылку в браузере:
 ```
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://www.giftdraw.today/api/telegram-webhook
 ```
 
 Должен вернуться JSON:
@@ -35,7 +35,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.tod
 ```bash
 curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://giftdraw.today/api/telegram-webhook"}'
+  -d '{"url": "https://www.giftdraw.today/api/telegram-webhook"}'
 ```
 
 ## Шаг 3: Проверьте Webhook
@@ -50,7 +50,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 {
   "ok": true,
   "result": {
-    "url": "https://giftdraw.today/api/telegram-webhook",
+    "url": "https://www.giftdraw.today/api/telegram-webhook",
     "has_custom_certificate": false,
     "pending_update_count": 0
   }

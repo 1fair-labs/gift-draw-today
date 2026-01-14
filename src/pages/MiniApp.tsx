@@ -1084,41 +1084,20 @@ export default function MiniApp() {
 
   // Handle authorization through bot
   const handleConnectViaBot = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      console.log('Opening Telegram bot...');
-      
-      // Генерируем длинный числовой идентификатор для отслеживания запроса авторизации
-      // Это не токен, а просто маркер того, что запрос пришел с сайта
-      // Используем timestamp + случайные цифры для уникальности
-      const timestamp = Date.now().toString();
-      const randomDigits = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
-      const authId = timestamp + randomDigits;
-      
-      // В новой системе открываем бота с параметром auth, логин произойдет при /start
-      const botUrl = `https://t.me/giftdrawtoday_bot?start=${authId}`;
-      console.log('Opening bot URL:', botUrl);
+    // Генерируем длинный числовой идентификатор для отслеживания запроса авторизации
+    // Это не токен, а просто маркер того, что запрос пришел с сайта
+    // Используем timestamp + случайные цифры для уникальности
+    const timestamp = Date.now().toString();
+    const randomDigits = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
+    const authId = timestamp + randomDigits;
     
-      // Используем правильный формат deep link для Telegram
-      const deepLink = `tg://resolve?domain=giftdrawtoday_bot&start=${authId}`;
-      console.log('Using deep link:', deepLink);
-      
-      // Всегда используем прямой переход на URL бота для гарантированной отправки /start
-      // Это работает надежнее, чем openTelegramLink, особенно при первом открытии
-      console.log('Opening bot via direct URL navigation:', botUrl);
-      console.log('This will automatically send /start command with parameter');
-      
-      // Используем прямой переход - это гарантирует автоматическую отправку /start
-      // При первом открытии бота Telegram автоматически отправляет команду /start с параметром из URL
-      window.location.href = botUrl;
-    } catch (error: any) {
-      console.error('Error connecting via bot:', error);
-      console.error('Error stack:', error.stack);
-      alert(`Failed to connect: ${error.message || 'Please try again.'}`);
-    } finally {
-      setLoading(false);
-    }
+    // В новой системе открываем бота с параметром auth, логин произойдет при /start
+    const botUrl = `https://t.me/giftdrawtoday_bot?start=${authId}`;
+    
+    // Используем прямой переход - это гарантирует автоматическую отправку /start
+    // При первом открытии бота Telegram автоматически отправляет команду /start с параметром из URL
+    // Не устанавливаем loading, так как переход происходит мгновенно
+    window.location.href = botUrl;
   }, []);
 
   // Initialize user from Telegram WebApp (if in Telegram)

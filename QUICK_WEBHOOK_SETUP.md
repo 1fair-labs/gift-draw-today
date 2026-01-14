@@ -9,7 +9,7 @@
 ### Шаг 1: Установите webhook (откройте в браузере)
 
 ```
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://www.giftdraw.today/api/telegram-webhook
 ```
 
 **Ожидаемый ответ:**
@@ -28,7 +28,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 {
   "ok": true,
   "result": {
-    "url": "https://giftdraw.today/api/telegram-webhook",
+    "url": "https://www.giftdraw.today/api/telegram-webhook",
     "has_custom_certificate": false,
     "pending_update_count": 0
   }
@@ -38,7 +38,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ### Шаг 3: Проверьте endpoint
 
 ```
-https://giftdraw.today/api/telegram-webhook
+https://www.giftdraw.today/api/telegram-webhook
 ```
 
 **Ожидаемый ответ:**
@@ -72,6 +72,6 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook
 
 **Установить заново:**
 ```
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://giftdraw.today/api/telegram-webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://www.giftdraw.today/api/telegram-webhook
 ```
 
