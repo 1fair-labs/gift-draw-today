@@ -314,11 +314,12 @@ export default async function handler(
             
             // Отправляем подтверждение со ссылкой для перехода на сайт
             console.log('Sending success message with callback URL...');
+            const fullName = ((firstName || '') + (lastName ? ' ' + lastName : '')).trim();
             const sentMessage = await sendMessage(
               BOT_TOKEN,
               chatId,
               `✅ Authorization successful!\n\n` +
-              `You are authorized as: ${(firstName || '') + (lastName ? ' ' + lastName : '')}`.trim() || username || `ID: ${userId}`}\n\n` +
+              `You are authorized as: ${fullName || username || `ID: ${userId}`}\n\n` +
               `Click the link below to return to the website.\n` +
               `(Tap and hold, then select "Open in browser" if needed)`,
               [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
