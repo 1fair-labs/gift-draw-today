@@ -1097,11 +1097,11 @@ export default function MiniApp() {
       const authId = timestamp + randomDigits;
       
       // В новой системе открываем бота с параметром auth, логин произойдет при /start
-      const botUrl = `https://t.me/giftdrawtodaybot?start=${authId}`;
+      const botUrl = `https://t.me/giftdrawtoday_bot?start=${authId}`;
       console.log('Opening bot URL:', botUrl);
     
       // Используем правильный формат deep link для Telegram
-      const deepLink = `tg://resolve?domain=giftdrawtodaybot&start=${authId}`;
+      const deepLink = `tg://resolve?domain=giftdrawtoday_bot&start=${authId}`;
       console.log('Using deep link:', deepLink);
       
       // Всегда используем прямой переход на URL бота для гарантированной отправки /start
