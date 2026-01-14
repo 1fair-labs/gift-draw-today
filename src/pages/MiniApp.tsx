@@ -1105,14 +1105,44 @@ export default function MiniApp() {
       console.log('Using deep link:', deepLink);
       
       // Пытаемся открыть через Telegram (приложение или веб)
-      if (window.Telegram && window.Telegram.WebApp) {
+      const WebApp = (window as any).Telegram?.WebApp;
+      if (WebApp) {
         // Если мы в Telegram Mini App, используем Telegram API
         console.log('Using Telegram WebApp API');
         try {
-          window.Telegram.WebApp.openTelegramLink(botUrl);
+          // Используем openLink для более надежной работы с параметром start
+          // Это должно автоматически отправить команду /start с параметром
+          if (WebApp.openLink) {
+            WebApp.openLink(botUrl);
+            console.log('Opened bot via openLink:', botUrl);
+          } else if (WebApp.openTelegramLink) {
+            WebApp.openTelegramLink(botUrl);
+            console.log('Opened bot via openTelegramLink:', botUrl);
+          } else {
+            // Fallback: используем deep link
+            const link = document.createElement('a');
+            link.href = deepLink;
+            link.target = '_self';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => document.body.removeChild(link), 100);
+            console.log('Opened bot via deep link fallback');
+          }
         } catch (e) {
           console.log('Error with Telegram WebApp API, using fallback:', e);
-          window.open(botUrl, '_blank', 'noopener,noreferrer');
+          // Fallback: используем deep link
+          try {
+            const link = document.createElement('a');
+            link.href = deepLink;
+            link.target = '_self';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => document.body.removeChild(link), 100);
+            console.log('Opened bot via deep link after error');
+          } catch (fallbackError) {
+            console.log('Error with deep link, using web URL:', fallbackError);
+            window.open(botUrl, '_blank', 'noopener,noreferrer');
+          }
         }
       } else {
         // Для обычного браузера: сначала пробуем deep link, потом веб-версию
