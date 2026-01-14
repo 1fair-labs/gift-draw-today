@@ -1046,16 +1046,6 @@ export default function MiniApp() {
     try {
       triggerHaptic();
       
-      // Сначала очищаем состояние пользователя немедленно (для плавного UI)
-      setTelegramUser(null);
-      setTelegramId(null);
-      setUser(null);
-      setWalletAddress(null);
-      setGiftBalance(0);
-      setUsdtBalance(0);
-      setTonBalance(0);
-      setTickets([]);
-      
       // Отключаем кошелек если подключен
       if (tonConnectUI.connected) {
         try {
@@ -1082,11 +1072,9 @@ export default function MiniApp() {
       // Это предотвратит проверку сессии при следующей загрузке
       localStorage.setItem('just_logged_out', 'true');
       
-      // Небольшая задержка перед перезагрузкой для плавности
-      setTimeout(() => {
-        // Используем replace вместо href для избежания истории
-        window.location.replace('/');
-      }, 100);
+      // Немедленно перезагружаем страницу без изменения состояния
+      // Состояние очистится при перезагрузке
+      window.location.replace('/');
     } catch (error) {
       console.error('Error during logout:', error);
       // В случае ошибки все равно перезагружаем страницу
@@ -1365,10 +1353,11 @@ export default function MiniApp() {
               ) : (
                 <button
                   onClick={handleLogout}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  className="group p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer flex items-center gap-1"
                   title="Logout"
                 >
-                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                  <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">Logout</span>
                 </button>
               )}
             </div>
@@ -1570,10 +1559,11 @@ export default function MiniApp() {
                 ) : (
                   <button
                     onClick={handleLogout}
-                    className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    className="group p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer flex items-center gap-1"
                     title="Logout"
                   >
-                    <LogOut className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                    <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">Logout</span>
                   </button>
                 )}
               </div>
