@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 
 export default function Landing() {
   const handleConnect = () => {
-    window.location.href = "https://t.me/giftdrawtodaybot?startapp";
+    window.location.href = "https://t.me/giftdrawtoday_bot?startapp";
   };
 
   return (

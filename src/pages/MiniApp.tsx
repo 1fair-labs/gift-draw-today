@@ -1029,9 +1029,9 @@ export default function MiniApp() {
         if (responseData.details?.error_code === 403 || 
             responseData.details?.description?.includes('bot was blocked') ||
             responseData.details?.description?.includes('chat not found')) {
-          console.warn('User needs to start a conversation with the bot first. Please send /start to @giftdrawtodaybot');
+          console.warn('User needs to start a conversation with the bot first. Please send /start to @giftdrawtoday_bot');
           // Можно показать уведомление пользователю
-          alert('Please start a conversation with @giftdrawtodaybot first by sending /start command.');
+          alert('Please start a conversation with @giftdrawtoday_bot first by sending /start command.');
         }
       } else {
         console.log('Welcome message sent successfully');
