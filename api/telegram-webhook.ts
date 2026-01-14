@@ -227,7 +227,7 @@ export default async function handler(
         const args = text.split(' ');
         console.log('Args:', args);
         
-        // Сохраняем message_id сообщения пользователя для удаления после обработки
+        // Сохраняем message_id сообщения пользователя для удаления после отправки ответа
         const userMessageId = message.message_id;
         
         // Проверяем, есть ли токен авторизации (теперь без префикса auth_)
@@ -306,7 +306,7 @@ export default async function handler(
             
             // Отправляем подтверждение со ссылкой для перехода на сайт
             console.log('Sending success message with callback URL...');
-            await sendMessage(
+            const sentMessage = await sendMessage(
               BOT_TOKEN,
               chatId,
               `✅ Authorization successful!\n\n` +
@@ -319,12 +319,15 @@ export default async function handler(
             console.log('Success message sent with callback URL');
             
             // Удаляем команду пользователя после успешной отправки ответа
-            try {
-              await deleteMessage(BOT_TOKEN, chatId, userMessageId);
-              console.log('User /start message deleted after successful response:', userMessageId);
-            } catch (error: any) {
-              console.warn('Failed to delete user message:', error);
-            }
+            // Небольшая задержка, чтобы пользователь увидел ответ
+            setTimeout(async () => {
+              try {
+                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+                console.log('User /start message deleted after successful response:', userMessageId);
+              } catch (error: any) {
+                console.warn('Failed to delete user message:', error);
+              }
+            }, 1000); // 1 секунда задержки
           } catch (error: any) {
             console.error('Error verifying token:', error);
             console.error('Error stack:', error.stack);
@@ -337,12 +340,14 @@ export default async function handler(
             );
             
             // Удаляем команду пользователя даже при ошибке
-            try {
-              await deleteMessage(BOT_TOKEN, chatId, userMessageId);
-              console.log('User /start message deleted after error response:', userMessageId);
-            } catch (deleteError: any) {
-              console.warn('Failed to delete user message after error:', deleteError);
-            }
+            setTimeout(async () => {
+              try {
+                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+                console.log('User /start message deleted after error response:', userMessageId);
+              } catch (deleteError: any) {
+                console.warn('Failed to delete user message after error:', deleteError);
+              }
+            }, 1000);
           }
         } else {
           // Обычная команда /start без токена
@@ -360,15 +365,6 @@ export default async function handler(
                 undefined,
                 undefined
               );
-              
-              // Удаляем команду пользователя
-              try {
-                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
-                console.log('User /start message deleted (no userId):', userMessageId);
-              } catch (deleteError: any) {
-                console.warn('Failed to delete user message:', deleteError);
-              }
-              
               return response.status(200).json({ ok: true });
             }
             
@@ -400,6 +396,16 @@ export default async function handler(
               );
             }
             console.log('Regular /start message sent successfully');
+            
+            // Удаляем команду пользователя после отправки ответа
+            setTimeout(async () => {
+              try {
+                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+                console.log('User /start message deleted after regular response:', userMessageId);
+              } catch (error: any) {
+                console.warn('Failed to delete user message:', error);
+              }
+            }, 1000);
           } catch (error: any) {
             console.error('Error sending regular /start message:', error);
             // Fallback на обычное сообщение без кнопки
@@ -415,6 +421,16 @@ export default async function handler(
             } catch (fallbackError: any) {
               console.error('Error sending fallback message:', fallbackError);
             }
+            
+            // Удаляем команду пользователя даже при ошибке fallback
+            setTimeout(async () => {
+              try {
+                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
+                console.log('User /start message deleted after fallback:', userMessageId);
+              } catch (deleteError: any) {
+                console.warn('Failed to delete user message after fallback:', deleteError);
+              }
+            }, 1000);
           }
         }
       } else {
