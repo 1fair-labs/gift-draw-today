@@ -158,7 +158,7 @@ WEB_APP_URL=https://giftdraw.today
 {
   "success": true,
   "token": "a1b2c3d4e5f6...",
-  "botUrl": "https://t.me/cryptolotterytoday_bot?start=auth_a1b2c3d4e5f6..."
+  "botUrl": "https://t.me/giftdrawtoday_bot?start=auth_a1b2c3d4e5f6..."
 }
 ```
 

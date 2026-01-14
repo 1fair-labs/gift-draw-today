@@ -102,7 +102,7 @@ vercel
 ## Шаг 6: Обновление Telegram бота
 
 1. Откройте @BotFather в Telegram
-2. Найдите вашего бота `@cryptolotterytoday_bot`
+2. Найдите вашего бота `@giftdrawtoday_bot`
 3. Выполните команду `/mybots`
 4. Выберите вашего бота → "Bot Settings" → "Menu Button"
 5. Или используйте `/newapp` для создания/обновления мини-приложения

@@ -55,7 +55,7 @@ https://giftdraw.today/api/telegram-webhook
 
 ### Шаг 5: Протестируйте
 
-1. Откройте бота в Telegram: `@cryptolotterytoday_bot`
+1. Откройте бота в Telegram: `@giftdrawtoday_bot`
 2. Отправьте команду `/start`
 3. Бот должен ответить: "👋 Привет! Я бот для CryptoLottery.today..."
 

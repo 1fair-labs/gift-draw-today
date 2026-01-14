@@ -4,7 +4,7 @@
 
 1. ✅ Обновлены все ссылки в коде на новый домен `https://giftdraw.today`
 2. ✅ Исправлена шапка для Telegram WebApp (уменьшены размеры, добавлены настройки цвета)
-3. ✅ Добавлен username бота `@cryptolotterytoday_bot` в функцию редиректа
+3. ✅ Добавлен username бота `@giftdrawtoday_bot` в функцию редиректа
 4. ✅ Обновлен TON Connect Manifest с новым доменом
 
 ## Что нужно сделать в Vercel:
@@ -44,7 +44,7 @@
 ### 3. Обновить настройки Telegram бота
 
 1. Откройте @BotFather в Telegram
-2. Найдите вашего бота `@cryptolotterytoday_bot`
+2. Найдите вашего бота `@giftdrawtoday_bot`
 3. Выполните команду `/mybots`
 4. Выберите вашего бота
 5. Выберите "Bot Settings" → "Menu Button"
@@ -57,7 +57,7 @@
 
 1. Откройте @BotFather в Telegram
 2. Введите команду `/setdomain`
-3. Выберите вашего бота `@cryptolotterytoday_bot`
+3. Выберите вашего бота `@giftdrawtoday_bot`
 4. Введите домен **без протокола и слеша**: `giftdraw.today`
 5. После успешной настройки вы получите подтверждение от BotFather
 
