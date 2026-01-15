@@ -89,7 +89,8 @@ function App() {
   const network = WalletAdapterNetwork.Mainnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   
-  // Supported wallets
+  // Supported wallets - фиксированный список, только эти кошельки будут показаны
+  // MetaMask и другие кошельки, не входящие в этот список, будут скрыты
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
@@ -187,7 +188,7 @@ function App() {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect={false} onError={onError}>
-        <WalletModalProvider>
+        <WalletModalProvider featuredWallets={wallets.length} wallets={wallets}>
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <Toaster />

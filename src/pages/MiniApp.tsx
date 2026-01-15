@@ -505,6 +505,13 @@ export default function MiniApp() {
     try {
       setLoading(true);
       
+      // Сбрасываем выбранный кошелек перед открытием модального окна
+      // Это предотвращает автоматическое подключение к ранее выбранному кошельку (например, MetaMask)
+      if (select) {
+        select(null);
+        console.log('[DEBUG] Wallet selection reset before opening modal');
+      }
+      
       // #region agent log
       console.log('[DEBUG] Opening wallet modal', { connected, hasPublicKey: !!publicKey, walletName: wallet?.adapter?.name });
       fetch('http://127.0.0.1:7242/ingest/094020a3-bc5a-42d4-a0ac-2503a2d49047',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MiniApp.tsx:505',message:'Opening wallet modal',data:{connected,hasPublicKey:!!publicKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -538,14 +545,28 @@ export default function MiniApp() {
         }
         
         // Проверяем готовность кошелька и обрабатываем случай NotDetected
+        // НО НЕ вызываем connect() автоматически - только если кошелек выбран пользователем в модальном окне
         if (wallet && !connected && !connecting) {
           const adapter = wallet.adapter;
           const readyState = adapter?.readyState;
+          const walletName = adapter?.name || '';
+          
+          // Список разрешенных кошельков - только эти кошельки разрешены
+          const allowedWallets = ['Phantom', 'Solflare', 'Backpack', 'Glow', 'Torus', 'Ledger', 'MathWallet', 'Coinbase Wallet', 'Trust Wallet'];
+          
+          // Если выбран кошелек, которого нет в списке разрешенных (например, MetaMask), сбрасываем выбор
+          if (walletName && !allowedWallets.includes(walletName)) {
+            console.log('[DEBUG] Unauthorized wallet selected, resetting selection', { walletName });
+            if (select) {
+              select(null);
+            }
+            setLoading(false);
+            return;
+          }
           
           // Если кошелек не обнаружен, показываем сообщение и открываем страницу установки
           if (readyState === 'NotDetected') {
-            console.log('[DEBUG] Wallet not detected, opening installation page', { walletName: adapter?.name });
-            const walletName = adapter?.name || 'wallet';
+            console.log('[DEBUG] Wallet not detected, opening installation page', { walletName });
             const installUrls: Record<string, string> = {
               'Phantom': 'https://phantom.app/',
               'Solflare': 'https://solflare.com/',
@@ -566,24 +587,8 @@ export default function MiniApp() {
             return;
           }
           
-          // Если кошелек готов, но еще не подключен, пытаемся подключиться явно
-          // Модальное окно может не вызвать connect() автоматически
-          if ((readyState === 'Installed' || readyState === 'Loadable') && attempts === 10) {
-            console.log('[DEBUG] Wallet ready, attempting explicit connect()', { 
-              attempts, 
-              walletName: adapter?.name,
-              readyState
-            });
-            try {
-              await connect();
-              console.log('[DEBUG] Explicit connect() called successfully');
-            } catch (error: any) {
-              console.error('[DEBUG] Error calling explicit connect():', { 
-                errorName: error?.name, 
-                errorMessage: error?.message
-              });
-            }
-          }
+          // НЕ вызываем connect() автоматически - модальное окно должно вызывать его при выборе кошелька пользователем
+          // Просто ждем, пока пользователь выберет кошелек и модальное окно вызовет connect()
         }
         
         // Отслеживаем состояние подключения
