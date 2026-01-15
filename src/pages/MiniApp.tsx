@@ -541,6 +541,54 @@ export default function MiniApp() {
     }
   }, [connected, publicKey, setVisible, loadWalletBalances]);
 
+  // Switch wallet - отключает текущий и открывает выбор нового
+  const handleSwitchWallet = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Отключаем текущий кошелек если подключен
+      if (connected) {
+        try {
+          await disconnect();
+        } catch (error) {
+          console.error('Error disconnecting wallet:', error);
+        }
+      }
+      
+      // Небольшая задержка для отключения
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Открываем модальное окно выбора кошелька
+      setVisible(true);
+      
+      // Ждем подключения нового кошелька
+      let attempts = 0;
+      const maxAttempts = 100; // 5 seconds (100 * 50ms)
+      
+      while (!connected && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        attempts++;
+        
+        if (connected && publicKey) {
+          const address = publicKey.toString();
+          setWalletAddress(address);
+          await loadWalletBalances();
+          break;
+        }
+      }
+      
+      if (connected && publicKey) {
+        const address = publicKey.toString();
+        setWalletAddress(address);
+        await loadWalletBalances();
+      }
+    } catch (error: any) {
+      console.error('Error switching wallet:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [connected, disconnect, setVisible, publicKey, loadWalletBalances]);
+
   // Initialize Telegram WebApp
   useEffect(() => {
     const isInTelegram = isInTelegramWebApp();
@@ -1192,6 +1240,7 @@ export default function MiniApp() {
                       localStorage.setItem('balance_visible', String(newValue));
                     }}
                     onConnectWallet={handleConnectWallet}
+                    onSwitchWallet={handleSwitchWallet}
                     onBuyTicket={handleBuyTicket}
                     loading={loading}
                   />
@@ -1414,6 +1463,7 @@ export default function MiniApp() {
                       localStorage.setItem('balance_visible', String(newValue));
                     }}
                     onConnectWallet={handleConnectWallet}
+                    onSwitchWallet={handleSwitchWallet}
                     onBuyTicket={handleBuyTicket}
                     loading={loading}
                   />

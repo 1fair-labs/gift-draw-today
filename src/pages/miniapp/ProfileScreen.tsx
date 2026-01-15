@@ -1,6 +1,6 @@
 // src/pages/miniapp/ProfileScreen.tsx
 import { useState, useEffect } from 'react';
-import { Copy, Eye, EyeOff, Wallet, Gift, ExternalLink, Loader2, Send } from 'lucide-react';
+import { Copy, Eye, EyeOff, Wallet, Gift, ExternalLink, Loader2, Send, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ interface ProfileScreenProps {
   isBalanceVisible: boolean;
   onToggleBalanceVisibility: () => void;
   onConnectWallet: () => void;
+  onSwitchWallet: () => void;
   onBuyTicket: () => void;
   loading?: boolean;
 }
@@ -31,6 +32,7 @@ export default function ProfileScreen({
   isBalanceVisible,
   onToggleBalanceVisibility,
   onConnectWallet,
+  onSwitchWallet,
   onBuyTicket,
   loading,
 }: ProfileScreenProps) {
@@ -170,13 +172,27 @@ export default function ProfileScreen({
               <div className="space-y-2 mt-6">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Wallet</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onSwitchWallet}
+                      disabled={loading}
+                      className="h-8 px-2 text-xs hover:bg-muted"
+                      title="Switch Wallet"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Change
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
+                      className="h-8 w-8 p-0 hover:bg-muted hover:text-foreground"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
               </div>
