@@ -537,8 +537,54 @@ export default function MiniApp() {
           });
         }
         
-        // НЕ вызываем connect() вручную - модальное окно должно делать это автоматически
-        // Просто ждем, пока модальное окно вызовет connect() и состояние обновится
+        // Проверяем готовность кошелька и обрабатываем случай NotDetected
+        if (wallet && !connected && !connecting) {
+          const adapter = wallet.adapter;
+          const readyState = adapter?.readyState;
+          
+          // Если кошелек не обнаружен, показываем сообщение и открываем страницу установки
+          if (readyState === 'NotDetected') {
+            console.log('[DEBUG] Wallet not detected, opening installation page', { walletName: adapter?.name });
+            const walletName = adapter?.name || 'wallet';
+            const installUrls: Record<string, string> = {
+              'Phantom': 'https://phantom.app/',
+              'Solflare': 'https://solflare.com/',
+              'Backpack': 'https://www.backpack.app/',
+              'Glow': 'https://glow.app/',
+              'Torus': 'https://tor.us/',
+              'MathWallet': 'https://mathwallet.org/',
+              'Coinbase Wallet': 'https://www.coinbase.com/wallet',
+              'Trust Wallet': 'https://trustwallet.com/',
+            };
+            
+            const installUrl = installUrls[walletName] || 'https://solana.com/ecosystem/explore?categories=wallet';
+            
+            setLoading(false);
+            if (confirm(`${walletName} is not installed. Would you like to open the installation page?`)) {
+              window.open(installUrl, '_blank');
+            }
+            return;
+          }
+          
+          // Если кошелек готов, но еще не подключен, пытаемся подключиться явно
+          // Модальное окно может не вызвать connect() автоматически
+          if ((readyState === 'Installed' || readyState === 'Loadable') && attempts === 10) {
+            console.log('[DEBUG] Wallet ready, attempting explicit connect()', { 
+              attempts, 
+              walletName: adapter?.name,
+              readyState
+            });
+            try {
+              await connect();
+              console.log('[DEBUG] Explicit connect() called successfully');
+            } catch (error: any) {
+              console.error('[DEBUG] Error calling explicit connect():', { 
+                errorName: error?.name, 
+                errorMessage: error?.message
+              });
+            }
+          }
+        }
         
         // Отслеживаем состояние подключения
         if (connecting && !wasConnecting) {

@@ -5,7 +5,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -86,8 +85,6 @@ function RootRedirect() {
 }
 
 function App() {
-  const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
-  
   // Solana network configuration
   const network = WalletAdapterNetwork.Mainnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
@@ -191,24 +188,22 @@ function App() {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect={false} onError={onError}>
         <WalletModalProvider>
-          <TonConnectUIProvider manifestUrl={manifestUrl}>
-            <QueryClientProvider client={queryClient}>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<RootRedirect />} />
-                    <Route path="/landing" element={<Landing />} />
-                    <Route path="/miniapp" element={<MiniApp />} />
-                    <Route path="/auth" element={<AuthCallback />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </QueryClientProvider>
-          </TonConnectUIProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<RootRedirect />} />
+                  <Route path="/landing" element={<Landing />} />
+                  <Route path="/miniapp" element={<MiniApp />} />
+                  <Route path="/auth" element={<AuthCallback />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </QueryClientProvider>
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
