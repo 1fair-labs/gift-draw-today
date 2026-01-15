@@ -190,6 +190,12 @@ export default function MiniApp() {
 
   // Load wallet balances
   const loadWalletBalances = useCallback(async () => {
+    // Не загружаем балансы, если пользователь не авторизован через Telegram
+    if (!telegramId) {
+      addDebugLog('❌ No Telegram authorization');
+      return;
+    }
+
     if (!walletAddress) {
       addDebugLog('❌ No wallet address');
       return;
@@ -236,7 +242,7 @@ export default function MiniApp() {
       addDebugLog(`❌ Error loading wallet balances`);
       console.error('Error loading wallet balances:', error);
     }
-  }, [walletAddress, addDebugLog]);
+  }, [walletAddress, telegramId, addDebugLog]);
 
   // Update ticket draw_id in Supabase
   const updateTicketDrawId = async (ticketId: number, drawId: string) => {
@@ -691,38 +697,34 @@ export default function MiniApp() {
   }, []);
 
 
-  // Update balances automatically every 10 seconds
+  // Update balances automatically every 10 seconds - только после авторизации
   useEffect(() => {
-    if (!walletAddress) return;
+    // Не загружаем балансы, если нет авторизации через Telegram
+    if (!walletAddress || !telegramId) return;
 
     // Update immediately when wallet address changes
     loadWalletBalances();
-    if (telegramId) {
-      loadUserData(telegramId);
-    }
+    loadUserData(telegramId);
 
     // Then update every 10 seconds
     const interval = setInterval(() => {
       loadWalletBalances();
-      if (telegramId) {
-        loadUserData(telegramId);
-      }
+      loadUserData(telegramId);
     }, 10000); // Update every 10 seconds
 
     return () => clearInterval(interval);
   }, [walletAddress, telegramId, loadWalletBalances]);
 
-  // Update balances when app becomes visible (user returns from wallet)
+  // Update balances when app becomes visible (user returns from wallet) - только после авторизации
   useEffect(() => {
-    if (!walletAddress) return;
+    // Не загружаем балансы, если нет авторизации через Telegram
+    if (!walletAddress || !telegramId) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // User returned to app, refresh balances
         loadWalletBalances();
-        if (telegramId) {
-          loadUserData(telegramId);
-        }
+        loadUserData(telegramId);
       }
     };
 
@@ -731,9 +733,7 @@ export default function MiniApp() {
     // Also listen for focus event as fallback
     const handleFocus = () => {
       loadWalletBalances();
-      if (telegramId) {
-        loadUserData(telegramId);
-      }
+      loadUserData(telegramId);
     };
     
     window.addEventListener('focus', handleFocus);
@@ -815,11 +815,17 @@ export default function MiniApp() {
     }
   }, []);
 
-  // Track wallet connection
+  // Track wallet connection - только после авторизации через Telegram
   useEffect(() => {
+    // Не инициализируем кошелек, если пользователь не авторизован через Telegram
+    if (!telegramId) {
+      return;
+    }
+
     if (connected && publicKey) {
       const address = publicKey.toString();
       setWalletAddress(address);
+      // Загружаем балансы только если есть telegramId
       loadWalletBalances();
     } else {
       setWalletAddress(null);
@@ -827,7 +833,7 @@ export default function MiniApp() {
       setUsdtBalance(0);
       setSolBalance(0);
     }
-  }, [connected, publicKey, loadWalletBalances]);
+  }, [connected, publicKey, telegramId, loadWalletBalances]);
 
   // Handle logout
   const handleLogout = useCallback(async () => {
