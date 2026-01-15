@@ -114,9 +114,11 @@ function App() {
     
     // Если кошелек не установлен, открываем страницу установки
     if (error?.name === 'WalletNotFoundError' || 
+        error?.name === 'WalletNotInstalledError' ||
         error?.message?.includes('not found') || 
         error?.message?.includes('not installed') ||
-        error?.message?.includes('No provider found')) {
+        error?.message?.includes('No provider found') ||
+        error?.message?.includes('not available')) {
       const walletName = error?.wallet?.name || error?.wallet?.adapter?.name || 'wallet';
       const installUrls: Record<string, string> = {
         'Phantom': 'https://phantom.app/',
@@ -131,12 +133,18 @@ function App() {
       
       const installUrl = installUrls[walletName] || 'https://solana.com/ecosystem/explore?categories=wallet';
       
-      if (confirm(`${walletName} is not installed. Would you like to open the installation page?`)) {
-        window.open(installUrl, '_blank');
-      }
+      // Используем setTimeout чтобы избежать блокировки UI
+      setTimeout(() => {
+        if (confirm(`${walletName} is not installed. Would you like to open the installation page?`)) {
+          window.open(installUrl, '_blank');
+        }
+      }, 100);
     } else {
       // Для других ошибок показываем сообщение только если это не ошибка отмены пользователем
-      if (error?.name !== 'WalletConnectionError' && !error?.message?.includes('User rejected')) {
+      if (error?.name !== 'WalletConnectionError' && 
+          error?.name !== 'WalletNotSelectedError' &&
+          !error?.message?.includes('User rejected') &&
+          !error?.message?.includes('User cancelled')) {
         console.error('Wallet error details:', error);
         // Не показываем alert для всех ошибок, чтобы не раздражать пользователя
         // Ошибки уже логируются в консоль

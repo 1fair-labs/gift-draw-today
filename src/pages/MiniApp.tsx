@@ -43,7 +43,7 @@ import AboutScreen from './miniapp/AboutScreen';
 type Screen = 'home' | 'tickets' | 'profile' | 'about';
 
 export default function MiniApp() {
-  const { publicKey, wallet, connected, connect, disconnect } = useWallet();
+  const { publicKey, wallet, connected, connect, disconnect, connecting, select } = useWallet();
   const { connection } = useConnection();
   const { setVisible } = useWalletModal();
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -506,11 +506,17 @@ export default function MiniApp() {
       
       // Wait for connection to be established
       let attempts = 0;
-      const maxAttempts = 100; // 5 seconds (100 * 50ms)
+      const maxAttempts = 200; // Увеличено до 10 секунд (200 * 50ms)
+      let wasConnecting = false;
       
       while (!connected && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 50));
         attempts++;
+        
+        // Отслеживаем состояние подключения
+        if (connecting && !wasConnecting) {
+          wasConnecting = true;
+        }
         
         // Check if connection was established
         if (connected && publicKey) {
@@ -518,6 +524,12 @@ export default function MiniApp() {
           setWalletAddress(address);
           await loadWalletBalances();
           break;
+        }
+        
+        // Если подключение началось, но потом остановилось, даем больше времени
+        if (wasConnecting && !connecting && attempts > 50) {
+          // Возможно, пользователь отменил или произошла ошибка
+          // Продолжаем ждать еще немного
         }
       }
       
@@ -530,6 +542,8 @@ export default function MiniApp() {
         await new Promise(resolve => setTimeout(resolve, 100));
       } else {
         setLoading(false);
+        // Не показываем ошибку, если пользователь просто закрыл модальное окно
+        // или не выбрал кошелек
         return;
       }
     } catch (error: any) {
@@ -538,24 +552,31 @@ export default function MiniApp() {
       
       // Обработка ошибки "кошелек не найден" - уже обработана в onError
       if (error?.name === 'WalletNotFoundError' || 
+          error?.name === 'WalletNotInstalledError' ||
           error?.message?.includes('not found') || 
           error?.message?.includes('not installed') ||
-          error?.message?.includes('No provider found')) {
+          error?.message?.includes('No provider found') ||
+          error?.message?.includes('not available')) {
         // Ошибка уже обработана в onError, просто закрываем модальное окно
         return;
       }
       
       // Для ошибок отмены пользователем не показываем alert
-      if (error?.name === 'WalletConnectionError' || error?.message?.includes('User rejected')) {
+      if (error?.name === 'WalletConnectionError' || 
+          error?.name === 'WalletNotSelectedError' ||
+          error?.message?.includes('User rejected') ||
+          error?.message?.includes('User cancelled')) {
         return;
       }
       
-      // Для других ошибок показываем сообщение
-      alert(`Failed to connect wallet: ${error.message || 'Please try again.'}`);
+      // Для других ошибок показываем сообщение только если это не обычная ошибка
+      if (!error?.message?.includes('closed') && !error?.message?.includes('cancelled')) {
+        console.error('Unexpected wallet error:', error);
+      }
     } finally {
       setLoading(false);
     }
-  }, [connected, publicKey, setVisible, loadWalletBalances]);
+  }, [connected, publicKey, setVisible, loadWalletBalances, connecting]);
 
   // Switch wallet - отключает текущий и открывает выбор нового
   const handleSwitchWallet = useCallback(async () => {
