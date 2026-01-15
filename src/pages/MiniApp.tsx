@@ -874,7 +874,7 @@ export default function MiniApp() {
       // В случае ошибки все равно перезагружаем страницу
       window.location.replace('/');
     }
-  }, [tonConnectUI]);
+  }, [connected, disconnect]);
 
   // Handle authorization through bot
   const handleConnectViaBot = useCallback(async () => {
