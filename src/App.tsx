@@ -110,6 +110,13 @@ function App() {
 
   // Обработчик ошибок кошелька
   const onError = useCallback((error: any) => {
+    // Игнорируем некритичные ошибки Solflare (MetaMask detection)
+    if (error?.message?.includes('solflare-detect-metamask') || 
+        error?.message?.includes('Unknown response id')) {
+      // Это не критичная ошибка, просто игнорируем
+      return;
+    }
+    
     console.error('Wallet error:', error);
     
     // Если кошелек не установлен, открываем страницу установки
@@ -152,9 +159,26 @@ function App() {
     }
   }, []);
   
+  // Добавляем глобальный обработчик для игнорирования некритичных ошибок
+  useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args: any[]) => {
+      // Игнорируем ошибки Solflare MetaMask detection
+      if (args[0]?.includes?.('solflare-detect-metamask') || 
+          args[0]?.includes?.('Unknown response id')) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+    
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect onError={onError}>
+      <WalletProvider wallets={wallets} autoConnect={false} onError={onError}>
         <WalletModalProvider>
           <TonConnectUIProvider manifestUrl={manifestUrl}>
             <QueryClientProvider client={queryClient}>
