@@ -537,19 +537,21 @@ export default function MiniApp() {
       setLoading(false);
       
       // Обработка ошибки "кошелек не найден" - уже обработана в onError
-      const errorName = error?.name || '';
-      const errorMessage = error?.message || '';
-      const isWalletNotFound = 
-        errorName === 'WalletNotFoundError' ||
-        errorName === 'WalletNotInstalledError' ||
-        errorMessage.toLowerCase().includes('not found') ||
-        errorMessage.toLowerCase().includes('not installed');
-      
-      if (!isWalletNotFound) {
-        // Для других ошибок показываем сообщение
-        alert(`Failed to connect wallet: ${errorMessage || 'Please try again.'}`);
+      if (error?.name === 'WalletNotFoundError' || 
+          error?.message?.includes('not found') || 
+          error?.message?.includes('not installed') ||
+          error?.message?.includes('No provider found')) {
+        // Ошибка уже обработана в onError, просто закрываем модальное окно
+        return;
       }
-      // Если кошелек не найден, ошибка уже обработана в onError в App.tsx
+      
+      // Для ошибок отмены пользователем не показываем alert
+      if (error?.name === 'WalletConnectionError' || error?.message?.includes('User rejected')) {
+        return;
+      }
+      
+      // Для других ошибок показываем сообщение
+      alert(`Failed to connect wallet: ${error.message || 'Please try again.'}`);
     } finally {
       setLoading(false);
     }

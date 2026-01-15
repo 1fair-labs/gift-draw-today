@@ -20,7 +20,6 @@ import { CoinbaseWalletAdapter } from '@solana/wallet-adapter-coinbase';
 import { TrustWalletAdapter } from '@solana/wallet-adapter-trust';
 import { clusterApiUrl } from '@solana/web3.js';
 import '@solana/wallet-adapter-react-ui/styles.css';
-import { isInTelegramWebApp } from '@/lib/telegram';
 import Landing from "./pages/Landing";
 import MiniApp from "./pages/MiniApp";
 import NotFound from "./pages/NotFound";
@@ -90,66 +89,35 @@ function App() {
   const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
   
   // Solana network configuration
-  const network = WalletAdapterNetwork.Devnet; // Testnet для тестирования
+  const network = WalletAdapterNetwork.Mainnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   
   // Supported wallets
-  // Исключаем Solflare в Telegram WebApp из-за CSP (Content Security Policy) ограничений
-  const isInTelegram = isInTelegramWebApp();
   const wallets = useMemo(
-    () => {
-      const walletList = [
-        new PhantomWalletAdapter(),
-        new BackpackWalletAdapter(),
-        new GlowWalletAdapter(),
-        new TorusWalletAdapter(),
-        new LedgerWalletAdapter(),
-        new MathWalletAdapter(),
-        new CoinbaseWalletAdapter(),
-        new TrustWalletAdapter(),
-      ];
-      
-      // Solflare не работает в Telegram WebApp из-за CSP, добавляем только вне Telegram
-      if (!isInTelegram) {
-        walletList.splice(1, 0, new SolflareWalletAdapter()); // Вставляем после Phantom
-      }
-      
-      return walletList;
-    },
-    [isInTelegram]
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new BackpackWalletAdapter(),
+      new GlowWalletAdapter(),
+      new TorusWalletAdapter(),
+      new LedgerWalletAdapter(),
+      new MathWalletAdapter(),
+      new CoinbaseWalletAdapter(),
+      new TrustWalletAdapter(),
+    ],
+    []
   );
 
   // Обработчик ошибок кошелька
   const onError = useCallback((error: any) => {
     console.error('Wallet error:', error);
     
-    // Определяем название кошелька из ошибки
-    const walletName = error?.wallet?.name || error?.name || 'wallet';
-    const errorMessage = error?.message || '';
-    const errorName = error?.name || '';
-    
-    // Проверяем ошибки CSP (Content Security Policy) - особенно для Solflare в Telegram
-    const isCSPError = 
-      errorMessage.toLowerCase().includes('content security policy') ||
-      errorMessage.toLowerCase().includes('frame-src') ||
-      errorMessage.toLowerCase().includes('violates') ||
-      errorMessage.toLowerCase().includes('connect.solflare.com');
-    
-    if (isCSPError) {
-      alert('This wallet cannot be used in Telegram WebApp due to security restrictions. Please use another wallet like Phantom, Backpack, or Glow.');
-      return;
-    }
-    
-    // Проверяем, является ли ошибка "кошелек не найден"
-    const isWalletNotFound = 
-      errorName === 'WalletNotFoundError' ||
-      errorName === 'WalletNotInstalledError' ||
-      errorMessage.toLowerCase().includes('not found') ||
-      errorMessage.toLowerCase().includes('not installed') ||
-      errorMessage.toLowerCase().includes('not available');
-    
-    if (isWalletNotFound) {
-      // URL для установки кошельков
+    // Если кошелек не установлен, открываем страницу установки
+    if (error?.name === 'WalletNotFoundError' || 
+        error?.message?.includes('not found') || 
+        error?.message?.includes('not installed') ||
+        error?.message?.includes('No provider found')) {
+      const walletName = error?.wallet?.name || error?.wallet?.adapter?.name || 'wallet';
       const installUrls: Record<string, string> = {
         'Phantom': 'https://phantom.app/',
         'Solflare': 'https://solflare.com/',
@@ -163,14 +131,16 @@ function App() {
       
       const installUrl = installUrls[walletName] || 'https://solana.com/ecosystem/explore?categories=wallet';
       
-      // Показываем диалог и открываем страницу установки
       if (confirm(`${walletName} is not installed. Would you like to open the installation page?`)) {
-        window.open(installUrl, '_blank', 'noopener,noreferrer');
+        window.open(installUrl, '_blank');
       }
     } else {
-      // Для других ошибок показываем сообщение
-      const userMessage = errorMessage || 'Unknown error occurred';
-      alert(`Wallet error: ${userMessage}`);
+      // Для других ошибок показываем сообщение только если это не ошибка отмены пользователем
+      if (error?.name !== 'WalletConnectionError' && !error?.message?.includes('User rejected')) {
+        console.error('Wallet error details:', error);
+        // Не показываем alert для всех ошибок, чтобы не раздражать пользователя
+        // Ошибки уже логируются в консоль
+      }
     }
   }, []);
   
