@@ -1,7 +1,7 @@
 // src/lib/solana-transactions.ts
 import { Transaction, PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { createPurchaseTicketTransaction, LOTTERY_WALLET_ADDRESS, USDT_MINT_ADDRESS } from './solana';
+import { createPurchaseTicketTransaction, LOTTERY_WALLET_ADDRESS, USDT_MINT_ADDRESS } from './solana-config';
 
 /**
  * Send a transaction to purchase a ticket

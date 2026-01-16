@@ -2,7 +2,7 @@
 import React, { useMemo, ReactNode } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { SOLANA_RPC_URL } from './solana';
+import { SOLANA_RPC_URL } from './solana-config';
 
 // Import individual wallet adapters
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
