@@ -148,10 +148,9 @@ export default function AboutScreen() {
   const touchStartY = useRef<number>(0);
   const lastScrollTop = useRef<number>(0);
 
-  // Включаем fast mode сразу, но первый заголовок печатается посимвольно
-  // Все остальные абзацы используют fast mode (появляются быстро)
+  // Включаем fast mode сразу для всех абзацев
+  // Все абзацы появляются быстро (целиком), но с задержками между ними
   useEffect(() => {
-    // Включаем fast mode сразу, кроме первого заголовка
     setUseFastMode(true);
   }, []);
 
@@ -271,15 +270,8 @@ export default function AboutScreen() {
     { text: "Welcome to the revolution. 🌍✨" },
   ];
 
-  // Находим индекс первого заголовка (он будет печататься посимвольно)
-  // Все остальные абзацы используют fast mode
-  let firstHeadingIndex = -1;
-  for (let i = 0; i < content.length; i++) {
-    if (content[i].text !== '' && content[i].isHeading) {
-      firstHeadingIndex = i;
-      break;
-    }
-  }
+  // Все абзацы используют fast mode (появляются целиком)
+  // Задержки между абзацами сохраняются
 
   return (
     <div ref={containerRef} className="h-full w-full overflow-y-auto">
@@ -290,37 +282,26 @@ export default function AboutScreen() {
               return <div key={index} className="h-3" />;
             }
 
-            // Определяем, должен ли этот абзац использовать fast mode
-            // Только первый заголовок печатается посимвольно, все остальные - fast mode
-            const isFirstHeading = index === firstHeadingIndex;
-            const shouldUseFastMode = useFastMode && !isFirstHeading;
-            
-            // Вычисляем задержку для этого абзаца
+            // Все абзацы используют fast mode (появляются целиком)
+            // Вычисляем задержку для этого абзаца с сохранением оригинальных задержек
             let paragraphDelay: number;
             
-            if (isFirstHeading) {
-              // В обычном режиме (только для первого заголовка): считаем время печати
-              paragraphDelay = 50;
-            } else {
-              // В fast mode: абзацы появляются быстро после первого заголовка
-              // Вычисляем время печати первого заголовка
-              const headingItem = content[firstHeadingIndex];
-              const typingSpeed = 5;
-              const textLength = headingItem.text.length;
-              const baseTime = textLength * typingSpeed;
-              const punctuationCount = (headingItem.text.match(/[.!?]/g) || []).length;
-              const punctuationPause = punctuationCount * 30;
-              const headingTime = baseTime + punctuationPause + 100;
-              
-              // Считаем количество абзацев до текущего (после заголовка)
-              let fastIndex = 0;
-              for (let i = firstHeadingIndex + 1; i < index; i++) {
-                if (content[i].text !== '') {
-                  fastIndex++;
-                }
+            // Считаем задержку на основе времени печати предыдущих абзацев
+            let delay = 50;
+            for (let i = 0; i < index; i++) {
+              if (content[i].text === '') {
+                delay += 100;
+                continue;
               }
-              paragraphDelay = 50 + headingTime + (fastIndex * 60); // 60ms между абзацами в fast mode
+              const prevItem = content[i];
+              const typingSpeed = prevItem.isHeading ? 5 : prevItem.isList ? 8 : 8;
+              const textLength = prevItem.text.length;
+              const baseTime = textLength * typingSpeed;
+              const punctuationCount = (prevItem.text.match(/[.!?]/g) || []).length;
+              const punctuationPause = punctuationCount * 30;
+              delay += baseTime + punctuationPause + 100;
             }
+            paragraphDelay = delay;
 
             return (
               <Paragraph
@@ -332,7 +313,7 @@ export default function AboutScreen() {
                 isList={item.isList}
                 isListItem={item.isListItem}
                 shouldAutoScroll={shouldAutoScroll}
-                useFastMode={shouldUseFastMode}
+                useFastMode={useFastMode}
               />
             );
           })}
