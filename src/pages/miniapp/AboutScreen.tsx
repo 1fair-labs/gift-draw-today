@@ -148,21 +148,12 @@ export default function AboutScreen() {
   const touchStartY = useRef<number>(0);
   const lastScrollTop = useRef<number>(0);
 
-  // Включаем fast mode после печати первых нескольких абзацев
-  // Первый заголовок + первые 5-6 абзацев печатаются посимвольно
-  const INITIAL_TYPING_PARAGRAPHS = 7; // Заголовок + 6 абзацев
-  const [typedParagraphs, setTypedParagraphs] = useState(0);
-
-  // Отслеживаем завершение печати каждого абзаца
-  const handleParagraphComplete = () => {
-    setTypedParagraphs(prev => {
-      const newCount = prev + 1;
-      if (newCount >= INITIAL_TYPING_PARAGRAPHS) {
-        setUseFastMode(true);
-      }
-      return newCount;
-    });
-  };
+  // Включаем fast mode сразу, но первый заголовок печатается посимвольно
+  // Все остальные абзацы используют fast mode (появляются быстро)
+  useEffect(() => {
+    // Включаем fast mode сразу, кроме первого заголовка
+    setUseFastMode(true);
+  }, []);
 
   // Отслеживание touch событий
   useEffect(() => {
@@ -280,23 +271,14 @@ export default function AboutScreen() {
     { text: "Welcome to the revolution. 🌍✨" },
   ];
 
-  // Находим индекс, с которого начинается fast mode (после первых N абзацев)
-  let paragraphCount = 0;
-  let fastModeStartIndex = 0;
-  
+  // Находим индекс первого заголовка (он будет печататься посимвольно)
+  // Все остальные абзацы используют fast mode
+  let firstHeadingIndex = -1;
   for (let i = 0; i < content.length; i++) {
-    if (content[i].text === '') continue;
-    
-    paragraphCount++;
-    if (paragraphCount > INITIAL_TYPING_PARAGRAPHS) {
-      fastModeStartIndex = i;
+    if (content[i].text !== '' && content[i].isHeading) {
+      firstHeadingIndex = i;
       break;
     }
-  }
-  
-  // Если не нашли, значит все абзацы будут печататься
-  if (fastModeStartIndex === 0) {
-    fastModeStartIndex = content.length;
   }
 
   return (
@@ -309,48 +291,51 @@ export default function AboutScreen() {
             }
 
             // Определяем, должен ли этот абзац использовать fast mode
-            const shouldUseFastMode = useFastMode && index >= fastModeStartIndex;
-            const isTypingMode = index < fastModeStartIndex;
+            // Только первый заголовок печатается посимвольно, все остальные - fast mode
+            const isFirstHeading = index === firstHeadingIndex;
+            const shouldUseFastMode = useFastMode && !isFirstHeading;
             
             // Вычисляем задержку для этого абзаца
             let paragraphDelay: number;
             
             if (shouldUseFastMode) {
-              // В fast mode: все абзацы появляются быстро после первых абзацев
-              // Вычисляем примерное время печати первых абзацев
-              let typingTime = 0;
-              for (let i = 0; i < fastModeStartIndex; i++) {
-                if (content[i].text === '') {
-                  typingTime += 100;
-                  continue;
-                }
-                const prevItem = content[i];
-                const typingSpeed = prevItem.isHeading ? 5 : prevItem.isList ? 8 : 8;
-                const textLength = prevItem.text.length;
+              // В fast mode: абзацы появляются быстро
+              if (isFirstHeading) {
+                // Если это первый заголовок, считаем время его печати
+                const headingItem = content[firstHeadingIndex];
+                const typingSpeed = 5; // Для заголовка
+                const textLength = headingItem.text.length;
                 const baseTime = textLength * typingSpeed;
-                const punctuationCount = (prevItem.text.match(/[.!?]/g) || []).length;
+                const punctuationCount = (headingItem.text.match(/[.!?]/g) || []).length;
                 const punctuationPause = punctuationCount * 30;
-                typingTime += baseTime + punctuationPause + 100;
+                const headingTime = baseTime + punctuationPause + 100;
+                
+                // Время появления этого абзаца = время печати заголовка + задержка
+                const fastIndex = index - firstHeadingIndex - 1; // -1 потому что пропускаем пустую строку после заголовка
+                paragraphDelay = 50 + headingTime + (Math.max(0, fastIndex) * 60); // 60ms между абзацами в fast mode
+              } else {
+                // Для остальных абзацев после первого заголовка
+                // Вычисляем время печати первого заголовка
+                const headingItem = content[firstHeadingIndex];
+                const typingSpeed = 5;
+                const textLength = headingItem.text.length;
+                const baseTime = textLength * typingSpeed;
+                const punctuationCount = (headingItem.text.match(/[.!?]/g) || []).length;
+                const punctuationPause = punctuationCount * 30;
+                const headingTime = baseTime + punctuationPause + 100;
+                
+                // Считаем количество абзацев до текущего (после заголовка)
+                let fastIndex = 0;
+                for (let i = firstHeadingIndex + 1; i < index; i++) {
+                  if (content[i].text !== '') {
+                    fastIndex++;
+                  }
+                }
+                paragraphDelay = 50 + headingTime + (fastIndex * 60); // 60ms между абзацами в fast mode
               }
-              const fastIndex = index - fastModeStartIndex;
-              paragraphDelay = typingTime + (fastIndex * 60); // 60ms между абзацами в fast mode
             } else {
-              // В обычном режиме: считаем время печати
-              let delay = 50;
-              for (let i = 0; i < index; i++) {
-                if (content[i].text === '') {
-                  delay += 100;
-                  continue;
-                }
-                const prevItem = content[i];
-                const typingSpeed = prevItem.isHeading ? 5 : prevItem.isList ? 8 : 8;
-                const textLength = prevItem.text.length;
-                const baseTime = textLength * typingSpeed;
-                const punctuationCount = (prevItem.text.match(/[.!?]/g) || []).length;
-                const punctuationPause = punctuationCount * 30;
-                delay += baseTime + punctuationPause + 100;
-              }
-              paragraphDelay = delay;
+              // В обычном режиме (только для первого заголовка): считаем время печати
+              paragraphDelay = 50;
             }
 
             return (
@@ -364,7 +349,6 @@ export default function AboutScreen() {
                 isListItem={item.isListItem}
                 shouldAutoScroll={shouldAutoScroll}
                 useFastMode={shouldUseFastMode}
-                onComplete={isTypingMode ? handleParagraphComplete : undefined}
               />
             );
           })}
