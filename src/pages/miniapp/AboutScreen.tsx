@@ -152,58 +152,70 @@ export default function AboutScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const content = [
-    { text: "Welcome, Lucky One! 🍀", isHeading: true },
+    { text: "🍀 Welcome, Lucky One!", isHeading: true },
     { text: "" },
     { text: "The GiftDraw.today team is thrilled to welcome you to a truly unique Web3 experience — unlike anything else on the planet." },
     { text: "" },
-    { text: "🎯 GiftDraw.today ≠ lottery." },
+    { text: "GiftDraw.today ≠ lottery." },
     { text: "This is a New Paradigm." },
-    { text: "" },
-    { text: "🚫 We stand against gambling and broken dreams." },
-    { text: "💚 We believe in collective generosity, shared fortune, and conscious participation." },
+    { text: "We stand against gambling and broken dreams." },
+    { text: "We believe in collective generosity, shared fortune, and conscious participation." },
     { text: "" },
     { text: "Just mint an NFT ticket for ~$1 — not as a bet, but as a gift to the world — and join the daily global redistribution of value." },
+    { text: "" },
     { text: "Yes — people become wealthier every single day with GiftDraw. 💰" },
     { text: "" },
-    { text: "🔒 Honesty & Decentralization", isHeading: true },
+    { text: "Honesty & Decentralization", isHeading: true },
     { text: "Results cannot be faked." },
+    { text: "" },
     { text: "Every draw is on-chain, verifiable, and immutable — guaranteed by Solana blockchain." },
     { text: "" },
-    { text: "🌐 Complete Transparency", isHeading: true },
+    { text: "Complete Transparency", isHeading: true },
     { text: "You see everything:" },
     { text: "" },
     { text: "• Total participants", isList: true },
+    { text: "" },
     { text: "• Prize pool size", isList: true },
+    { text: "" },
     { text: "• Number of winners", isList: true },
+    { text: "" },
     { text: "• Unique draw hash for full verification", isList: true },
     { text: "" },
     { text: "No secrets. No manipulation. Just truth." },
     { text: "" },
-    { text: "🎉 High Winning Probability", isHeading: true },
-    { text: "✅ 25% of participants win every day — just like in a poker tournament!" },
+    { text: "High Winning Probability", isHeading: true },
+    { text: "25% of participants win every day — just like in a poker tournament!" },
+    { text: "" },
     { text: "🔥 Plus: Jackpot rolls over if not claimed — growing bigger until someone wins it all." },
+    { text: "" },
     { text: "The thrill? Never ends." },
     { text: "" },
     { text: "🎟️ Ticket Tiers", isHeading: true },
     { text: "Legendary ⚡\n1 in 10,000 chance — ultra-rare, life-changing rewards.", isListItem: true },
+    { text: "" },
     { text: "Event 🌟\n1 in 1,000 chance — special editions with boosted prizes.", isListItem: true },
+    { text: "" },
     { text: "Common ✅\nStandard ticket — still gives you that 25% daily win chance. Your everyday key to abundance.", isListItem: true },
     { text: "" },
     { text: "🪂 $GIFT Token Airdrop (SPL on Solana)", isHeading: true },
     { text: "Total Supply: 100,000,000 GIFT", isList: true },
+    { text: "" },
     { text: "DEX Liquidity: 50,000,000 GIFT (50%)", isList: true },
+    { text: "" },
     { text: "Airdrop: 25,000,000 GIFT (25%)", isList: true },
+    { text: "" },
     { text: "Presale / CEX / Team: 25,000,000 GIFT (25%)", isList: true },
     { text: "" },
     { text: "🚀 Ready to change your life?", isHeading: true },
     { text: "Join thousands of early winners already shaping the future of fair, joyful, decentralized fortune." },
     { text: "" },
     { text: "You're not late. You're early." },
-    { text: "Welcome to the revolution. 🌍✨" },
+    { text: "" },
+    { text: "Welcome to the revolution. 🌍" },
   ];
 
   // Вычисляем задержки для всех абзацев последовательно
-  const WELCOME_HEADING_TEXT = "Welcome, Lucky One! 🍀";
+  const WELCOME_HEADING_TEXT = "🍀 Welcome, Lucky One!";
   let currentDelay = 0;
   
   // Вычисляем задержку для каждого элемента
@@ -219,7 +231,7 @@ export default function AboutScreen() {
     
     const item = content[i];
     const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
-    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 3 : 3));
+    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
     const textLength = item.text.length;
     const baseTime = textLength * typingSpeed;
     const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
@@ -248,7 +260,7 @@ export default function AboutScreen() {
             const paragraphDelay = delays[index];
             
             // Определяем скорость печати
-            const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 3 : 3));
+            const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
 
             return (
               <Paragraph
