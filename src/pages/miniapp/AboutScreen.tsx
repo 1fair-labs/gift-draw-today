@@ -152,18 +152,16 @@ export default function AboutScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const content = [
-    { text: "🍀 Welcome, Lucky One!", isHeading: true },
-    { text: "" },
-    { text: "The GiftDraw.today team is thrilled to welcome you to a truly unique Web3 experience — unlike anything else on the planet." },
+    { text: "Welcome, Lucky One! 🍀", isHeading: true },
+    { text: "You've just stepped into a Web3 experience unlike any other on Earth." },
     { text: "" },
     { text: "GiftDraw.today ≠ lottery." },
     { text: "This is a New Paradigm." },
-    { text: "We stand against gambling and broken dreams." },
-    { text: "We believe in collective generosity, shared fortune, and conscious participation." },
     { text: "" },
-    { text: "Just mint an NFT ticket for ~$1 — not as a bet, but as a gift to the world — and join the daily global redistribution of value." },
+    { text: "We reject gambling and shattered hopes." },
+    { text: "Instead, we believe in collective generosity, shared fortune, and mindful participation." },
     { text: "" },
-    { text: "Yes — people become wealthier every single day with GiftDraw. 💰" },
+    { text: "Mint an NFT ticket for ~$1 — not as a wager, but as a gift to the world — and join the daily global flow of redistributed value." },
     { text: "" },
     { text: "Honesty & Decentralization", isHeading: true },
     { text: "Results cannot be faked." },
@@ -215,7 +213,7 @@ export default function AboutScreen() {
   ];
 
   // Вычисляем задержки для всех абзацев последовательно
-  const WELCOME_HEADING_TEXT = "🍀 Welcome, Lucky One!";
+  const WELCOME_HEADING_TEXT = "Welcome, Lucky One! 🍀";
   let currentDelay = 0;
   
   // Вычисляем задержку для каждого элемента
