@@ -207,35 +207,32 @@ export default function AboutScreen() {
     { text: "Welcome to the revolution. 🌍✨" },
   ];
 
-  // Вычисляем время печати заголовка "Welcome, Lucky One!"
+  // Вычисляем задержки для всех абзацев последовательно
   const WELCOME_HEADING_TEXT = "Welcome, Lucky One! 🍀";
-  let welcomeHeadingDelay = 0;
-  let welcomeHeadingTime = 0;
+  let currentDelay = 0;
   
-  // Находим заголовок и вычисляем время его печати
+  // Вычисляем задержку для каждого элемента
+  const delays: number[] = [];
   for (let i = 0; i < content.length; i++) {
     if (content[i].text === '') {
-      welcomeHeadingDelay += 100;
+      delays.push(currentDelay);
+      currentDelay += 100; // Пауза для пустой строки
       continue;
     }
     
-    if (content[i].text === WELCOME_HEADING_TEXT) {
-      // Вычисляем время печати заголовка (медленнее)
-      const textLength = WELCOME_HEADING_TEXT.length;
-      const typingSpeed = 18; // 18ms per char для заголовка (медленнее)
-      const baseTime = textLength * typingSpeed;
-      const punctuationCount = (WELCOME_HEADING_TEXT.match(/[.!?]/g) || []).length;
-      const punctuationPause = punctuationCount * 50; // Увеличенная пауза на пунктуации
-      const afterHeadingPause = 800; // Задержка после печати заголовка
-      welcomeHeadingTime = baseTime + punctuationPause + afterHeadingPause;
-      break;
-    }
+    delays.push(currentDelay);
     
-    welcomeHeadingDelay += 100; // Предполагаем минимальную задержку для предыдущих элементов
+    const item = content[i];
+    const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
+    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 8 : 8));
+    const textLength = item.text.length;
+    const baseTime = textLength * typingSpeed;
+    const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
+    const punctuationPause = punctuationCount * (isWelcomeHeading ? 50 : (item.isHeading ? 40 : 30));
+    const afterPause = isWelcomeHeading ? 800 : (item.isHeading ? 200 : 100);
+    
+    currentDelay += baseTime + punctuationPause + afterPause;
   }
-  
-  // Время начала fast mode (после заголовка)
-  const fastModeStartDelay = welcomeHeadingDelay + welcomeHeadingTime;
 
   return (
     <div ref={containerRef} className="h-full w-full overflow-y-auto">
@@ -249,41 +246,21 @@ export default function AboutScreen() {
             // Определяем, это ли заголовок "Welcome, Lucky One!"
             const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
             
-            // Заголовок печатается посимвольно, все остальное - быстро
-            const shouldUseFastMode = !isWelcomeHeading;
+            // Все абзацы печатаются посимвольно (без fast mode)
+            const shouldUseFastMode = false;
             
-            // Вычисляем задержку для этого абзаца
-            let paragraphDelay: number;
+            // Используем вычисленную задержку
+            const paragraphDelay = delays[index];
             
-            if (isWelcomeHeading) {
-              // Заголовок печатается посимвольно с начальной задержкой
-              paragraphDelay = welcomeHeadingDelay;
-            } else {
-              // Все остальные абзацы появляются быстро после заголовка
-              // Считаем индекс среди не-заголовков после заголовка
-              let fastIndex = 0;
-              let foundWelcomeHeading = false;
-              
-              for (let i = 0; i < index; i++) {
-                if (content[i].text === '') continue;
-                if (content[i].text === WELCOME_HEADING_TEXT) {
-                  foundWelcomeHeading = true;
-                  continue;
-                }
-                if (foundWelcomeHeading) {
-                  fastIndex++;
-                }
-              }
-              
-              paragraphDelay = fastModeStartDelay + (fastIndex * 150); // 150ms между абзацами (быстрее)
-            }
+            // Определяем скорость печати
+            const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 8 : 8));
 
             return (
               <Paragraph
                 key={index}
                 text={item.text}
                 startDelay={paragraphDelay}
-                typingDelay={isWelcomeHeading ? 18 : 8} // Медленнее для welcome heading
+                typingDelay={typingSpeed}
                 isHeading={item.isHeading}
                 isList={item.isList}
                 isListItem={item.isListItem}
