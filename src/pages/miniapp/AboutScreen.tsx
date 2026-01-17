@@ -9,6 +9,7 @@ interface ParagraphProps {
   isList?: boolean;
   isListItem?: boolean;
   shouldAutoScroll: boolean;
+  useFastMode: boolean; // Показывать абзац целиком после 3 секунд
 }
 
 function Paragraph({ 
@@ -18,7 +19,8 @@ function Paragraph({
   isHeading = false, 
   isList = false,
   isListItem = false,
-  shouldAutoScroll
+  shouldAutoScroll,
+  useFastMode
 }: ParagraphProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
@@ -35,11 +37,18 @@ function Paragraph({
   useEffect(() => {
     if (!isVisible) return;
 
+    // Если fast mode включен, показываем весь текст сразу
+    if (useFastMode) {
+      setDisplayedText(text);
+      return;
+    }
+
+    // Иначе печатаем посимвольно
     if (displayedText.length < text.length) {
       const currentChar = text[displayedText.length];
-      // Pause on punctuation: +30ms after ., !, ? (очень минимальная пауза)
+      // Pause on punctuation: +30ms after ., !, ?
       const punctuationPause = ['.', '!', '?'].includes(currentChar) ? 30 : 0;
-      // Randomized keystroke delay: ±2-3ms (очень минимальная вариация)
+      // Randomized keystroke delay: ±2-3ms
       const randomDelay = Math.random() * 3 - 1.5;
       const adjustedDelay = typingDelay + punctuationPause + randomDelay;
 
@@ -49,7 +58,7 @@ function Paragraph({
 
       return () => clearTimeout(timer);
     }
-  }, [displayedText, text, typingDelay, isVisible]);
+  }, [displayedText, text, typingDelay, isVisible, useFastMode]);
 
   useEffect(() => {
     if (isVisible && paragraphRef.current && displayedText.length > 0 && shouldAutoScroll) {
@@ -68,7 +77,7 @@ function Paragraph({
         className="text-xl font-bold text-foreground mb-3 mt-6 first:mt-0"
       >
         {displayedText}
-        {!isComplete && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
+        {!isComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
       </h2>
     );
   }
@@ -80,7 +89,7 @@ function Paragraph({
         className="text-sm text-muted-foreground mb-1"
       >
         {displayedText}
-        {!isComplete && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
+        {!isComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
       </p>
     );
   }
@@ -100,13 +109,13 @@ function Paragraph({
         className="ml-4 mb-3"
       >
         <p className="text-base text-foreground font-semibold mb-1">
-          {titleText}
-          {!titleComplete && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
+          {useFastMode ? title : titleText}
+          {!titleComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
         </p>
-        {titleComplete && (
+        {(titleComplete || useFastMode) && (
           <p className="text-sm text-muted-foreground ml-4">
-            {descText}
-            {descText.length < description.length && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
+            {useFastMode ? description : descText}
+            {descText.length < description.length && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
           </p>
         )}
       </div>
@@ -119,7 +128,7 @@ function Paragraph({
       className="text-base text-foreground leading-relaxed mb-4"
     >
       {displayedText}
-      {!isComplete && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
+      {!isComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
     </p>
   );
 }
@@ -127,9 +136,19 @@ function Paragraph({
 export default function AboutScreen() {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const [useFastMode, setUseFastMode] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
   const lastScrollTop = useRef<number>(0);
+
+  // Включаем fast mode после 3 секунд
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setUseFastMode(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Отслеживание touch событий
   useEffect(() => {
@@ -255,32 +274,38 @@ export default function AboutScreen() {
         <div className="space-y-1">
           {content.map((item, index) => {
             if (item.text === '') {
-              currentDelay += 100; // Line break pause: очень минимальная пауза
+              // В fast mode пауза между абзацами очень маленькая
+              currentDelay += useFastMode ? 50 : 100;
               return <div key={index} className="h-3" />;
             }
 
             const paragraphDelay = currentDelay;
-            // Максимально ускоренная скорость печати: 5-8ms на символ (125-200 символов/сек)
-            const typingSpeed = item.isHeading ? 5 : item.isList ? 8 : 8;
             
-            // Calculate delay for next element
-            const textLength = item.text.length;
-            const baseTime = textLength * typingSpeed;
-            // Add punctuation pauses (очень минимальные)
-            const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
-            const punctuationPause = punctuationCount * 30; // Очень минимальная пауза
-            currentDelay += baseTime + punctuationPause + 100; // Base time + punctuation + очень минимальная пауза
+            if (useFastMode) {
+              // В fast mode показываем абзацы с минимальной задержкой
+              const fastDelay = 80; // 80ms между абзацами
+              currentDelay += fastDelay;
+            } else {
+              // В обычном режиме считаем время печати
+              const typingSpeed = item.isHeading ? 5 : item.isList ? 8 : 8;
+              const textLength = item.text.length;
+              const baseTime = textLength * typingSpeed;
+              const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
+              const punctuationPause = punctuationCount * 30;
+              currentDelay += baseTime + punctuationPause + 100;
+            }
 
             return (
               <Paragraph
                 key={index}
                 text={item.text}
                 startDelay={paragraphDelay}
-                typingDelay={typingSpeed}
+                typingDelay={8}
                 isHeading={item.isHeading}
                 isList={item.isList}
                 isListItem={item.isListItem}
                 shouldAutoScroll={shouldAutoScroll}
+                useFastMode={useFastMode}
               />
             );
           })}
