@@ -14,7 +14,7 @@ interface ParagraphProps {
 function Paragraph({ 
   text, 
   startDelay, 
-  typingDelay = 10, 
+  typingDelay = 8, 
   isHeading = false, 
   isList = false,
   isListItem = false,
@@ -37,10 +37,10 @@ function Paragraph({
 
     if (displayedText.length < text.length) {
       const currentChar = text[displayedText.length];
-      // Pause on punctuation: +50ms after ., !, ? (минимальная пауза)
-      const punctuationPause = ['.', '!', '?'].includes(currentChar) ? 50 : 0;
-      // Randomized keystroke delay: ±3-5ms (минимальная вариация)
-      const randomDelay = Math.random() * 5 - 2.5;
+      // Pause on punctuation: +30ms after ., !, ? (очень минимальная пауза)
+      const punctuationPause = ['.', '!', '?'].includes(currentChar) ? 30 : 0;
+      // Randomized keystroke delay: ±2-3ms (очень минимальная вариация)
+      const randomDelay = Math.random() * 3 - 1.5;
       const adjustedDelay = typingDelay + punctuationPause + randomDelay;
 
       const timer = setTimeout(() => {
@@ -247,7 +247,7 @@ export default function AboutScreen() {
     { text: "Welcome to the revolution. 🌍✨" },
   ];
 
-  let currentDelay = 100; // Start delay: минимальная задержка
+  let currentDelay = 50; // Start delay: очень минимальная задержка
 
   return (
     <div ref={containerRef} className="h-full w-full overflow-y-auto">
@@ -255,21 +255,21 @@ export default function AboutScreen() {
         <div className="space-y-1">
           {content.map((item, index) => {
             if (item.text === '') {
-              currentDelay += 200; // Line break pause: минимальная пауза
+              currentDelay += 100; // Line break pause: очень минимальная пауза
               return <div key={index} className="h-3" />;
             }
 
             const paragraphDelay = currentDelay;
-            // Максимально ускоренная скорость печати: 8-10ms на символ (65-100 символов/сек)
-            const typingSpeed = item.isHeading ? 8 : item.isList ? 10 : 10;
+            // Максимально ускоренная скорость печати: 5-8ms на символ (125-200 символов/сек)
+            const typingSpeed = item.isHeading ? 5 : item.isList ? 8 : 8;
             
             // Calculate delay for next element
             const textLength = item.text.length;
             const baseTime = textLength * typingSpeed;
-            // Add punctuation pauses (минимальные)
+            // Add punctuation pauses (очень минимальные)
             const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
-            const punctuationPause = punctuationCount * 50; // Минимальная пауза
-            currentDelay += baseTime + punctuationPause + 150; // Base time + punctuation + минимальная пауза
+            const punctuationPause = punctuationCount * 30; // Очень минимальная пауза
+            currentDelay += baseTime + punctuationPause + 100; // Base time + punctuation + очень минимальная пауза
 
             return (
               <Paragraph
