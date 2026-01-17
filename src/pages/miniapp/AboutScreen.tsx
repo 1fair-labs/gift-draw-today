@@ -259,8 +259,34 @@ export default function AboutScreen() {
     { text: "Welcome to the revolution. 🌍✨" },
   ];
 
-  // Все абзацы появляются быстро (целиком) с задержками между ними
-  let currentDelay = 50;
+  // Вычисляем время печати заголовка "Welcome, Lucky One!"
+  const WELCOME_HEADING_TEXT = "✨ Welcome, Lucky One! 🍀";
+  let welcomeHeadingDelay = 0;
+  let welcomeHeadingTime = 0;
+  
+  // Находим заголовок и вычисляем время его печати
+  for (let i = 0; i < content.length; i++) {
+    if (content[i].text === '') {
+      welcomeHeadingDelay += 100;
+      continue;
+    }
+    
+    if (content[i].text === WELCOME_HEADING_TEXT) {
+      // Вычисляем время печати заголовка
+      const textLength = WELCOME_HEADING_TEXT.length;
+      const typingSpeed = 5; // 5ms per char для заголовка
+      const baseTime = textLength * typingSpeed;
+      const punctuationCount = (WELCOME_HEADING_TEXT.match(/[.!?]/g) || []).length;
+      const punctuationPause = punctuationCount * 30;
+      welcomeHeadingTime = baseTime + punctuationPause + 100;
+      break;
+    }
+    
+    welcomeHeadingDelay += 100; // Предполагаем минимальную задержку для предыдущих элементов
+  }
+  
+  // Время начала fast mode (после заголовка)
+  const fastModeStartDelay = welcomeHeadingDelay + welcomeHeadingTime;
 
   return (
     <div ref={containerRef} className="h-full w-full overflow-y-auto">
@@ -268,13 +294,40 @@ export default function AboutScreen() {
         <div className="space-y-1">
           {content.map((item, index) => {
             if (item.text === '') {
-              currentDelay += 100; // Пауза для пустой строки
               return <div key={index} className="h-3" />;
             }
 
-            // Все абзацы появляются быстро (целиком) с задержками между ними
-            const paragraphDelay = currentDelay;
-            currentDelay += 60; // 60ms между абзацами
+            // Определяем, это ли заголовок "Welcome, Lucky One!"
+            const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
+            
+            // Заголовок печатается посимвольно, все остальное - быстро
+            const shouldUseFastMode = !isWelcomeHeading;
+            
+            // Вычисляем задержку для этого абзаца
+            let paragraphDelay: number;
+            
+            if (isWelcomeHeading) {
+              // Заголовок печатается посимвольно с начальной задержкой
+              paragraphDelay = welcomeHeadingDelay;
+            } else {
+              // Все остальные абзацы появляются быстро после заголовка
+              // Считаем индекс среди не-заголовков после заголовка
+              let fastIndex = 0;
+              let foundWelcomeHeading = false;
+              
+              for (let i = 0; i < index; i++) {
+                if (content[i].text === '') continue;
+                if (content[i].text === WELCOME_HEADING_TEXT) {
+                  foundWelcomeHeading = true;
+                  continue;
+                }
+                if (foundWelcomeHeading) {
+                  fastIndex++;
+                }
+              }
+              
+              paragraphDelay = fastModeStartDelay + (fastIndex * 60); // 60ms между абзацами
+            }
 
             return (
               <Paragraph
@@ -286,7 +339,7 @@ export default function AboutScreen() {
                 isList={item.isList}
                 isListItem={item.isListItem}
                 shouldAutoScroll={shouldAutoScroll}
-                useFastMode={true}
+                useFastMode={shouldUseFastMode}
               />
             );
           })}
