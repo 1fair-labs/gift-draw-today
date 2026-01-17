@@ -224,7 +224,7 @@ export default function AboutScreen() {
     
     const item = content[i];
     const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
-    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 8 : 8));
+    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 5 : 5));
     const textLength = item.text.length;
     const baseTime = textLength * typingSpeed;
     const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
@@ -253,7 +253,7 @@ export default function AboutScreen() {
             const paragraphDelay = delays[index];
             
             // Определяем скорость печати
-            const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 8 : 8));
+            const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 5 : 5));
 
             return (
               <Paragraph
