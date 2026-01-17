@@ -9,7 +9,6 @@ interface ParagraphProps {
   isList?: boolean;
   isListItem?: boolean;
   isBold?: boolean;
-  isVerticalBar?: boolean;
   shouldAutoScroll: boolean;
   useFastMode: boolean; // Показывать абзац целиком
 }
@@ -22,7 +21,6 @@ function Paragraph({
   isList = false,
   isListItem = false,
   isBold = false,
-  isVerticalBar = false,
   shouldAutoScroll,
   useFastMode
 }: ParagraphProps) {
@@ -143,7 +141,7 @@ function Paragraph({
   return (
     <p 
       ref={paragraphRef}
-      className={`text-base text-foreground/92 leading-relaxed mb-4 transition-opacity duration-300 ${isBold ? 'font-bold' : ''} ${isVerticalBar ? 'inline-block pr-6 border-r-2 border-foreground/60' : ''}`}
+      className={`text-base text-foreground/90 leading-relaxed mb-4 transition-opacity duration-300 ${isBold ? 'font-bold' : ''}`}
       style={{ opacity }}
     >
       {displayedText}
@@ -159,8 +157,8 @@ export default function AboutScreen() {
     { text: "Welcome, Lucky One! 🍀", isHeading: true },
     { text: "You've just stepped into a Web3 experience unlike any other on Earth." },
     { text: "" },
-    { text: "GiftDraw.today ≠ lottery.", isBold: true, isVerticalBar: true },
-    { text: "This is a New Paradigm.", isBold: true, isVerticalBar: true },
+    { text: "GiftDraw.today ≠ lottery.", isBold: true },
+    { text: "This is a New Paradigm.", isBold: true },
     { text: "" },
     { text: "We reject gambling and shattered hopes." },
     { text: "Instead, we believe in collective generosity, shared fortune, and mindful participation." },
@@ -264,7 +262,6 @@ export default function AboutScreen() {
                 isList={item.isList}
                 isListItem={item.isListItem}
                 isBold={item.isBold}
-                isVerticalBar={item.isVerticalBar}
                 shouldAutoScroll={shouldAutoScroll}
                 useFastMode={shouldUseFastMode}
               />
