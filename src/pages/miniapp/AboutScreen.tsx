@@ -259,7 +259,7 @@ export default function AboutScreen() {
                 }
               }
               
-              paragraphDelay = fastModeStartDelay + (fastIndex * 400); // 400ms между абзацами (еще медленнее)
+              paragraphDelay = fastModeStartDelay + (fastIndex * 300); // 300ms между абзацами
             }
 
             return (
