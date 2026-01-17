@@ -103,7 +103,7 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className="text-sm text-muted-foreground/70 mb-1 transition-opacity duration-300"
+        className="text-sm text-muted-foreground mb-1 transition-opacity duration-300"
         style={{ opacity }}
       >
         {displayedText}
@@ -130,7 +130,7 @@ function Paragraph({
           {useFastMode ? title : titleText}
         </p>
         {(titleComplete || useFastMode) && (
-          <p className="text-sm text-muted-foreground/70 ml-4">
+          <p className="text-sm text-muted-foreground ml-4">
             {useFastMode ? description : descText}
           </p>
         )}
@@ -141,7 +141,7 @@ function Paragraph({
   return (
     <p 
       ref={paragraphRef}
-      className={`text-base text-muted-foreground/70 leading-relaxed mb-4 transition-opacity duration-300 ${isBold ? 'font-bold' : ''}`}
+      className={`text-base text-foreground/85 leading-relaxed mb-4 transition-opacity duration-300 ${isBold ? 'font-bold' : ''}`}
       style={{ opacity }}
     >
       {displayedText}
