@@ -137,76 +137,8 @@ function Paragraph({
 }
 
 export default function AboutScreen() {
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const [shouldAutoScroll] = useState(false); // Автоскролл отключен
   const containerRef = useRef<HTMLDivElement>(null);
-  const touchStartY = useRef<number>(0);
-  const lastScrollTop = useRef<number>(0);
-
-  // Отслеживание touch событий
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY.current = e.touches[0].clientY;
-      setIsUserInteracting(true);
-      setShouldAutoScroll(false);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      const currentY = e.touches[0].clientY;
-      const deltaY = touchStartY.current - currentY;
-      
-      // Если пользователь прокручивает вверх (deltaY < 0), отключаем автоскролл
-      if (deltaY < -10) {
-        setShouldAutoScroll(false);
-        setIsUserInteracting(true);
-      }
-    };
-
-    const handleTouchEnd = () => {
-      // Включаем автоскролл обратно через небольшую задержку, если пользователь не взаимодействует
-      setTimeout(() => {
-        if (!isUserInteracting) {
-          setShouldAutoScroll(true);
-        }
-      }, 2000);
-    };
-
-    const handleWheel = (e: WheelEvent) => {
-      // Отслеживание прокрутки колесиком мыши
-      if (e.deltaY < 0) {
-        // Прокрутка вверх
-        setShouldAutoScroll(false);
-        setIsUserInteracting(true);
-      }
-    };
-
-    const handleScroll = () => {
-      const currentScrollTop = container.scrollTop;
-      if (currentScrollTop < lastScrollTop.current) {
-        // Прокрутка вверх
-        setShouldAutoScroll(false);
-        setIsUserInteracting(true);
-      }
-      lastScrollTop.current = currentScrollTop;
-    };
-
-    container.addEventListener('touchstart', handleTouchStart);
-    container.addEventListener('touchmove', handleTouchMove);
-    container.addEventListener('touchend', handleTouchEnd);
-    container.addEventListener('wheel', handleWheel);
-    container.addEventListener('scroll', handleScroll);
-
-    return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, [isUserInteracting]);
 
   const content = [
     { text: "✨ Welcome, Lucky One! 🍀", isHeading: true },
