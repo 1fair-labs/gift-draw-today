@@ -8,6 +8,7 @@ interface ParagraphProps {
   isHeading?: boolean;
   isList?: boolean;
   isListItem?: boolean;
+  isBold?: boolean;
   shouldAutoScroll: boolean;
   useFastMode: boolean; // Показывать абзац целиком
 }
@@ -19,6 +20,7 @@ function Paragraph({
   isHeading = false, 
   isList = false,
   isListItem = false,
+  isBold = false,
   shouldAutoScroll,
   useFastMode
 }: ParagraphProps) {
@@ -139,7 +141,7 @@ function Paragraph({
   return (
     <p 
       ref={paragraphRef}
-      className="text-base text-muted-foreground leading-relaxed mb-4 transition-opacity duration-300"
+      className={`text-base text-muted-foreground leading-relaxed mb-4 transition-opacity duration-300 ${isBold ? 'font-bold' : ''}`}
       style={{ opacity }}
     >
       {displayedText}
@@ -155,8 +157,8 @@ export default function AboutScreen() {
     { text: "Welcome, Lucky One! 🍀", isHeading: true },
     { text: "You've just stepped into a Web3 experience unlike any other on Earth." },
     { text: "" },
-    { text: "GiftDraw.today ≠ lottery." },
-    { text: "This is a New Paradigm." },
+    { text: "GiftDraw.today ≠ lottery.", isBold: true },
+    { text: "This is a New Paradigm.", isBold: true },
     { text: "" },
     { text: "We reject gambling and shattered hopes." },
     { text: "Instead, we believe in collective generosity, shared fortune, and mindful participation." },
@@ -259,6 +261,7 @@ export default function AboutScreen() {
                 isHeading={item.isHeading}
                 isList={item.isList}
                 isListItem={item.isListItem}
+                isBold={item.isBold}
                 shouldAutoScroll={shouldAutoScroll}
                 useFastMode={shouldUseFastMode}
               />
