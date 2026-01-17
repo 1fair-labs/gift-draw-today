@@ -24,6 +24,7 @@ function Paragraph({
 }: ParagraphProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
+  const [opacity, setOpacity] = useState(0.3); // Начинаем с тусклого текста
   const paragraphRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +41,12 @@ function Paragraph({
     // Если fast mode включен, показываем весь текст сразу
     if (useFastMode) {
       setDisplayedText(text);
-      return;
+      // Начинаем с тусклого текста и плавно увеличиваем opacity до 1
+      setOpacity(0.3);
+      const opacityTimer = setTimeout(() => {
+        setOpacity(1);
+      }, 200); // Плавный переход за 200ms
+      return () => clearTimeout(opacityTimer);
     }
 
     // Иначе печатаем посимвольно
@@ -54,11 +60,17 @@ function Paragraph({
 
       const timer = setTimeout(() => {
         setDisplayedText(text.slice(0, displayedText.length + 1));
+        // Постепенно увеличиваем opacity по мере появления текста
+        const progress = (displayedText.length + 1) / text.length;
+        setOpacity(0.3 + (progress * 0.7)); // От 0.3 до 1.0
       }, Math.max(5, adjustedDelay));
 
       return () => clearTimeout(timer);
+    } else {
+      // Когда текст полностью напечатан, делаем его полностью видимым
+      setOpacity(1);
     }
-  }, [displayedText, text, typingDelay, isVisible, useFastMode]);
+  }, [displayedText, text, typingDelay, isVisible, useFastMode, isHeading]);
 
   useEffect(() => {
     if (isVisible && paragraphRef.current && displayedText.length > 0 && shouldAutoScroll) {
@@ -77,7 +89,8 @@ function Paragraph({
     return (
       <h2 
         ref={paragraphRef}
-        className={`text-xl font-bold text-foreground mb-3 mt-6 first:mt-0 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
+        className={`text-xl font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
+        style={{ opacity }}
       >
         {displayedText}
         {!isComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
@@ -89,7 +102,8 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className="text-sm text-muted-foreground mb-1"
+        className="text-sm text-muted-foreground mb-1 transition-opacity duration-300"
+        style={{ opacity }}
       >
         {displayedText}
         {!isComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
@@ -109,7 +123,8 @@ function Paragraph({
     return (
       <div 
         ref={paragraphRef}
-        className="ml-4 mb-3"
+        className="ml-4 mb-3 transition-opacity duration-300"
+        style={{ opacity }}
       >
         <p className="text-base text-foreground font-semibold mb-1">
           {useFastMode ? title : titleText}
@@ -128,7 +143,8 @@ function Paragraph({
   return (
     <p 
       ref={paragraphRef}
-      className="text-base text-foreground leading-relaxed mb-4"
+      className="text-base text-foreground leading-relaxed mb-4 transition-opacity duration-300"
+      style={{ opacity }}
     >
       {displayedText}
       {!isComplete && !useFastMode && <span className="inline-block w-0.5 h-4 bg-foreground ml-1 animate-pulse">|</span>}
