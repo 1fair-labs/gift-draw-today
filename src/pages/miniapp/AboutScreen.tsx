@@ -89,7 +89,7 @@ function Paragraph({
     return (
       <h2 
         ref={paragraphRef}
-        className={`text-xl font-bold text-foreground mb-5 mt-6 first:mt-0 first:mb-3 transition-opacity duration-300 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
+        className={`text-xl font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
         style={{ opacity }}
       >
         {displayedText}
@@ -164,6 +164,7 @@ export default function AboutScreen() {
     { text: "Mint an NFT ticket for ~$1 — not as a wager, but as a gift to the world — and join the daily global flow of redistributed value." },
     { text: "" },
     { text: "On-Chain Transparency 🔍", isHeading: true },
+    { text: "" },
     { text: "All draws are executed on Solana: 100% on-chain, immutable, and publicly verifiable." },
     { text: "" },
     { text: "Real-time data includes: participant count, prize pool amount, winner count, and a unique draw hash." },
