@@ -141,7 +141,7 @@ export default function AboutScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const content = [
-    { text: "✨ Welcome, Lucky One! 🍀", isHeading: true },
+    { text: "Welcome, Lucky One! 🍀", isHeading: true },
     { text: "" },
     { text: "The GiftDraw.today team is thrilled to welcome you to a truly unique Web3 experience — unlike anything else on the planet." },
     { text: "" },
@@ -192,7 +192,7 @@ export default function AboutScreen() {
   ];
 
   // Вычисляем время печати заголовка "Welcome, Lucky One!"
-  const WELCOME_HEADING_TEXT = "✨ Welcome, Lucky One! 🍀";
+  const WELCOME_HEADING_TEXT = "Welcome, Lucky One! 🍀";
   let welcomeHeadingDelay = 0;
   let welcomeHeadingTime = 0;
   
@@ -259,7 +259,7 @@ export default function AboutScreen() {
                 }
               }
               
-              paragraphDelay = fastModeStartDelay + (fastIndex * 200); // 200ms между абзацами (медленнее)
+              paragraphDelay = fastModeStartDelay + (fastIndex * 400); // 400ms между абзацами (еще медленнее)
             }
 
             return (
