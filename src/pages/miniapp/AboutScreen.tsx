@@ -188,6 +188,12 @@ function Paragraph({
 export default function AboutScreen() {
   const [shouldAutoScroll] = useState(false); // Автоскролл отключен
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Проверяем, была ли уже показана анимация
+  const hasSeenAnimation = localStorage.getItem('about_animation_seen') === 'true';
+  
+  // Если анимация уже была показана, используем fast mode для всех параграфов
+  const shouldUseFastMode = hasSeenAnimation;
 
   const content = [
     { text: "Welcome, Lucky One! 🍀", isHeading: true },
@@ -266,6 +272,24 @@ export default function AboutScreen() {
     
     currentDelay += baseTime + punctuationPause + afterPause;
   }
+  
+  // Вычисляем общее время анимации (время последнего параграфа + его задержка)
+  const lastItem = content[content.length - 1];
+  const lastItemDelay = delays[delays.length - 1];
+  const lastItemTypingSpeed = lastItem.isHeading ? 12 : (lastItem.isList ? 2 : 2);
+  const lastItemTime = lastItem.text.length * lastItemTypingSpeed;
+  const totalAnimationTime = lastItemDelay + lastItemTime + 1000; // +1 секунда на всякий случай
+  
+  // Сохраняем флаг после завершения анимации (только если анимация была показана)
+  useEffect(() => {
+    if (!hasSeenAnimation && !shouldUseFastMode) {
+      const timer = setTimeout(() => {
+        localStorage.setItem('about_animation_seen', 'true');
+      }, totalAnimationTime);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasSeenAnimation, shouldUseFastMode, totalAnimationTime]);
 
   return (
     <div ref={containerRef} className="h-full w-full overflow-y-auto">
@@ -279,11 +303,8 @@ export default function AboutScreen() {
             // Определяем, это ли заголовок "Welcome, Lucky One!"
             const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
             
-            // Все абзацы печатаются посимвольно (без fast mode)
-            const shouldUseFastMode = false;
-            
-            // Используем вычисленную задержку
-            const paragraphDelay = delays[index];
+            // Используем вычисленную задержку (в fast mode все показывается сразу)
+            const paragraphDelay = shouldUseFastMode ? 0 : delays[index];
             
             // Определяем скорость печати
             const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
@@ -316,7 +337,7 @@ export default function AboutScreen() {
               return (
                 <div key={index} className="pl-4 border-l-2 border-foreground/60">
                   {blockItems.map(({ item: blockItem, index: blockItemIndex }) => {
-                    const blockItemDelay = delays[blockItemIndex];
+                    const blockItemDelay = shouldUseFastMode ? 0 : delays[blockItemIndex];
                     const isBlockWelcomeHeading = blockItem.text === WELCOME_HEADING_TEXT;
                     const blockItemTypingSpeed = isBlockWelcomeHeading ? 18 : (blockItem.isHeading ? 12 : (blockItem.isList ? 2 : 2));
                     return (
