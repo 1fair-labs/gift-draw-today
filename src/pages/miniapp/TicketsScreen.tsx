@@ -1,5 +1,5 @@
 // src/pages/miniapp/TicketsScreen.tsx
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Ticket, ChevronRight, Calendar as CalendarIcon, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,14 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
   const [selectedTicket, setSelectedTicket] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
+  
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const touchStartY = useRef<number>(0);
+  const touchCurrentY = useRef<number>(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isAtTopRef = useRef<boolean>(true);
 
   const getStatusLabel = (status: string) => {
     if (status === 'available') return 'Available';
@@ -59,9 +67,96 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
     setShowCalendar(true);
   };
 
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    const scrollTop = container.scrollTop;
+    isAtTopRef.current = scrollTop <= 5; // Allow small tolerance
+    
+    if (isAtTopRef.current) {
+      touchStartY.current = e.touches[0].clientY;
+      touchCurrentY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    // Check if still at top
+    const scrollTop = container.scrollTop;
+    if (scrollTop > 5) {
+      isAtTopRef.current = false;
+      if (isPulling) {
+        setPullDistance(0);
+        setIsPulling(false);
+      }
+      return;
+    }
+    
+    if (!isAtTopRef.current) return;
+    
+    touchCurrentY.current = e.touches[0].clientY;
+    const distance = touchCurrentY.current - touchStartY.current;
+    
+    if (distance > 0) {
+      // Pulling down
+      setIsPulling(true);
+      const maxPull = 120;
+      const pullAmount = Math.min(distance * 0.6, maxPull);
+      setPullDistance(pullAmount);
+      e.preventDefault(); // Prevent default scroll
+    } else if (isPulling) {
+      // Pulling up while in pull state - reset
+      setPullDistance(0);
+      setIsPulling(false);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isPulling) {
+      // Animate back to top
+      setPullDistance(0);
+      setIsPulling(false);
+    }
+    touchStartY.current = 0;
+    touchCurrentY.current = 0;
+  };
+
+  // Check scroll position
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      isAtTopRef.current = scrollTop <= 5;
+      
+      if (!isAtTopRef.current && isPulling) {
+        setPullDistance(0);
+        setIsPulling(false);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isPulling]);
+
   if (tickets.length === 0) {
     return (
-      <div className="h-full overflow-y-auto">
+      <div 
+        ref={scrollContainerRef}
+        className="h-full overflow-y-auto"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: `translateY(${pullDistance}px)`,
+          transition: isPulling ? 'none' : 'transform 0.3s ease-out',
+        }}
+      >
         <div className="p-4 pt-2 pb-10 md:pb-6">
           <Card className="glass-card p-6 text-center">
             <Ticket className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
@@ -92,7 +187,17 @@ export default function TicketsScreen({ tickets, onEnterDraw, onBuyTicket, loadi
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto">
+    <div 
+      ref={scrollContainerRef}
+      className="h-full w-full overflow-y-auto"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        transform: `translateY(${pullDistance}px)`,
+        transition: isPulling ? 'none' : 'transform 0.3s ease-out',
+      }}
+    >
       <div className="p-4 pt-2 pb-10 md:pb-6 space-y-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
