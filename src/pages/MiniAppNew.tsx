@@ -123,13 +123,69 @@ export default function MiniAppNew() {
     }
   };
 
+  // Check and refresh avatar if needed
+  const checkAndRefreshAvatar = async (telegramId: number, avatarUrl: string | null | undefined) => {
+    if (!avatarUrl) return null;
+    
+    // Если это URL Supabase Storage, он всегда валиден
+    if (avatarUrl.includes('supabase.co') || avatarUrl.includes('supabase.in')) {
+      return avatarUrl;
+    }
+    
+    // Если это URL Telegram API, проверяем валидность
+    try {
+      const response = await fetch(avatarUrl, { method: 'HEAD' });
+      if (response.ok) {
+        return avatarUrl;
+      }
+    } catch (error) {
+      console.log('Avatar URL is invalid, refreshing...');
+    }
+    
+    // URL невалиден, обновляем аватар
+    try {
+      const refreshResponse = await fetch('/api/auth/refresh-avatar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ telegramId }),
+      });
+      
+      if (refreshResponse.ok) {
+        const { avatarUrl: newAvatarUrl } = await refreshResponse.json();
+        return newAvatarUrl;
+      }
+    } catch (error) {
+      console.error('Error refreshing avatar:', error);
+    }
+    
+    return null;
+  };
+
   // Load user data
   const loadUserData = async (telegramId: number) => {
     try {
       const userData = await getOrCreateUserByTelegramId(telegramId);
       if (userData) {
-        setUser(userData);
-        setCltBalance(Number(userData.balance));
+        // Проверяем и обновляем аватар если нужно
+        const validAvatarUrl = await checkAndRefreshAvatar(telegramId, userData.avatar_url);
+        
+        // Обновляем userData с валидным аватаром если он был обновлен
+        const updatedUserData = validAvatarUrl && validAvatarUrl !== userData.avatar_url
+          ? { ...userData, avatar_url: validAvatarUrl }
+          : userData;
+        
+        // Обновляем telegramUser с валидным аватаром
+        if (validAvatarUrl) {
+          setTelegramUser((prev: any) => ({
+            ...prev,
+            photo_url: validAvatarUrl,
+          }));
+        }
+        
+        setUser(updatedUserData);
+        setCltBalance(Number(updatedUserData.balance));
       }
       await loadUserTickets(telegramId);
     } catch (error) {

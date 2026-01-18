@@ -22,18 +22,23 @@ class UserAuthStore {
 
   constructor() {
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    // Используем Service Role Key для записи в Storage, иначе Anon Key
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
+                        process.env.VITE_SUPABASE_ANON_KEY || 
+                        process.env.SUPABASE_ANON_KEY;
 
-    if (supabaseUrl && supabaseAnonKey) {
-      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('UserAuthStore initialized with URL:', supabaseUrl.substring(0, 30) + '...');
+    if (supabaseUrl && supabaseKey) {
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+      const keyType = process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Service Role' : 'Anon';
+      console.log(`UserAuthStore initialized with ${keyType} key, URL:`, supabaseUrl.substring(0, 30) + '...');
     } else {
       console.error('⚠️ Supabase credentials not found!');
       console.error('VITE_SUPABASE_URL:', supabaseUrl ? 'SET' : 'NOT SET');
-      console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'SET' : 'NOT SET');
-      console.error('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
+      console.error('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
+      console.error('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
       console.error('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
       console.warn('⚠️ UserAuthStore will not work without Supabase credentials.');
+      console.warn('💡 For Storage uploads, SUPABASE_SERVICE_ROLE_KEY is recommended.');
     }
   }
 
@@ -545,8 +550,19 @@ class UserAuthStore {
     }
   }
 
+  // Проверка валидности URL аватара
+  async checkAvatarUrl(avatarUrl: string): Promise<boolean> {
+    try {
+      const response = await fetch(avatarUrl, { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+
   // Получение и сохранение аватара пользователя через Telegram Bot API
-  async fetchAndSaveAvatar(telegramId: number, botToken: string): Promise<string | null> {
+  // Теперь скачивает файл и сохраняет в Supabase Storage для надежности
+  async fetchAndSaveAvatar(telegramId: number, botToken: string, forceRefresh: boolean = false): Promise<string | null> {
     if (!this.supabase) {
       console.error('Supabase client not initialized');
       return null;
@@ -560,10 +576,26 @@ class UserAuthStore {
         .eq('telegram_id', telegramId)
         .single();
 
-      // Если аватар уже есть, не запрашиваем снова
-      if (existingUser?.avatar_url) {
-        console.log('Avatar already exists for user:', telegramId);
-        return existingUser.avatar_url;
+      // Если аватар уже есть и не требуется принудительное обновление, проверяем валидность
+      if (existingUser?.avatar_url && !forceRefresh) {
+        // Проверяем, является ли это URL Supabase Storage (надежный)
+        const isSupabaseUrl = existingUser.avatar_url.includes('supabase.co') || 
+                              existingUser.avatar_url.includes('supabase.in');
+        
+        if (isSupabaseUrl) {
+          console.log('Avatar already exists in Supabase Storage for user:', telegramId);
+          return existingUser.avatar_url;
+        }
+
+        // Если это URL Telegram API, проверяем валидность
+        const isValid = await this.checkAvatarUrl(existingUser.avatar_url);
+        if (isValid) {
+          console.log('Avatar URL is still valid for user:', telegramId);
+          return existingUser.avatar_url;
+        } else {
+          console.log('Avatar URL is invalid, refreshing for user:', telegramId);
+          // Продолжаем загрузку нового аватара
+        }
       }
 
       console.log('Fetching avatar for user:', telegramId);
@@ -604,25 +636,68 @@ class UserAuthStore {
         return null;
       }
 
-      // Шаг 3: Формируем URL аватара
-      const avatarUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
-      console.log('Avatar URL generated:', avatarUrl.substring(0, 50) + '...');
+      // Шаг 3: Скачиваем файл с Telegram API
+      const telegramFileUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
+      console.log('Downloading avatar from Telegram:', telegramFileUrl.substring(0, 50) + '...');
+      
+      const imageResponse = await fetch(telegramFileUrl);
+      if (!imageResponse.ok) {
+        console.error('Failed to download avatar image');
+        return null;
+      }
 
-      // Шаг 4: Сохраняем URL в БД
+      const imageBlob = await imageResponse.blob();
+      const imageBuffer = Buffer.from(await imageBlob.arrayBuffer());
+
+      // Шаг 4: Определяем расширение файла
+      const fileExtension = fileData.result.file_path.split('.').pop() || 'jpg';
+      const fileName = `avatars/${telegramId}.${fileExtension}`;
+
+      // Шаг 5: Сохраняем в Supabase Storage
+      const { data: uploadData, error: uploadError } = await this.supabase.storage
+        .from('avatars')
+        .upload(fileName, imageBuffer, {
+          contentType: imageBlob.type || `image/${fileExtension}`,
+          upsert: true, // Перезаписываем если файл уже существует
+        });
+
+      if (uploadError) {
+        console.error('❌ Error uploading avatar to Supabase Storage:', uploadError);
+        // Fallback: сохраняем URL Telegram API (временно)
+        const fallbackUrl = telegramFileUrl;
+        const { error: updateError } = await this.supabase
+          .from('users')
+          .update({ avatar_url: fallbackUrl })
+          .eq('telegram_id', telegramId);
+        
+        if (!updateError) {
+          console.log('⚠️ Saved Telegram URL as fallback for user:', telegramId);
+          return fallbackUrl;
+        }
+        return null;
+      }
+
+      // Шаг 6: Получаем публичный URL
+      const { data: urlData } = this.supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl;
+      console.log('✅ Avatar uploaded to Supabase Storage:', publicUrl.substring(0, 50) + '...');
+
+      // Шаг 7: Сохраняем публичный URL в БД
       const { error: updateError } = await this.supabase
         .from('users')
-        .update({ avatar_url: avatarUrl })
+        .update({ avatar_url: publicUrl })
         .eq('telegram_id', telegramId);
 
       if (updateError) {
         console.error('❌ Error saving avatar URL:', updateError);
-        console.error('Update error code:', updateError.code);
-        console.error('Update error message:', updateError.message);
         return null;
       }
 
       console.log('✅ Avatar URL saved successfully for user:', telegramId);
-      return avatarUrl;
+      return publicUrl;
     } catch (error: any) {
       console.error('❌ Exception fetching avatar:', error);
       console.error('Exception message:', error.message);
