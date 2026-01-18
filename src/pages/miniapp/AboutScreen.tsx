@@ -345,7 +345,7 @@ export default function AboutScreen() {
               return null;
             }
 
-            return (
+  return (
               <Paragraph
                 key={index}
                 text={item.text}
