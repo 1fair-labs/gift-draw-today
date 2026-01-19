@@ -68,11 +68,31 @@ export default async function handler(
       console.warn('TELEGRAM_BOT_TOKEN not set, cannot fetch avatar');
     }
 
-    // Принудительно используем www.giftdraw.today (с www для правильной работы)
-    let webAppUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
-    if (webAppUrl.includes('crypto-lottery-today') || webAppUrl.includes('1fairlabs') || !webAppUrl.includes('www.')) {
-      webAppUrl = 'https://www.giftdraw.today';
+    // Определяем URL в зависимости от окружения
+    let webAppUrl: string;
+
+    // Проверяем, это ли продакшн (по VERCEL_ENV или по наличию giftdraw.today в URL)
+    const isProduction = process.env.VERCEL_ENV === 'production' || 
+                         (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today'));
+
+    if (isProduction) {
+      // Для продакшна всегда используем www.giftdraw.today
+      webAppUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+    } else {
+      // Для dev/preview используем URL из переменной или определяем автоматически из запроса
+      if (process.env.WEB_APP_URL) {
+        webAppUrl = process.env.WEB_APP_URL;
+      } else {
+        // Автоматически определяем URL из заголовков запроса
+        const host = request.headers.host || '';
+        const protocol = request.headers['x-forwarded-proto'] || 'https';
+        webAppUrl = `${protocol}://${host}`;
+      }
     }
+    // Убираем trailing slash
+    webAppUrl = webAppUrl.replace(/\/$/, '');
+    console.log('Using webAppUrl:', webAppUrl);
+    
     const callbackUrl = `${webAppUrl}/auth?refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
 
     return response.status(200).json({

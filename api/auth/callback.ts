@@ -69,11 +69,29 @@ export default async function handler(
     console.log('Cookie set for telegramId:', userData.telegramId);
 
     // Перенаправляем на главную страницу
-    // Принудительно используем giftdraw.today
-    let redirectUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
-    if (redirectUrl.includes('crypto-lottery-today') || redirectUrl.includes('1fairlabs') || !redirectUrl.includes('www.')) {
-      redirectUrl = 'https://www.giftdraw.today';
+    // Определяем URL в зависимости от окружения
+    let redirectUrl: string;
+
+    // Проверяем, это ли продакшн
+    const isProduction = process.env.VERCEL_ENV === 'production' || 
+                         (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today'));
+
+    if (isProduction) {
+      // Для продакшна всегда используем www.giftdraw.today
+      redirectUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+    } else {
+      // Для dev/preview используем URL из переменной или определяем автоматически из запроса
+      if (process.env.WEB_APP_URL) {
+        redirectUrl = process.env.WEB_APP_URL;
+      } else {
+        // Автоматически определяем URL из заголовков запроса
+        const host = request.headers.host || '';
+        const protocol = request.headers['x-forwarded-proto'] || 'https';
+        redirectUrl = `${protocol}://${host}`;
+      }
     }
+    // Убираем trailing slash
+    redirectUrl = redirectUrl.replace(/\/$/, '');
     
     // Проверяем User-Agent, чтобы определить, открывается ли из Telegram WebView
     const userAgent = request.headers['user-agent'] || '';

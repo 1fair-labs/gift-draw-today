@@ -66,13 +66,29 @@ export default async function handler(
   // Логируем первые и последние символы токена для отладки (безопасно)
   console.log('BOT_TOKEN configured:', BOT_TOKEN ? `${BOT_TOKEN.substring(0, 10)}...${BOT_TOKEN.substring(BOT_TOKEN.length - 5)}` : 'NOT SET');
 
-  // Принудительно используем www.giftdraw.today (с www для правильной работы webhook)
-  let WEB_APP_URL = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
-  // Если в переменной окружения старый домен или без www, заменяем на новый с www
-  if (WEB_APP_URL.includes('crypto-lottery-today') || WEB_APP_URL.includes('1fairlabs') || !WEB_APP_URL.includes('www.')) {
-    console.warn('⚠️ Domain detected without www or old domain, replacing with www.giftdraw.today');
-    WEB_APP_URL = 'https://www.giftdraw.today';
+  // Определяем URL в зависимости от окружения
+  let WEB_APP_URL: string;
+
+  // Проверяем, это ли продакшн
+  const isProduction = process.env.VERCEL_ENV === 'production' || 
+                       (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today'));
+
+  if (isProduction) {
+    // Для продакшна всегда используем www.giftdraw.today
+    WEB_APP_URL = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+  } else {
+    // Для dev/preview используем URL из переменной или определяем автоматически из запроса
+    if (process.env.WEB_APP_URL) {
+      WEB_APP_URL = process.env.WEB_APP_URL;
+    } else {
+      // Автоматически определяем URL из заголовков запроса
+      const host = request.headers.host || '';
+      const protocol = request.headers['x-forwarded-proto'] || 'https';
+      WEB_APP_URL = `${protocol}://${host}`;
+    }
+    console.log('Using WEB_APP_URL for dev/preview:', WEB_APP_URL);
   }
+  // Убираем trailing slash
   WEB_APP_URL = WEB_APP_URL.replace(/\/$/, '');
   console.log('Using WEB_APP_URL:', WEB_APP_URL);
 
