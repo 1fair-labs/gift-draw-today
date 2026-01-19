@@ -72,38 +72,51 @@ export default async function handler(
     // Определяем URL в зависимости от окружения
     let redirectUrl: string;
 
-    // Проверяем, это ли продакшн
-    const isProduction = process.env.VERCEL_ENV === 'production' || 
-                         (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today'));
+    // Более надежная проверка: явно определяем preview деплой
+    const host = request.headers['x-forwarded-host'] || 
+                 request.headers.host || 
+                 '';
+    const isPreviewDeployment = host.includes('vercel.app') || 
+                                process.env.VERCEL_URL?.includes('vercel.app') ||
+                                process.env.VERCEL_ENV === 'preview';
+
+    const isProduction = !isPreviewDeployment && 
+                        (process.env.VERCEL_ENV === 'production' || 
+                         (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today')));
 
     if (isProduction) {
       // Для продакшна всегда используем www.giftdraw.today
       redirectUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
     } else {
-      // Для dev/preview используем URL из переменной или определяем автоматически из заголовков запроса
-      if (process.env.WEB_APP_URL) {
+      // Для dev/preview используем URL из заголовков или переменных
+      if (process.env.WEB_APP_URL && !process.env.WEB_APP_URL.includes('giftdraw.today')) {
+        // Если WEB_APP_URL задан и это не production URL, используем его
         redirectUrl = process.env.WEB_APP_URL;
-      } else {
-        // Vercel автоматически устанавливает x-forwarded-host для каждого деплоя
-        // Это самый надежный способ получить правильный URL для preview деплоя
-        const host = request.headers['x-forwarded-host'] || 
-                     request.headers.host || 
-                     '';
+      } else if (host && host.includes('vercel.app')) {
+        // Используем host из заголовков, если это vercel.app
         const protocol = request.headers['x-forwarded-proto'] || 'https';
-        
-        if (host) {
-          redirectUrl = `${protocol}://${host}`;
-        } else if (process.env.VERCEL_URL) {
-          // Fallback: используем VERCEL_URL если заголовки недоступны
-          redirectUrl = `https://${process.env.VERCEL_URL}`;
-        } else {
-          // Последний fallback
-          redirectUrl = 'https://www.giftdraw.today';
-        }
+        redirectUrl = `${protocol}://${host}`;
+      } else if (process.env.VERCEL_URL) {
+        // Используем VERCEL_URL
+        redirectUrl = `https://${process.env.VERCEL_URL}`;
+      } else {
+        // Последний fallback
+        redirectUrl = 'https://www.giftdraw.today';
       }
     }
     // Убираем trailing slash
     redirectUrl = redirectUrl.replace(/\/$/, '');
+    
+    console.log('Environment detection (callback):', {
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      VERCEL_URL: process.env.VERCEL_URL,
+      WEB_APP_URL_ENV: process.env.WEB_APP_URL,
+      'x-forwarded-host': request.headers['x-forwarded-host'],
+      host: request.headers.host,
+      isPreviewDeployment,
+      isProduction,
+      finalRedirectUrl: redirectUrl
+    });
     
     // Проверяем User-Agent, чтобы определить, открывается ли из Telegram WebView
     const userAgent = request.headers['user-agent'] || '';
