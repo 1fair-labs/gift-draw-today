@@ -12,6 +12,7 @@ interface ParagraphProps {
   hasLeftBorder?: boolean;
   isInBlock?: boolean;
   isSmallText?: boolean;
+  isExtraSmallText?: boolean;
   shouldAutoScroll: boolean;
   useFastMode: boolean; // Показывать абзац целиком
 }
@@ -56,6 +57,7 @@ function Paragraph({
   hasLeftBorder = false,
   isInBlock = false,
   isSmallText = false,
+  isExtraSmallText = false,
   shouldAutoScroll,
   useFastMode
 }: ParagraphProps) {
@@ -172,10 +174,18 @@ function Paragraph({
   // Применяем форматирование к отображаемому тексту
   const formattedText = formatTextWithBold(displayedText);
 
+  // Определяем размер текста
+  let textSize = 'text-base';
+  if (isExtraSmallText) {
+    textSize = 'text-[10px]';
+  } else if (isSmallText) {
+    textSize = 'text-sm';
+  }
+
   return (
     <p 
       ref={paragraphRef}
-      className={`${isSmallText ? 'text-sm' : 'text-base'} text-foreground/90 leading-relaxed ${isInBlock ? 'mb-1' : 'mb-4'} transition-opacity duration-300 ${isBold ? 'font-bold' : ''} ${hasLeftBorder ? 'pl-4 border-l-2 border-foreground/60' : ''}`}
+      className={`${textSize} text-foreground/90 leading-relaxed ${isInBlock ? 'mb-1' : 'mb-4'} transition-opacity duration-300 ${isBold ? 'font-bold' : ''} ${hasLeftBorder ? 'pl-4 border-l-2 border-foreground/60' : ''}`}
       style={{ opacity }}
     >
       {formattedText}
@@ -225,7 +235,7 @@ export default function AboutScreen() {
     { text: "" },
     { text: "Ticket Types 🎟️", isHeading: true },
     { text: "" },
-    { text: "Paid Tickets", isSmallText: true },
+    { text: "Paid Tickets", isExtraSmallText: true },
     { text: "Common", isList: true, isBold: true },
     { text: "Standard NFT ticket for ~$1. Weight: 1.0", isSmallText: true },
     { text: "" },
@@ -235,7 +245,7 @@ export default function AboutScreen() {
     { text: "Legendary", isList: true, isBold: true },
     { text: "Exclusive rare ticket with the highest win weight (10.0) and guaranteed prize. 1 in 10,000 mint chance.", isSmallText: true },
     { text: "" },
-    { text: "Free Tickets", isSmallText: true },
+    { text: "Free Tickets", isExtraSmallText: true },
     { text: "Welcome", isList: true, isBold: true },
     { text: "Free for users invited by friends. Weight: 0.5", isSmallText: true },
     { text: "" },
@@ -370,6 +380,7 @@ export default function AboutScreen() {
                         hasLeftBorder={false}
                         isInBlock={true}
                         isSmallText={blockItem.isSmallText}
+                        isExtraSmallText={blockItem.isExtraSmallText}
                         shouldAutoScroll={shouldAutoScroll}
                         useFastMode={shouldUseFastMode}
                       />
@@ -396,6 +407,7 @@ export default function AboutScreen() {
                 isBold={item.isBold}
                 hasLeftBorder={item.hasLeftBorder}
                 isSmallText={item.isSmallText}
+                isExtraSmallText={item.isExtraSmallText}
                 shouldAutoScroll={shouldAutoScroll}
                 useFastMode={shouldUseFastMode}
               />
