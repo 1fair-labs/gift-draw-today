@@ -131,10 +131,13 @@ function Paragraph({
   }
 
   if (isList) {
+    // Если isSmallText: false, используем text-lg (для названий билетов)
+    // Если isSmallText: true, используем text-xs (для Paid/Free Tickets)
+    const textSize = isSmallText ? 'text-xs' : 'text-lg';
     return (
       <p 
         ref={paragraphRef}
-        className={`${isSmallText ? 'text-xs' : 'text-sm'} text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative before:content-['•'] before:absolute before:-left-3`}
+        className={`${textSize} text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative before:content-['•'] before:absolute before:-left-3`}
         style={{ opacity }}
       >
         {displayedText}
@@ -225,21 +228,21 @@ export default function AboutScreen() {
     { text: "" },
     { text: "Ticket Types 🎟️", isHeading: true },
     { text: "" },
-    { text: "Paid Tickets", isHeading: true, isSmallText: true },
-    { text: "Common", isList: true, isSmallText: true },
+    { text: "Paid Tickets", isList: true, isSmallText: true },
+    { text: "Common", isList: true, isSmallText: false },
     { text: "Standard NFT ticket for ~$1. Weight: 1.0", isSmallText: true },
     { text: "" },
-    { text: "Event", isList: true, isSmallText: true },
+    { text: "Event", isList: true, isSmallText: false },
     { text: "Collectible NFT ticket with a 1 in 1,000 mint chance. Features vibrant thematic design. Weight: 2.5", isSmallText: true },
     { text: "" },
-    { text: "Legendary", isList: true, isSmallText: true },
+    { text: "Legendary", isList: true, isSmallText: false },
     { text: "Exclusive rare ticket with the highest win weight (10.0) and guaranteed prize. 1 in 10,000 mint chance.", isSmallText: true },
     { text: "" },
-    { text: "Free Tickets", isHeading: true, isSmallText: true },
-    { text: "Welcome", isList: true, isSmallText: true },
+    { text: "Free Tickets", isList: true, isSmallText: true },
+    { text: "Welcome", isList: true, isSmallText: false },
     { text: "Free for users invited by friends. Weight: 0.5", isSmallText: true },
     { text: "" },
-    { text: "Referral", isList: true, isSmallText: true },
+    { text: "Referral", isList: true, isSmallText: false },
     { text: "Earned when your friend joins and activates their ticket. Weight: 0.8", isSmallText: true },
     { text: "" },
     { text: "💡 How free tickets win:", hasLeftBorder: true, isSmallText: true },
