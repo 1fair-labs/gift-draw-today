@@ -170,7 +170,7 @@ export default function MiniApp() {
       if (data) {
         setCurrentDraw(data as Draw);
       } else {
-        // Если нет активного розыгрыша, устанавливаем null
+        // ��T����� �-��T� �-��T¦��-�-�-���- T��-��T˦�T�T�TȦ-, T�T�T¦-�-�-�-�����-�-���- null
         setCurrentDraw(null);
       }
     } catch (error) {
@@ -188,7 +188,7 @@ export default function MiniApp() {
   // Load wallet balances
   const loadWalletBalances = useCallback(async () => {
     if (!walletAddress) {
-      addDebugLog('❌ No wallet address');
+      addDebugLog('��� No wallet address');
       return;
     }
 
@@ -197,27 +197,27 @@ export default function MiniApp() {
       // No need to convert to RAW format
       const accountAddress = walletAddress;
       
-      addDebugLog(`🔍 Loading balances for: ${accountAddress}`);
+      addDebugLog(`���� Loading balances for: ${accountAddress}`);
       
       // Get TON balance using TON API (tonapi.io/v2)
       const tonApiUrl = 'https://tonapi.io/v2';
       try {
-        addDebugLog(`📡 Fetching TON balance...`);
+        addDebugLog(`���� Fetching TON balance...`);
         const tonBalanceResponse = await fetch(`${tonApiUrl}/accounts/${accountAddress}`);
         if (tonBalanceResponse.ok) {
           const tonData = await tonBalanceResponse.json();
           const balanceNano = BigInt(tonData.balance || '0');
           const balanceTon = Number(balanceNano) / 1_000_000_000;
           setTonBalance(balanceTon);
-          addDebugLog(`✅ TON balance: ${balanceTon.toFixed(4)} TON`);
-          addDebugLog(`💾 State updated: TON = ${balanceTon.toFixed(4)}`);
+          addDebugLog(`��� TON balance: ${balanceTon.toFixed(4)} TON`);
+          addDebugLog(`���- State updated: TON = ${balanceTon.toFixed(4)}`);
         } else {
           const errorText = await tonBalanceResponse.text();
-          addDebugLog(`❌ Failed to get TON balance: ${tonBalanceResponse.status}`);
+          addDebugLog(`��� Failed to get TON balance: ${tonBalanceResponse.status}`);
           console.error('Failed to get TON balance:', tonBalanceResponse.status, errorText);
         }
       } catch (tonError) {
-        addDebugLog(`❌ Error getting TON balance`);
+        addDebugLog(`��� Error getting TON balance`);
         console.error('Error getting TON balance:', tonError);
       }
 
@@ -226,7 +226,7 @@ export default function MiniApp() {
       const usdtJettonMasterAddress = 'EQCxE6mUtQJKFnGfaSdGGbKjgNkQ4mQX6W1n7b7q8j8j4y0r';
       
       try {
-        addDebugLog(`📡 Fetching jettons...`);
+        addDebugLog(`���� Fetching jettons...`);
         // Get all jettons for this account
         const jettonsResponse = await fetch(
           `${tonApiUrl}/accounts/${accountAddress}/jettons`
@@ -236,11 +236,11 @@ export default function MiniApp() {
           const jettonsData = await jettonsResponse.json();
           const jettons = jettonsData.jettons || jettonsData || [];
           
-          addDebugLog(`📦 Found ${jettons.length} jettons`);
+          addDebugLog(`���� Found ${jettons.length} jettons`);
           
           if (jettons.length === 0) {
-            addDebugLog(`⚠️ No jettons found on this address`);
-            addDebugLog(`💡 Check on tonviewer.com: ${accountAddress}`);
+            addDebugLog(`������ No jettons found on this address`);
+            addDebugLog(`���� Check on tonviewer.com: ${accountAddress}`);
           } else {
             // Log all jettons for debugging
             jettons.forEach((j: any, idx: number) => {
@@ -255,21 +255,21 @@ export default function MiniApp() {
           }
           
           // Find USDT jetton - check all possible fields and formats
-          // Extended symbol list: USDT, USD₮, usdt, USDT.e, usdt.e
-          const usdtSymbols = ['USDT', 'USD₮', 'usdt', 'USDT.e', 'usdt.e'];
+          // Extended symbol list: USDT, USD���, usdt, USDT.e, usdt.e
+          const usdtSymbols = ['USDT', 'USD���', 'usdt', 'USDT.e', 'usdt.e'];
           
           const usdtJetton = jettons.find((jetton: any) => {
             // Check by symbol (extended list)
             const symbol = jetton.jetton?.symbol || jetton.symbol || '';
             if (usdtSymbols.includes(symbol)) {
-              addDebugLog(`✅ Found USDT by symbol: ${symbol}`);
+              addDebugLog(`��� Found USDT by symbol: ${symbol}`);
               return true;
             }
             
             // Check by name
             const name = (jetton.jetton?.name || jetton.name || '').toLowerCase();
             if (name.includes('usdt') || name.includes('tether')) {
-              addDebugLog(`✅ Found USDT by name: ${name}`);
+              addDebugLog(`��� Found USDT by name: ${name}`);
               return true;
             }
             
@@ -287,7 +287,7 @@ export default function MiniApp() {
               if (masterLower === usdtMasterLower || 
                   masterLower.includes(usdtMasterLower.slice(-20)) ||
                   usdtMasterLower.includes(masterLower.slice(-20))) {
-                addDebugLog(`✅ Found USDT by master address: ${masterAddress}`);
+                addDebugLog(`��� Found USDT by master address: ${masterAddress}`);
                 return true;
               }
             }
@@ -296,7 +296,7 @@ export default function MiniApp() {
           });
           
           if (usdtJetton) {
-            addDebugLog(`✅ USDT jetton found!`);
+            addDebugLog(`��� USDT jetton found!`);
             
             // Balance can be in different fields - check all possibilities
             const balance = usdtJetton.balance || 
@@ -306,31 +306,31 @@ export default function MiniApp() {
                            usdtJetton.jetton?.amount ||
                            '0';
             
-            addDebugLog(`📊 Raw USDT balance: ${balance}`);
+            addDebugLog(`���� Raw USDT balance: ${balance}`);
             
             // USDT has 6 decimals (1 USDT = 1,000,000 units)
             const balanceUnits = BigInt(balance.toString());
             const balanceUsdt = Number(balanceUnits) / 1_000_000;
-            addDebugLog(`✅ USDT balance: ${balanceUsdt.toFixed(6)} USDT`);
+            addDebugLog(`��� USDT balance: ${balanceUsdt.toFixed(6)} USDT`);
             setUsdtBalance(balanceUsdt);
-            addDebugLog(`💾 State updated: USDT = ${balanceUsdt.toFixed(6)}`);
+            addDebugLog(`���- State updated: USDT = ${balanceUsdt.toFixed(6)}`);
           } else {
-            addDebugLog(`❌ USDT jetton not found in ${jettons.length} jettons`);
+            addDebugLog(`��� USDT jetton not found in ${jettons.length} jettons`);
             setUsdtBalance(0);
           }
         } else {
           const errorText = await jettonsResponse.text();
-          addDebugLog(`❌ Failed to get jettons: ${jettonsResponse.status}`);
+          addDebugLog(`��� Failed to get jettons: ${jettonsResponse.status}`);
           console.error('Failed to get jettons:', jettonsResponse.status, errorText);
           setUsdtBalance(0);
         }
       } catch (jettonError) {
-        addDebugLog(`❌ Error loading USDT balance`);
+        addDebugLog(`��� Error loading USDT balance`);
         console.error('Error loading USDT balance:', jettonError);
         // Don't reset to 0 on error, keep previous value
       }
     } catch (error) {
-      addDebugLog(`❌ Error loading wallet balances`);
+      addDebugLog(`��� Error loading wallet balances`);
       console.error('Error loading wallet balances:', error);
       // Don't reset balances on error, keep previous values
     }
@@ -456,11 +456,11 @@ export default function MiniApp() {
         
         // Get current balance from state
         const currentUsdtBalance = usdtBalance;
-        addDebugLog(`💰 Checking USDT balance: ${currentUsdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
+        addDebugLog(`���- Checking USDT balance: ${currentUsdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
         
         // Check USDT balance
         if (currentUsdtBalance < minUsdtBalance) {
-          addDebugLog(`❌ Insufficient balance: ${currentUsdtBalance.toFixed(6)} < ${minUsdtBalance}`);
+          addDebugLog(`��� Insufficient balance: ${currentUsdtBalance.toFixed(6)} < ${minUsdtBalance}`);
           setLoading(false);
           const openPurchase = confirm(
             `Insufficient USDT balance. You need at least ${minUsdtBalance} USDT to buy a ticket.\n\nYour current balance: ${currentUsdtBalance.toFixed(6)} USDT\n\nWould you like to open the USDT purchase page?`
@@ -511,7 +511,7 @@ export default function MiniApp() {
 
       // Check USDT balance (if wallet was already connected)
       const minUsdtBalance = 1.1;
-      addDebugLog(`💰 Checking USDT balance: ${usdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
+      addDebugLog(`���- Checking USDT balance: ${usdtBalance.toFixed(6)} USDT (min: ${minUsdtBalance})`);
       
       // Reload balances before check
       if (walletAddress) {
@@ -520,10 +520,10 @@ export default function MiniApp() {
       }
       
       const currentUsdtBalance = usdtBalance;
-      addDebugLog(`💰 Current USDT balance after reload: ${currentUsdtBalance.toFixed(6)} USDT`);
+      addDebugLog(`���- Current USDT balance after reload: ${currentUsdtBalance.toFixed(6)} USDT`);
       
       if (currentUsdtBalance < minUsdtBalance) {
-        addDebugLog(`❌ Insufficient balance: ${currentUsdtBalance.toFixed(6)} < ${minUsdtBalance}`);
+        addDebugLog(`��� Insufficient balance: ${currentUsdtBalance.toFixed(6)} < ${minUsdtBalance}`);
         setLoading(false);
         const openPurchase = confirm(
           `Insufficient USDT balance. You need at least ${minUsdtBalance} USDT to buy a ticket.\n\nYour current balance: ${currentUsdtBalance.toFixed(6)} USDT\n\nWould you like to open the USDT purchase page?`
@@ -623,7 +623,7 @@ export default function MiniApp() {
       }
       
       await loadUserTickets(tgId);
-      alert(`✅ Successfully purchased ${count} ticket(s)!`);
+      alert(`��� Successfully purchased ${count} ticket(s)!`);
     } catch (error) {
       console.error('Error in createTicketsAfterPayment:', error);
       alert('Payment successful, but failed to create tickets. Please contact support.');
@@ -713,18 +713,18 @@ export default function MiniApp() {
     const isInTelegram = isInTelegramWebApp();
     const WebApp = (window as any).Telegram?.WebApp;
     
-    // Если не в Telegram, устанавливаем десктопный режим
+    // ��T����� �-�� �- Telegram, T�T�T¦-�-�-�-�����-�-���- �+��T���T¦-���-T˦� T��������-
     if (!isInTelegram || !WebApp) {
-      // Определяем, мобильное ли устройство по размеру экрана
+      // �ަ�T����+����TϦ��-, �-�-�-����Ț-�-�� ���� T�T�T�T��-��T�T¦-�- ���- T��-���-��T�T� Tͦ�T��-�-�-
       const isMobileDevice = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(isMobileDevice);
       
-      // Устанавливаем viewport для десктопа
+      // ��T�T¦-�-�-�-�����-�-���- viewport �+��T� �+��T���T¦-���-
       if (!isMobileDevice) {
         setViewport({ height: window.innerHeight, width: window.innerWidth });
       }
       
-      // Загружаем активный розыгрыш даже вне Telegram
+      // �צ-��T�Tæ��-���- �-��T¦��-�-T˦� T��-��T˦�T�T�T� �+�-���� �-�-�� Telegram
       loadActiveDraw();
       return;
     }
@@ -732,19 +732,19 @@ export default function MiniApp() {
     try {
       WebApp.ready();
 
-      // Определяем платформу
+      // �ަ�T����+����TϦ��- �����-T�TĦ-T��-T�
       const platform = WebApp.platform || '';
       const isMobilePlatform = platform === 'ios' || platform === 'android';
       const isDesktop = platform === 'desktop' || platform === 'web' || (!isMobilePlatform && platform !== '');
       setIsMobile(isMobilePlatform);
 
-      // Получаем safe area insets для мобильных
+      // �ߦ-��T�TǦ-���- safe area insets �+��T� �-�-�-����Ț-T�T�
       if (isMobilePlatform && WebApp.safeAreaInsets) {
         setSafeAreaTop(WebApp.safeAreaInsets.top || 0);
         setSafeAreaBottom(WebApp.safeAreaInsets.bottom || 0);
       }
 
-      // Разворачиваем только на мобильных устройствах (не на десктопе)
+      // ��-���-�-T��-TǦ��-�-���- T¦-��Ț��- �-�- �-�-�-����Ț-T�T� T�T�T�T��-��T�T¦-�-T� (�-�� �-�- �+��T���T¦-����)
       if (isMobilePlatform && !isDesktop) {
         const expandToFullscreen = () => {
           if (WebApp.expand) {
@@ -973,13 +973,13 @@ export default function MiniApp() {
   // Handle navigation from buttons with animation (Enter Draw button)
   const handleNavigateToTickets = () => {
     setPrevScreen(currentScreen);
-    // Сначала устанавливаем экран tickets с начальной позицией справа
+    // ��-�-TǦ-���- T�T�T¦-�-�-�-�����-�-���- Tͦ�T��-�- tickets T� �-�-TǦ-��Ț-�-�� ���-����TƦ����� T���T��-�-�-
     setCurrentScreen('tickets');
     setIsTransitioning(false);
-    // Небольшая задержка для применения начального состояния (справа)
+    // �ݦ��-�-��T�TȦ-T� ���-�+��T������- �+��T� ��T����-���-���-��T� �-�-TǦ-��Ț-�-���- T��-T�T¦-TϦ-��T� (T���T��-�-�-)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        // Запускаем анимацию - tickets сдвигается в центр, home уходит влево
+        // �צ-��T�T����-���- �-�-���-�-TƦ�T� - tickets T��+�-�����-��T�T�T� �- TƦ��-T�T�, home T�TŦ-�+��T� �-�����-�-
         setIsTransitioning(true);
         setTimeout(() => {
           setIsTransitioning(false);
@@ -1025,12 +1025,12 @@ export default function MiniApp() {
       if (!response.ok) {
         console.error('Failed to send welcome message:', responseData);
         
-        // Если пользователь не начал диалог с ботом, показываем подсказку
+        // ��T����� ���-��Ț��-�-�-T¦���T� �-�� �-�-TǦ-�� �+���-���-�� T� �-�-T¦-�-, ���-���-��T˦-�-���- ���-�+T����-����T�
         if (responseData.details?.error_code === 403 || 
             responseData.details?.description?.includes('bot was blocked') ||
             responseData.details?.description?.includes('chat not found')) {
           console.warn('User needs to start a conversation with the bot first. Please send /start to @giftdrawtoday_bot');
-          // Можно показать уведомление пользователю
+          // �ܦ-���-�- ���-���-���-T�T� Tæ-���+�-�-�����-���� ���-��Ț��-�-�-T¦���T�
           alert('Please start a conversation with @giftdrawtoday_bot first by sending /start command.');
         }
       } else {
@@ -1046,7 +1046,7 @@ export default function MiniApp() {
     try {
       triggerHaptic();
       
-      // Отключаем кошелек если подключен
+      // ��T¦���T�TǦ-���- ���-TȦ������� ��T����� ���-�+����T�TǦ��-
       if (tonConnectUI.connected) {
         try {
           await tonConnectUI.disconnect();
@@ -1055,7 +1055,7 @@ export default function MiniApp() {
         }
       }
       
-      // Очищаем cookie сессии через API
+      // ��TǦ�Tɦ-���- cookie T���T�T����� TǦ�T����� API
       try {
         await fetch('/api/auth/logout', {
           method: 'POST',
@@ -1065,47 +1065,47 @@ export default function MiniApp() {
         console.error('Error clearing session:', error);
       }
       
-      // Очищаем localStorage
+      // ��TǦ�Tɦ-���- localStorage
       localStorage.removeItem('balance_visible');
       
-      // Устанавливаем флаг, что пользователь только что разлогинился
-      // Это предотвратит проверку сессии при следующей загрузке
+      // ��T�T¦-�-�-�-�����-�-���- TĦ��-��, T�T¦- ���-��Ț��-�-�-T¦���T� T¦-��Ț��- T�T¦- T��-�����-�����-����T�T�
+      // ��T¦- ��T����+�-T¦-T��-T¦�T� ��T��-�-��T���T� T���T�T����� ��T��� T������+T�T�Tɦ��� ���-��T�Tæ�����
       localStorage.setItem('just_logged_out', 'true');
       
-      // Немедленно перезагружаем страницу без изменения состояния
-      // Состояние очистится при перезагрузке
+      // �ݦ��-���+�����-�-�- ����T������-��T�Tæ��-���- T�T�T��-�-��T�T� �-���� �����-���-���-��T� T��-T�T¦-TϦ-��T�
+      // ��-T�T¦-TϦ-���� �-TǦ�T�T¦�T�T�T� ��T��� ����T������-��T�Tæ�����
       window.location.replace('/');
     } catch (error) {
       console.error('Error during logout:', error);
-      // В случае ошибки все равно перезагружаем страницу
+      // �� T���T�TǦ-�� �-TȦ��-���� �-T��� T��-�-�-�- ����T������-��T�Tæ��-���- T�T�T��-�-��T�T�
       window.location.replace('/');
     }
   }, [tonConnectUI]);
 
   // Handle authorization through bot
   const handleConnectViaBot = useCallback(async () => {
-    // Генерируем длинный числовой идентификатор для отслеживания запроса авторизации
-    // Это не токен, а просто маркер того, что запрос пришел с сайта
-    // Используем timestamp + случайные цифры для уникальности
+    // �Ӧ��-��T���T�Tæ��- �+�����-�-T˦� TǦ�T����-�-�-�� ���+���-T¦�TĦ����-T¦-T� �+��T� �-T�T����������-�-�-��T� ���-��T��-T��- �-�-T¦-T������-TƦ���
+    // ��T¦- �-�� T¦-�����-, �- ��T��-T�T¦- �-�-T�����T� T¦-���-, T�T¦- ���-��T��-T� ��T���TȦ��� T� T��-��T¦-
+    // ��T����-��Ț�Tæ��- timestamp + T���T�TǦ-���-T˦� TƦ�T�T�T� �+��T� Tæ-�����-��Ț-�-T�T¦�
     const timestamp = Date.now().toString();
     const randomDigits = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
     const authId = timestamp + randomDigits;
     
-    // В новой системе открываем бота с параметром auth, логин произойдет при /start
+    // �� �-�-�-�-�� T���T�T¦��-�� �-T¦�T�T˦-�-���- �-�-T¦- T� ���-T��-�-��T�T��-�- auth, ���-�����- ��T��-�����-���+��T� ��T��� /start
     const botUrl = `https://t.me/giftdrawtoday_bot?start=${authId}`;
     
-    // Используем прямой переход - это гарантирует автоматическую отправку /start
-    // При первом открытии бота Telegram автоматически отправляет команду /start с параметром из URL
-    // Не устанавливаем loading, так как переход происходит мгновенно
+    // ��T����-��Ț�Tæ��- ��T�TϦ-�-�� ����T���TŦ-�+ - T�T¦- ���-T��-�-T¦�T�Tæ�T� �-�-T¦-�-�-T¦�TǦ�T���T�T� �-T¦�T��-�-��T� /start
+    // ��T��� ����T��-�-�- �-T¦�T�T�T¦��� �-�-T¦- Telegram �-�-T¦-�-�-T¦�TǦ�T����� �-T¦�T��-�-��TϦ�T� ���-�-�-�-�+T� /start T� ���-T��-�-��T�T��-�- ���� URL
+    // �ݦ� T�T�T¦-�-�-�-�����-�-���- loading, T¦-�� ���-�� ����T���TŦ-�+ ��T��-��T�TŦ-�+��T� �-���-�-�-���-�-�-
     window.location.href = botUrl;
   }, []);
 
   // Initialize user from Telegram WebApp (if in Telegram)
   useEffect(() => {
-    // Если пользователь уже авторизован, не делаем ничего
+    // ��T����� ���-��Ț��-�-�-T¦���T� Tæ��� �-�-T¦-T������-�-�-�-, �-�� �+�����-���- �-��TǦ����-
     if (telegramUser) return;
 
-    // Если уже в Telegram WebApp, используем существующие данные напрямую
+    // ��T����� Tæ��� �- Telegram WebApp, ��T����-��Ț�Tæ��- T�T�Tɦ�T�T¦-T�T�Tɦ��� �+�-�-�-T˦� �-�-��T�TϦ-T�T�
     if (isInTelegramWebApp()) {
       const WebApp = (window as any).Telegram?.WebApp;
       if (WebApp?.initDataUnsafe?.user) {
@@ -1115,7 +1115,7 @@ export default function MiniApp() {
           setTelegramId(user.id);
           loadUserData(user.id);
           
-          // Запрашиваем разрешение на отправку сообщений
+          // �צ-��T��-TȦ��-�-���- T��-��T���TȦ��-���� �-�- �-T¦�T��-�-��T� T��-�-�-Tɦ��-����
           if (WebApp.requestWriteAccess) {
             WebApp.requestWriteAccess((granted: boolean) => {
               if (granted) {
@@ -1128,19 +1128,19 @@ export default function MiniApp() {
       }
     }
 
-    // Проверяем сессию из cookie (для авторизации через бота)
+    // ��T��-�-��T�TϦ��- T���T�T���T� ���� cookie (�+��T� �-�-T¦-T������-TƦ��� TǦ�T����� �-�-T¦-)
     let lastSessionCheck = 0;
-    const SESSION_CHECK_COOLDOWN = 3000; // Минимум 3 секунды между проверками
+    const SESSION_CHECK_COOLDOWN = 3000; // �ܦ��-���-Tæ- 3 T�����Tæ-�+T� �-�����+T� ��T��-�-��T����-�-��
     
     const checkSession = async () => {
-      // Не проверяем сессию если пользователь только что разлогинился
+      // �ݦ� ��T��-�-��T�TϦ��- T���T�T���T� ��T����� ���-��Ț��-�-�-T¦���T� T¦-��Ț��- T�T¦- T��-�����-�����-����T�T�
       const justLoggedOut = localStorage.getItem('just_logged_out');
       if (justLoggedOut === 'true') {
         localStorage.removeItem('just_logged_out');
         return false;
       }
       
-      // Ограничиваем частоту проверок
+      // �ަ�T��-�-��TǦ��-�-���- TǦ-T�T¦-T�T� ��T��-�-��T��-��
       const now = Date.now();
       if (now - lastSessionCheck < SESSION_CHECK_COOLDOWN) {
         return false;
@@ -1148,7 +1148,7 @@ export default function MiniApp() {
       lastSessionCheck = now;
       
       try {
-        // Проверяем cookie через API endpoint
+        // ��T��-�-��T�TϦ��- cookie TǦ�T����� API endpoint
         const response = await fetch('/api/auth/check-session', {
           credentials: 'include',
         });
@@ -1157,7 +1157,7 @@ export default function MiniApp() {
           const data = await response.json();
           
           if (data.authenticated && data.userId) {
-            // Восстанавливаем данные пользователя из сессии
+            // �Ҧ-T�T�T¦-�-�-�-�����-�-���- �+�-�-�-T˦� ���-��Ț��-�-�-T¦���T� ���� T���T�T�����
             setTelegramUser({
               id: data.userId,
               first_name: data.firstName || '',
@@ -1167,22 +1167,22 @@ export default function MiniApp() {
             });
             setTelegramId(data.userId);
             await loadUserData(data.userId);
-            return true; // Сессия найдена
+            return true; // �ᦦT�T���T� �-�-���+���-�-
           }
         }
       } catch (error) {
         console.error('Error checking session:', error);
       }
-      return false; // Сессия не найдена
+      return false; // �ᦦT�T���T� �-�� �-�-���+���-�-
     };
 
-    // Проверяем сессию сразу при загрузке (только один раз)
+    // ��T��-�-��T�TϦ��- T���T�T���T� T�T��-��T� ��T��� ���-��T�Tæ����� (T¦-��Ț��- �-�+���- T��-��)
     checkSession();
       
-    // Проверяем сессию при видимости страницы (когда пользователь возвращается на вкладку)
-    // Используем только visibilitychange, так как focus может срабатывать слишком часто
+    // ��T��-�-��T�TϦ��- T���T�T���T� ��T��� �-���+���-�-T�T¦� T�T�T��-�-��T�T� (���-���+�- ���-��Ț��-�-�-T¦���T� �-�-���-T��-Tɦ-��T�T�T� �-�- �-�����-�+��T�)
+    // ��T����-��Ț�Tæ��- T¦-��Ț��- visibilitychange, T¦-�� ���-�� focus �-�-����T� T�T��-�-�-T�T˦-�-T�T� T�����TȦ��-�- TǦ-T�T¦-
     const handleVisibilityChange = async () => {
-      // Не проверяем сессию если пользователь только что разлогинился
+      // �ݦ� ��T��-�-��T�TϦ��- T���T�T���T� ��T����� ���-��Ț��-�-�-T¦���T� T¦-��Ț��- T�T¦- T��-�����-�����-����T�T�
       const justLoggedOut = localStorage.getItem('just_logged_out');
       if (justLoggedOut === 'true') {
         return;
@@ -1245,7 +1245,7 @@ export default function MiniApp() {
             borderRadius: '20px',
           }}
         >
-          {/* Header - только на десктопе */}
+          {/* Header - T¦-��Ț��- �-�- �+��T���T¦-���� */}
           <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0">
             <div className="px-4 py-4 min-h-[60px] flex justify-between items-center gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -1279,12 +1279,12 @@ export default function MiniApp() {
                 ) : (
                   <div className="flex items-center gap-2">
                     <Wand2 className="w-6 h-6 text-primary" />
-                    <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
+                    <h2 className="text-base font-display font-bold">GIFTDRAW.today</h2>
                   </div>
                 )}
               </div>
               
-              {/* Кнопка подключения через бота или иконка выхода */}
+              {/* �ڦ-�-�����- ���-�+����T�TǦ��-��T� TǦ�T����� �-�-T¦- ������ �����-�-���- �-T�TŦ-�+�- */}
               {!telegramUser ? (
                 <Button
                   onClick={handleConnectViaBot}
@@ -1306,11 +1306,11 @@ export default function MiniApp() {
             </div>
           </header>
 
-          {/* Screens Container для десктопа */}
+          {/* Screens Container �+��T� �+��T���T¦-���- */}
           <div 
             className="relative w-full overflow-hidden"
             style={{
-              height: 'calc(100% - 60px - 80px)', // Высота минус header и footer
+              height: 'calc(100% - 60px - 80px)', // ��T�T��-T¦- �-���-T�T� header �� footer
               marginTop: '0',
             }}
           >
@@ -1373,7 +1373,7 @@ export default function MiniApp() {
             </div>
           </div>
 
-          {/* Bottom Navigation для десктопа */}
+          {/* Bottom Navigation �+��T� �+��T���T¦-���- */}
           <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '16px' }}>
             <div className="flex items-center justify-around px-4 py-4 h-20">
               {/* About Button (Left) */}
@@ -1434,7 +1434,7 @@ export default function MiniApp() {
         </div>
       ) : (
         <>
-          {/* Header - только на мобильных, с логотипом и кнопкой подключения */}
+          {/* Header - T¦-��Ț��- �-�- �-�-�-����Ț-T�T�, T� ���-���-T¦����-�- �� ���-�-�����-�� ���-�+����T�TǦ��-��T� */}
           {isMobile && (
             <header 
               className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/50 border-b border-border/50"
@@ -1474,12 +1474,12 @@ export default function MiniApp() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <Wand2 className="w-5 h-5 text-primary" />
-                      <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
+                      <h2 className="text-sm font-display font-bold">GIFTDRAW.today</h2>
                     </div>
                   )}
                 </div>
                 
-                {/* Кнопка подключения через бота или иконка выхода */}
+                {/* �ڦ-�-�����- ���-�+����T�TǦ��-��T� TǦ�T����� �-�-T¦- ������ �����-�-���- �-T�TŦ-�+�- */}
                 {!telegramUser ? (
                   <Button
                     onClick={handleConnectViaBot}
@@ -1502,7 +1502,7 @@ export default function MiniApp() {
             </header>
           )}
 
-          {/* Screens Container для мобильных */}
+          {/* Screens Container �+��T� �-�-�-����Ț-T�T� */}
           <div 
             className="relative w-full overflow-hidden"
             style={isMobile ? {
@@ -1575,7 +1575,7 @@ export default function MiniApp() {
             </div>
           </div>
 
-          {/* Bottom Navigation для мобильных */}
+          {/* Bottom Navigation �+��T� �-�-�-����Ț-T�T� */}
           <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
             <div className="flex items-center justify-around px-4 h-[66px]">
               {/* About Button (Left) */}

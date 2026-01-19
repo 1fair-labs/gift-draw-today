@@ -17,7 +17,7 @@ export default function Landing() {
           </div>
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">GiftDraw.today</h1>
+          <h1 className="text-2xl font-bold">GIFTDRAW.today</h1>
           <p className="text-muted-foreground">
             Fair, transparent lottery on Telegram. No setup. Just play.
           </p>
