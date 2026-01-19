@@ -137,10 +137,10 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative flex items-start gap-2 ${isBold ? 'font-bold' : ''}`}
+        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative flex items-start gap-1.5 ${isBold ? 'font-bold' : ''}`}
         style={{ opacity }}
       >
-        <Wand2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+        <Wand2 className="w-3 h-3 text-foreground/90 flex-shrink-0" />
         <span>{displayedText}</span>
       </p>
     );
