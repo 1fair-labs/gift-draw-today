@@ -137,7 +137,7 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative flex items-center gap-1.5 ${isBold ? 'font-bold' : ''}`}
+        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 relative flex items-center gap-1.5 ${isBold ? 'font-bold' : ''}`}
         style={{ opacity }}
       >
         <Wand2 className="w-3 h-3 text-foreground/90 flex-shrink-0" />
@@ -254,7 +254,7 @@ export default function AboutScreen() {
     { text: "Referral", isList: true, isBold: true },
     { text: "Earned when your friend joins and activates their ticket. Weight: 0.8" },
     { text: "" },
-    { text: "💡 How free tickets win:", hasLeftBorder: true, isSmallText: true },
+    { text: "💡 How free tickets win:", hasLeftBorder: true },
     { text: "For every 10 winning paid tickets, 1 free ticket is randomly selected to win.", hasLeftBorder: true },
     { text: "" },
     { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", isSmallText: true },
