@@ -137,7 +137,7 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative flex items-start gap-1.5 ${isBold ? 'font-bold' : ''}`}
+        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative flex items-center gap-1.5 ${isBold ? 'font-bold' : ''}`}
         style={{ opacity }}
       >
         <Wand2 className="w-3 h-3 text-foreground/90 flex-shrink-0" />
@@ -237,7 +237,7 @@ export default function AboutScreen() {
     { text: "" },
     { text: "Ticket Types 🎟️", isHeading: true },
     { text: "" },
-    { text: "Paid Tickets:", isExtraSmallText: true },
+    { text: "Paid Tickets:", isSmallText: true },
     { text: "Common", isList: true, isBold: true },
     { text: "Standard NFT ticket for ~$1. Weight: 1.0" },
     { text: "" },
@@ -247,7 +247,7 @@ export default function AboutScreen() {
     { text: "Legendary", isList: true, isBold: true },
     { text: "Exclusive rare ticket with the highest win weight (2.0) and guaranteed prize. 1 in 10,000 mint chance." },
     { text: "" },
-    { text: "Free Tickets:", isExtraSmallText: true },
+    { text: "Free Tickets:", isSmallText: true },
     { text: "Welcome", isList: true, isBold: true },
     { text: "Free for users invited by friends. Weight: 0.5" },
     { text: "" },
@@ -255,7 +255,7 @@ export default function AboutScreen() {
     { text: "Earned when your friend joins and activates their ticket. Weight: 0.8" },
     { text: "" },
     { text: "💡 How free tickets win:", hasLeftBorder: true, isSmallText: true },
-    { text: "For every 10 winning paid tickets, 1 free ticket is randomly selected to win.", hasLeftBorder: true, isSmallText: true },
+    { text: "For every 10 winning paid tickets, 1 free ticket is randomly selected to win.", hasLeftBorder: true },
     { text: "" },
     { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", isSmallText: true },
     { text: "" },
