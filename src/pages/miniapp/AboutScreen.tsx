@@ -1,5 +1,6 @@
 // src/pages/miniapp/AboutScreen.tsx
 import { useState, useEffect, useRef } from 'react';
+import { Wand2 } from 'lucide-react';
 
 interface ParagraphProps {
   text: string;
@@ -136,11 +137,11 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative ${isBold ? 'font-bold' : ''}`}
+        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative flex items-start gap-2 ${isBold ? 'font-bold' : ''}`}
         style={{ opacity }}
       >
-        <span className="mr-2">✨</span>
-        {displayedText}
+        <Wand2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+        <span>{displayedText}</span>
       </p>
     );
   }
@@ -238,25 +239,25 @@ export default function AboutScreen() {
     { text: "" },
     { text: "Paid Tickets:", isExtraSmallText: true },
     { text: "Common", isList: true, isBold: true },
-    { text: "Standard NFT ticket for ~$1. Weight: 1.0", isSmallText: true },
+    { text: "Standard NFT ticket for ~$1. Weight: 1.0" },
     { text: "" },
     { text: "Event", isList: true, isBold: true },
-    { text: "Collectible NFT ticket with a 1 in 1,000 mint chance. Features vibrant thematic design. Weight: 1.5", isSmallText: true },
+    { text: "Collectible NFT ticket with a 1 in 1,000 mint chance. Features vibrant thematic design. Weight: 1.5" },
     { text: "" },
     { text: "Legendary", isList: true, isBold: true },
-    { text: "Exclusive rare ticket with the highest win weight (2.0) and guaranteed prize. 1 in 10,000 mint chance.", isSmallText: true },
+    { text: "Exclusive rare ticket with the highest win weight (2.0) and guaranteed prize. 1 in 10,000 mint chance." },
     { text: "" },
     { text: "Free Tickets:", isExtraSmallText: true },
     { text: "Welcome", isList: true, isBold: true },
-    { text: "Free for users invited by friends. Weight: 0.5", isSmallText: true },
+    { text: "Free for users invited by friends. Weight: 0.5" },
     { text: "" },
     { text: "Referral", isList: true, isBold: true },
-    { text: "Earned when your friend joins and activates their ticket. Weight: 0.8", isSmallText: true },
+    { text: "Earned when your friend joins and activates their ticket. Weight: 0.8" },
     { text: "" },
     { text: "💡 How free tickets win:", hasLeftBorder: true, isSmallText: true },
     { text: "For every 10 winning paid tickets, 1 free ticket is randomly selected to win.", hasLeftBorder: true, isSmallText: true },
     { text: "" },
-    { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", isExtraSmallText: true },
+    { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", isSmallText: true },
     { text: "" },
     { text: "🪂 $GIFT Token Airdrop (SPL on Solana)", isHeading: true },
     { text: "Total Supply: 100,000,000 GIFT", isList: true },
