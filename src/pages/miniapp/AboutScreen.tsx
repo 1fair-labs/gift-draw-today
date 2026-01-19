@@ -11,6 +11,7 @@ interface ParagraphProps {
   isBold?: boolean;
   hasLeftBorder?: boolean;
   isInBlock?: boolean;
+  isSmallText?: boolean;
   shouldAutoScroll: boolean;
   useFastMode: boolean; // Показывать абзац целиком
 }
@@ -54,6 +55,7 @@ function Paragraph({
   isBold = false,
   hasLeftBorder = false,
   isInBlock = false,
+  isSmallText = false,
   shouldAutoScroll,
   useFastMode
 }: ParagraphProps) {
@@ -120,7 +122,7 @@ function Paragraph({
     return (
       <h2 
         ref={paragraphRef}
-        className={`text-xl font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
+        className={`${isSmallText ? 'text-lg' : 'text-xl'} font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
         style={{ opacity }}
       >
         {displayedText}
@@ -132,7 +134,7 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className="text-sm text-muted-foreground mb-1 transition-opacity duration-300"
+        className={`${isSmallText ? 'text-xs' : 'text-sm'} text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative before:content-['•'] before:absolute before:-left-3`}
         style={{ opacity }}
       >
         {displayedText}
@@ -173,7 +175,7 @@ function Paragraph({
   return (
     <p 
       ref={paragraphRef}
-      className={`text-base text-foreground/90 leading-relaxed ${isInBlock ? 'mb-1' : 'mb-4'} transition-opacity duration-300 ${isBold ? 'font-bold' : ''} ${hasLeftBorder ? 'pl-4 border-l-2 border-foreground/60' : ''}`}
+      className={`${isSmallText ? 'text-sm' : 'text-base'} text-foreground/90 leading-relaxed ${isInBlock ? 'mb-1' : 'mb-4'} transition-opacity duration-300 ${isBold ? 'font-bold' : ''} ${hasLeftBorder ? 'pl-4 border-l-2 border-foreground/60' : ''}`}
       style={{ opacity }}
     >
       {formattedText}
@@ -221,12 +223,28 @@ export default function AboutScreen() {
     { text: "" },
     { text: "Even with a free ticket, you can not only land a prize-winning place — you can win the entire Grand Prize!" },
     { text: "" },
-    { text: "🎟️ Ticket Tiers", isHeading: true },
-    { text: "Legendary ⚡\n1 in 10,000 chance — ultra-rare, life-changing rewards.", isListItem: true },
+    { text: "Ticket Types 🎟️", isHeading: true },
     { text: "" },
-    { text: "Event 🌟\n1 in 1,000 chance — special editions with boosted prizes.", isListItem: true },
+    { text: "Paid Tickets", isHeading: true, isSmallText: true },
+    { text: "Common", isList: true, isSmallText: true },
+    { text: "Standard NFT ticket for ~$1. Weight: 1.0", isSmallText: true },
     { text: "" },
-    { text: "Common ✅\nStandard ticket — still gives you that 25% daily win chance. Your everyday key to abundance.", isListItem: true },
+    { text: "Event", isList: true, isSmallText: true },
+    { text: "Collectible NFT ticket with a 1 in 1,000 mint chance. Features vibrant thematic design. Weight: 2.5", isSmallText: true },
+    { text: "" },
+    { text: "Legendary", isList: true, isSmallText: true },
+    { text: "Exclusive rare ticket with the highest win weight (10.0) and guaranteed prize. 1 in 10,000 mint chance.", isSmallText: true },
+    { text: "" },
+    { text: "Free Tickets", isHeading: true, isSmallText: true },
+    { text: "Welcome", isList: true, isSmallText: true },
+    { text: "Free for users invited by friends. Weight: 0.5", isSmallText: true },
+    { text: "" },
+    { text: "Referral", isList: true, isSmallText: true },
+    { text: "Earned when your friend joins and activates their ticket. Weight: 0.8", isSmallText: true },
+    { text: "" },
+    { text: "💡 How free tickets win:", hasLeftBorder: true, isSmallText: true },
+    { text: "For every 10 winning paid tickets, 1 free ticket is randomly selected to win.", hasLeftBorder: true, isSmallText: true },
+    { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", hasLeftBorder: true, isSmallText: true },
     { text: "" },
     { text: "🪂 $GIFT Token Airdrop (SPL on Solana)", isHeading: true },
     { text: "Total Supply: 100,000,000 GIFT", isList: true },
@@ -351,6 +369,7 @@ export default function AboutScreen() {
                         isBold={blockItem.isBold}
                         hasLeftBorder={false}
                         isInBlock={true}
+                        isSmallText={blockItem.isSmallText}
                         shouldAutoScroll={shouldAutoScroll}
                         useFastMode={shouldUseFastMode}
                       />
@@ -365,7 +384,7 @@ export default function AboutScreen() {
               return null;
             }
 
-  return (
+            return (
               <Paragraph
                 key={index}
                 text={item.text}
@@ -375,7 +394,8 @@ export default function AboutScreen() {
                 isList={item.isList}
                 isListItem={item.isListItem}
                 isBold={item.isBold}
-                hasLeftBorder={false}
+                hasLeftBorder={item.hasLeftBorder}
+                isSmallText={item.isSmallText}
                 shouldAutoScroll={shouldAutoScroll}
                 useFastMode={shouldUseFastMode}
               />
