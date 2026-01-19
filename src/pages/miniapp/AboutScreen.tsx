@@ -136,9 +136,10 @@ function Paragraph({
     return (
       <p 
         ref={paragraphRef}
-        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative before:content-['🪄'] before:absolute before:-left-3 ${isBold ? 'font-bold' : ''}`}
+        className={`text-base text-foreground/90 mb-1 transition-opacity duration-300 ml-4 relative ${isBold ? 'font-bold' : ''}`}
         style={{ opacity }}
       >
+        <span className="mr-2">✨</span>
         {displayedText}
       </p>
     );
@@ -240,10 +241,10 @@ export default function AboutScreen() {
     { text: "Standard NFT ticket for ~$1. Weight: 1.0", isSmallText: true },
     { text: "" },
     { text: "Event", isList: true, isBold: true },
-    { text: "Collectible NFT ticket with a 1 in 1,000 mint chance. Features vibrant thematic design. Weight: 2.5", isSmallText: true },
+    { text: "Collectible NFT ticket with a 1 in 1,000 mint chance. Features vibrant thematic design. Weight: 1.5", isSmallText: true },
     { text: "" },
     { text: "Legendary", isList: true, isBold: true },
-    { text: "Exclusive rare ticket with the highest win weight (10.0) and guaranteed prize. 1 in 10,000 mint chance.", isSmallText: true },
+    { text: "Exclusive rare ticket with the highest win weight (2.0) and guaranteed prize. 1 in 10,000 mint chance.", isSmallText: true },
     { text: "" },
     { text: "Free Tickets:", isExtraSmallText: true },
     { text: "Welcome", isList: true, isBold: true },
@@ -254,7 +255,8 @@ export default function AboutScreen() {
     { text: "" },
     { text: "💡 How free tickets win:", hasLeftBorder: true, isSmallText: true },
     { text: "For every 10 winning paid tickets, 1 free ticket is randomly selected to win.", hasLeftBorder: true, isSmallText: true },
-    { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", hasLeftBorder: true, isSmallText: true },
+    { text: "" },
+    { text: "Prize distribution among all winning tickets — paid and free — is then determined by their Weight.", isExtraSmallText: true },
     { text: "" },
     { text: "🪂 $GIFT Token Airdrop (SPL on Solana)", isHeading: true },
     { text: "Total Supply: 100,000,000 GIFT", isList: true },
