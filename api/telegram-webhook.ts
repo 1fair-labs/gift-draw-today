@@ -191,13 +191,12 @@ export default async function handler(
 
             console.log('Login successful (from button), tokens generated');
             
-            // Получаем аватар пользователя (если нужно)
-            try {
-              await userAuthStore.fetchAndSaveAvatar(userId, BOT_TOKEN);
-            } catch (avatarError: any) {
-              console.error('Error fetching avatar (non-critical):', avatarError);
-              // Продолжаем даже если аватар не загрузился
-            }
+            // Получаем аватар пользователя (если нужно) - в фоне, не блокируем авторизацию
+            // Запускаем асинхронно, не ждем результата
+            userAuthStore.fetchAndSaveAvatar(userId, BOT_TOKEN).catch((avatarError: any) => {
+              console.error('Error fetching avatar (non-critical, running in background):', avatarError);
+              // Игнорируем ошибку - аватар не критичен для авторизации
+            });
 
             // Формируем ссылку на callback для авторизации на сайте
             const callbackUrl = `${WEB_APP_URL}/auth?refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
@@ -320,17 +319,12 @@ export default async function handler(
 
             console.log('Login successful, tokens generated');
             
-            // Получаем аватар пользователя (если нужно)
-            let avatarUrl: string | null = null;
-            try {
-              avatarUrl = await userAuthStore.fetchAndSaveAvatar(userId, BOT_TOKEN);
-              if (avatarUrl) {
-                console.log('✅ Avatar fetched and saved successfully');
-              }
-            } catch (avatarError: any) {
-              console.error('Error fetching avatar (non-critical):', avatarError);
-              // Продолжаем даже если аватар не загрузился
-            }
+            // Получаем аватар пользователя (если нужно) - в фоне, не блокируем авторизацию
+            // Запускаем асинхронно, не ждем результата
+            userAuthStore.fetchAndSaveAvatar(userId, BOT_TOKEN).catch((avatarError: any) => {
+              console.error('Error fetching avatar (non-critical, running in background):', avatarError);
+              // Игнорируем ошибку - аватар не критичен для авторизации
+            });
 
             // Формируем ссылку на промежуточную страницу авторизации с refresh token
             const callbackUrl = `${WEB_APP_URL}/auth?refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
