@@ -294,7 +294,7 @@ export default async function handler(
 
           try {
             // Используем прямую функцию авторизации вместо HTTP вызова
-            console.log('=== CALLING LOGIN DIRECTLY ===');
+            console.log('=== CALLING LOGIN DIRECTLY (v2) ===');
             console.log('Request data:', {
               telegramId: userId,
               username,
@@ -302,7 +302,7 @@ export default async function handler(
               lastName
             });
             
-            // Вызываем loginOrUpdateUser напрямую
+            // Вызываем loginOrUpdateUser напрямую (НЕ используем fetch!)
             const tokens = await userAuthStore.loginOrUpdateUser(userId, username, firstName, lastName);
             
             if (!tokens || !tokens.refreshToken) {
