@@ -575,6 +575,19 @@ class UserAuthStore {
       // Шаг 1: Получаем список фото профиля
       const photosUrl = `https://api.telegram.org/bot${botToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`;
       const photosResponse = await fetch(photosUrl);
+      
+      if (!photosResponse.ok) {
+        console.error('Failed to fetch user profile photos, status:', photosResponse.status);
+        return null;
+      }
+      
+      const contentType = photosResponse.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await photosResponse.text();
+        console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+        return null;
+      }
+      
       const photosData = await photosResponse.json();
 
       if (!photosData.ok || !photosData.result?.photos || photosData.result.photos.length === 0) {
@@ -624,6 +637,19 @@ class UserAuthStore {
       // Шаг 3: Получаем путь к файлу
       const fileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
       const fileResponse = await fetch(fileUrl);
+      
+      if (!fileResponse.ok) {
+        console.error('Failed to get file path, status:', fileResponse.status);
+        return null;
+      }
+      
+      const contentType = fileResponse.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await fileResponse.text();
+        console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+        return null;
+      }
+      
       const fileData = await fileResponse.json();
 
       if (!fileData.ok || !fileData.result?.file_path) {
