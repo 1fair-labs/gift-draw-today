@@ -295,7 +295,8 @@ export default async function handler(
           try {
             // ВАЖНО: Используем прямую функцию авторизации, НЕ fetch запрос!
             // Если вы видите "CALLING LOGIN API" в логах - это старая версия кода!
-            console.log('=== CALLING LOGIN DIRECTLY (v3 - NO FETCH!) ===');
+            console.log('=== CALLING LOGIN DIRECTLY (v4 - COMMIT ab1ed4e - NO FETCH!) ===');
+            console.log('=== THIS IS THE NEW CODE - IF YOU SEE "CALLING LOGIN API" ABOVE, VERCEL IS USING OLD CODE ===');
             console.log('Request data:', {
               telegramId: userId,
               username,
