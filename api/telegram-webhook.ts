@@ -514,6 +514,18 @@ async function deleteMessage(
       }),
     });
 
+    // Проверяем content-type перед парсингом JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+      // Если сообщение уже удалено - это нормально
+      if (response.status === 200 || response.status === 400) {
+        return true;
+      }
+      return false;
+    }
+
     const responseData = await response.json();
     
     if (!response.ok) {
@@ -621,6 +633,14 @@ async function sendMessage(
     }),
   });
 
+  // Проверяем content-type перед парсингом JSON
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+    throw new Error(`Telegram API returned non-JSON response: ${contentType}`);
+  }
+
   const responseData = await response.json();
   
   if (!response.ok) {
@@ -690,6 +710,14 @@ async function answerCallbackQuery(
     },
     body: JSON.stringify(body),
   });
+
+  // Проверяем content-type перед парсингом JSON
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+    throw new Error(`Telegram API returned non-JSON response: ${contentType}`);
+  }
 
   const responseData = await response.json();
   

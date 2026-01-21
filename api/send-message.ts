@@ -92,6 +92,17 @@ export default async function handler(
       }
     );
 
+    // Проверяем content-type перед парсингом JSON
+    const contentType = telegramResponse.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await telegramResponse.text();
+      console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+      return response.status(500).json({
+        error: 'Telegram API returned non-JSON response',
+        contentType,
+      });
+    }
+
     const data = await telegramResponse.json();
 
     if (!telegramResponse.ok) {
