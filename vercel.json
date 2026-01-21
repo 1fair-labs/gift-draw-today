@@ -23,7 +23,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://*.telegram.org; frame-src 'self' https://telegram.org https://*.telegram.org https://oauth.telegram.org; connect-src 'self' https://telegram.org https://*.telegram.org https://oauth.telegram.org https://api.telegram.org https://config.ton.org https://*.ton.org https://*.supabase.co https://*.supabase.io wss://*.bridge.tonapi.io;"
+          "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://*.telegram.org https://vercel.live https://*.vercel.live; frame-src 'self' https://telegram.org https://*.telegram.org https://oauth.telegram.org; connect-src 'self' https://telegram.org https://*.telegram.org https://oauth.telegram.org https://api.telegram.org https://config.ton.org https://*.ton.org https://*.supabase.co https://*.supabase.io wss://*.bridge.tonapi.io;"
         },
         {
           "key": "X-Content-Type-Options",
