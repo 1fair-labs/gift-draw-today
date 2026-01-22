@@ -119,14 +119,14 @@ function Paragraph({
   const isComplete = displayedText.length === text.length;
 
   if (isHeading) {
-    // Определяем, это ли заголовок "Welcome, Lucky One!" или новый заголовок
+    // Определяем, это ли заголовок "Welcome, Lucky One!" или новый текст
     const isWelcomeHeading = text.includes("Welcome, Lucky One!");
-    const isGiftHeading = text.includes("Every ticket you mint helps someone thrive");
+    const isSpecialHeading = text.includes("Every ticket you mint helps someone thrive");
     
     return (
       <h2 
         ref={paragraphRef}
-        className={`${isSmallText ? 'text-lg' : 'text-xl'} font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading || isGiftHeading ? 'font-display' : 'font-sans'}`}
+        className={`${isSmallText ? 'text-lg' : 'text-xl'} font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${(isWelcomeHeading || isSpecialHeading) ? 'font-display' : 'font-sans'}`}
         style={{ opacity }}
       >
         {displayedText}
@@ -287,13 +287,12 @@ export default function AboutScreen() {
     
     const item = content[i];
     const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
-    const isGiftHeading = item.isHeading && item.text.includes("Every ticket you mint helps someone thrive");
-    const typingSpeed = (isWelcomeHeading || isGiftHeading) ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
+    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
     const textLength = item.text.length;
     const baseTime = textLength * typingSpeed;
     const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
-    const punctuationPause = punctuationCount * ((isWelcomeHeading || isGiftHeading) ? 50 : (item.isHeading ? 40 : 30));
-    const afterPause = (isWelcomeHeading || isGiftHeading) ? 800 : (item.isHeading ? 200 : 100);
+    const punctuationPause = punctuationCount * (isWelcomeHeading ? 50 : (item.isHeading ? 40 : 30));
+    const afterPause = isWelcomeHeading ? 800 : (item.isHeading ? 200 : 100);
     
     currentDelay += baseTime + punctuationPause + afterPause;
   }
@@ -364,8 +363,7 @@ export default function AboutScreen() {
                   {blockItems.map(({ item: blockItem, index: blockItemIndex }) => {
                     const blockItemDelay = shouldUseFastMode ? 0 : delays[blockItemIndex];
                     const isBlockWelcomeHeading = blockItem.text === WELCOME_HEADING_TEXT;
-                    const isBlockGiftHeading = blockItem.isHeading && blockItem.text.includes("Every ticket you mint helps someone thrive");
-                    const blockItemTypingSpeed = (isBlockWelcomeHeading || isBlockGiftHeading) ? 18 : (blockItem.isHeading ? 12 : (blockItem.isList ? 2 : 2));
+                    const blockItemTypingSpeed = isBlockWelcomeHeading ? 18 : (blockItem.isHeading ? 12 : (blockItem.isList ? 2 : 2));
                     return (
                       <Paragraph
                         key={blockItemIndex}
@@ -394,7 +392,7 @@ export default function AboutScreen() {
               return null;
             }
 
-            return (
+  return (
               <Paragraph
                 key={index}
                 text={item.text}
