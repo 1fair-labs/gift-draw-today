@@ -1059,7 +1059,6 @@ export default function MiniApp() {
       try {
         await fetch('/api/auth/session?action=logout', {
           method: 'POST',
-          method: 'POST',
           credentials: 'include',
         });
       } catch (error) {
