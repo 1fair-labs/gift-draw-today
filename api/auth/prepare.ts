@@ -1,8 +1,10 @@
 // api/auth/prepare.ts
 // Сохраняет origin для токена авторизации перед переходом к боту
+// Использует Supabase Storage для хранения (как аватары)
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import * as crypto from 'crypto';
 
 // Создаем Supabase клиент
 function getSupabaseClient() {
@@ -39,41 +41,29 @@ export default async function handler(
       return response.status(500).json({ error: 'Database not configured' });
     }
 
-    // Сохраняем origin в Supabase (таблица auth_origins)
-    // Если таблицы нет, она будет создана автоматически при первом запросе
-    // Или можно использовать upsert в существующую таблицу
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 минут
+    // Создаем хеш имени файла из токена для безопасности
+    const fileName = `auth_origins/${crypto.createHash('sha256').update(token).digest('hex')}.json`;
+    
+    // Сохраняем origin в JSON файл в Storage
+    const data = {
+      origin,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 минут
+      createdAt: Date.now()
+    };
 
-    const { error } = await supabase
-      .from('auth_origins')
-      .upsert({
-        token,
-        origin,
-        expires_at: expiresAt,
-        created_at: new Date().toISOString()
-      }, {
-        onConflict: 'token'
+    const { error } = await supabase.storage
+      .from('avatars') // Используем существующий bucket для аватаров
+      .upload(fileName, JSON.stringify(data), {
+        contentType: 'application/json',
+        upsert: true // Перезаписываем если файл существует
       });
 
     if (error) {
-      console.error('Error saving origin to Supabase:', error);
-      // Если таблицы нет, создаем запись через insert (без upsert)
-      const { error: insertError } = await supabase
-        .from('auth_origins')
-        .insert({
-          token,
-          origin,
-          expires_at: expiresAt,
-          created_at: new Date().toISOString()
-        });
-      
-      if (insertError) {
-        console.error('Error inserting origin:', insertError);
-        return response.status(500).json({ error: 'Failed to save origin' });
-      }
+      console.error('Error saving origin to Storage:', error);
+      return response.status(500).json({ error: 'Failed to save origin' });
     }
 
-    console.log('Origin saved for token:', token.substring(0, 10), 'origin:', origin);
+    console.log('Origin saved for token:', token.substring(0, 10), 'origin:', origin, 'file:', fileName);
 
     return response.status(200).json({ success: true });
   } catch (error: any) {
@@ -90,26 +80,32 @@ export async function getOriginForToken(token: string): Promise<string | null> {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('auth_origins')
-      .select('origin, expires_at')
-      .eq('token', token)
-      .single();
+    // Создаем хеш имени файла из токена
+    const fileName = `auth_origins/${crypto.createHash('sha256').update(token).digest('hex')}.json`;
+
+    // Получаем файл из Storage
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .download(fileName);
 
     if (error || !data) {
       return null;
     }
 
+    // Читаем JSON из файла
+    const text = await data.text();
+    const fileData = JSON.parse(text);
+
     // Проверяем, не истекла ли запись
-    if (new Date(data.expires_at) < new Date()) {
-      // Удаляем истекшую запись
-      await supabase.from('auth_origins').delete().eq('token', token);
+    if (fileData.expiresAt < Date.now()) {
+      // Удаляем истекший файл
+      await supabase.storage.from('avatars').remove([fileName]);
       return null;
     }
 
-    return data.origin;
+    return fileData.origin;
   } catch (error: any) {
-    console.error('Error getting origin from Supabase:', error);
+    console.error('Error getting origin from Storage:', error);
     return null;
   }
 }
