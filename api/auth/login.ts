@@ -15,6 +15,14 @@ export default async function handler(
     return response.status(200).end();
   }
 
+  // Поддерживаем действие через query параметр
+  const action = request.query.action as string;
+
+  // Если action=refresh-avatar, обрабатываем обновление аватара
+  if (action === 'refresh-avatar') {
+    return await handleRefreshAvatar(request, response);
+  }
+
   if (request.method !== 'POST') {
     return response.status(405).json({ error: 'Method not allowed' });
   }
@@ -122,6 +130,52 @@ export default async function handler(
       error: 'Internal server error',
       message: error.message || 'Unknown error occurred',
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
+  }
+}
+
+// Обработчик обновления аватара
+async function handleRefreshAvatar(
+  request: VercelRequest,
+  response: VercelResponse,
+) {
+  if (request.method !== 'POST') {
+    return response.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { telegramId } = request.body;
+
+    if (!telegramId) {
+      return response.status(400).json({ error: 'telegramId is required' });
+    }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      return response.status(500).json({ error: 'TELEGRAM_BOT_TOKEN not configured' });
+    }
+
+    // Принудительно обновляем аватар
+    console.log('Refreshing avatar for user:', telegramId);
+    const avatarUrl = await userAuthStore.fetchAndSaveAvatar(telegramId, botToken, true);
+
+    if (!avatarUrl) {
+      return response.status(404).json({ 
+        error: 'Avatar not found or failed to refresh',
+        avatarUrl: null 
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      avatarUrl,
+    });
+  } catch (error: any) {
+    console.error('Error refreshing avatar:', error);
+    return response.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message || 'Unknown error occurred',
     });
   }
 }
