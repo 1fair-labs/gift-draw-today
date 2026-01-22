@@ -581,10 +581,10 @@ class UserAuthStore {
         return null;
       }
       
-      const contentType = photosResponse.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      const photosContentType = photosResponse.headers.get('content-type');
+      if (!photosContentType || !photosContentType.includes('application/json')) {
         const text = await photosResponse.text();
-        console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+        console.error('Expected JSON but got:', photosContentType, 'Response (first 200 chars):', text.substring(0, 200));
         return null;
       }
       
@@ -643,10 +643,10 @@ class UserAuthStore {
         return null;
       }
       
-      const contentType = fileResponse.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      const fileContentType = fileResponse.headers.get('content-type');
+      if (!fileContentType || !fileContentType.includes('application/json')) {
         const text = await fileResponse.text();
-        console.error('Expected JSON but got:', contentType, 'Response (first 200 chars):', text.substring(0, 200));
+        console.error('Expected JSON but got:', fileContentType, 'Response (first 200 chars):', text.substring(0, 200));
         return null;
       }
       
