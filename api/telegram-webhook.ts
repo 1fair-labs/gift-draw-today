@@ -283,34 +283,20 @@ export default async function handler(
         // Сохраняем message_id сообщения пользователя для удаления после отправки ответа
         const userMessageId = message.message_id;
         
-        // Проверяем, есть ли токен авторизации и origin (формат: token_base64origin)
+        // Проверяем, есть ли токен авторизации
         if (args.length > 1 && args[1]) {
-          const tokenWithOrigin = args[1];
-          const parts = tokenWithOrigin.split('_');
-          const token = parts[0]; // Токен идет первым
+          const token = args[1]; // Токен идет напрямую
           
-          // Извлекаем origin из base64 (если есть)
-          let userOrigin: string | null = null;
-          if (parts.length > 1) {
-            try {
-              // Декодируем base64 origin (заменяем обратно символы для base64)
-              const base64Origin = parts.slice(1).join('_').replace(/-/g, '+').replace(/_/g, '/');
-              // Добавляем padding если нужно
-              const paddedBase64 = base64Origin + '='.repeat((4 - base64Origin.length % 4) % 4);
-              userOrigin = Buffer.from(paddedBase64, 'base64').toString('utf-8');
-              console.log('Extracted user origin from command:', userOrigin);
-            } catch (decodeError: any) {
-              console.warn('Failed to decode origin from command:', decodeError);
-              // Продолжаем без origin, используем WEB_APP_URL
-            }
-          }
+          // Получаем origin из хранилища на сервере
+          const { getOriginForToken } = await import('./auth/prepare');
+          const userOrigin = getOriginForToken(token);
           
           console.log('=== AUTH TOKEN PROCESSING ===');
           console.log('Full command:', text);
           console.log('Args:', args);
           console.log('Token (first 10 chars):', token.substring(0, 10));
           console.log('Token length:', token.length);
-          console.log('User origin from command:', userOrigin || 'NOT PROVIDED');
+          console.log('User origin from server store:', userOrigin || 'NOT FOUND');
 
           if (!userId) {
             console.error('No userId in message');
