@@ -1057,7 +1057,8 @@ export default function MiniApp() {
       
       // ��TǦ�Tɦ-���- cookie T���T�T����� TǦ�T����� API
       try {
-        await fetch('/api/auth/logout', {
+        await fetch('/api/auth/session?action=logout', {
+          method: 'POST',
           method: 'POST',
           credentials: 'include',
         });
@@ -1158,7 +1159,7 @@ try {
       
       try {
         // ��T��-�-��T�TϦ��- cookie TǦ�T����� API endpoint
-        const response = await fetch('/api/auth/check-session', {
+        const response = await fetch('/api/auth/session', {
           credentials: 'include',
         });
         
