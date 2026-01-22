@@ -69,41 +69,30 @@ export default async function handler(
     console.log('Cookie set for telegramId:', userData.telegramId);
 
     // Перенаправляем на главную страницу
-    // Определяем URL в зависимости от окружения
+    // Определяем URL - ВСЕГДА используем vercel.app URL, игнорируя WEB_APP_URL
     let redirectUrl: string;
 
-    // Более надежная проверка: явно определяем preview деплой
     const host = request.headers['x-forwarded-host'] || 
                  request.headers.host || 
                  '';
-    const isPreviewDeployment = host.includes('vercel.app') || 
-                                process.env.VERCEL_URL?.includes('vercel.app') ||
-                                process.env.VERCEL_ENV === 'preview';
 
-    const isProduction = !isPreviewDeployment && 
-                        (process.env.VERCEL_ENV === 'production' || 
-                         (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today')));
-
-    if (isProduction) {
-      // Для продакшна всегда используем www.giftdraw.today
-      redirectUrl = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+    // ВСЕГДА используем vercel.app URL из заголовков или VERCEL_URL
+    // Игнорируем WEB_APP_URL для определения окружения
+    if (host && host.includes('vercel.app')) {
+      // Используем host из заголовков, если это vercel.app
+      const protocol = request.headers['x-forwarded-proto'] || 'https';
+      redirectUrl = `${protocol}://${host}`;
+      console.log('Using URL from host header:', redirectUrl);
+    } else if (process.env.VERCEL_URL) {
+      // Используем VERCEL_URL
+      redirectUrl = `https://${process.env.VERCEL_URL}`;
+      console.log('Using URL from VERCEL_URL:', redirectUrl);
     } else {
-      // Для dev/preview используем URL из заголовков или переменных
-      if (process.env.WEB_APP_URL && !process.env.WEB_APP_URL.includes('giftdraw.today')) {
-        // Если WEB_APP_URL задан и это не production URL, используем его
-        redirectUrl = process.env.WEB_APP_URL;
-      } else if (host && host.includes('vercel.app')) {
-        // Используем host из заголовков, если это vercel.app
-        const protocol = request.headers['x-forwarded-proto'] || 'https';
-        redirectUrl = `${protocol}://${host}`;
-      } else if (process.env.VERCEL_URL) {
-        // Используем VERCEL_URL
-        redirectUrl = `https://${process.env.VERCEL_URL}`;
-      } else {
-        // Последний fallback
-        redirectUrl = 'https://www.giftdraw.today';
-      }
+      // Fallback (не должен использоваться в Vercel)
+      redirectUrl = 'https://www.giftdraw.today';
+      console.log('Using fallback URL:', redirectUrl);
     }
+
     // Убираем trailing slash
     redirectUrl = redirectUrl.replace(/\/$/, '');
     

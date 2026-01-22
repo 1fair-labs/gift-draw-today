@@ -70,41 +70,30 @@ export default async function handler(
   // Логируем первые и последние символы токена для отладки (безопасно)
   console.log('BOT_TOKEN configured:', BOT_TOKEN ? `${BOT_TOKEN.substring(0, 10)}...${BOT_TOKEN.substring(BOT_TOKEN.length - 5)}` : 'NOT SET');
 
-  // Определяем URL в зависимости от окружения
+  // Определяем URL - ВСЕГДА используем vercel.app URL, игнорируя WEB_APP_URL
   let WEB_APP_URL: string;
 
-  // Более надежная проверка: явно определяем preview деплой
   const host = request.headers['x-forwarded-host'] || 
                request.headers.host || 
                '';
-  const isPreviewDeployment = host.includes('vercel.app') || 
-                              process.env.VERCEL_URL?.includes('vercel.app') ||
-                              process.env.VERCEL_ENV === 'preview';
 
-  const isProduction = !isPreviewDeployment && 
-                      (process.env.VERCEL_ENV === 'production' || 
-                       (process.env.WEB_APP_URL && process.env.WEB_APP_URL.includes('giftdraw.today')));
-
-  if (isProduction) {
-    // Для продакшна всегда используем www.giftdraw.today
-    WEB_APP_URL = process.env.WEB_APP_URL || 'https://www.giftdraw.today';
+  // ВСЕГДА используем vercel.app URL из заголовков или VERCEL_URL
+  // Игнорируем WEB_APP_URL для определения окружения
+  if (host && host.includes('vercel.app')) {
+    // Используем host из заголовков, если это vercel.app
+    const protocol = request.headers['x-forwarded-proto'] || 'https';
+    WEB_APP_URL = `${protocol}://${host}`;
+    console.log('Using URL from host header:', WEB_APP_URL);
+  } else if (process.env.VERCEL_URL) {
+    // Используем VERCEL_URL
+    WEB_APP_URL = `https://${process.env.VERCEL_URL}`;
+    console.log('Using URL from VERCEL_URL:', WEB_APP_URL);
   } else {
-    // Для dev/preview используем URL из заголовков или переменных
-    if (process.env.WEB_APP_URL && !process.env.WEB_APP_URL.includes('giftdraw.today')) {
-      // Если WEB_APP_URL задан и это не production URL, используем его
-      WEB_APP_URL = process.env.WEB_APP_URL;
-    } else if (host && host.includes('vercel.app')) {
-      // Используем host из заголовков, если это vercel.app
-      const protocol = request.headers['x-forwarded-proto'] || 'https';
-      WEB_APP_URL = `${protocol}://${host}`;
-    } else if (process.env.VERCEL_URL) {
-      // Используем VERCEL_URL
-      WEB_APP_URL = `https://${process.env.VERCEL_URL}`;
-    } else {
-      // Последний fallback
-      WEB_APP_URL = 'https://www.giftdraw.today';
-    }
+    // Fallback (не должен использоваться в Vercel)
+    WEB_APP_URL = 'https://www.giftdraw.today';
+    console.log('Using fallback URL:', WEB_APP_URL);
   }
+
   // Убираем trailing slash
   WEB_APP_URL = WEB_APP_URL.replace(/\/$/, '');
   
@@ -114,8 +103,6 @@ export default async function handler(
     WEB_APP_URL_ENV: process.env.WEB_APP_URL,
     'x-forwarded-host': request.headers['x-forwarded-host'],
     host: request.headers.host,
-    isPreviewDeployment,
-    isProduction,
     finalWEB_APP_URL: WEB_APP_URL
   });
 
