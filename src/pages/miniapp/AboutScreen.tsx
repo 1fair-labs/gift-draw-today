@@ -119,13 +119,14 @@ function Paragraph({
   const isComplete = displayedText.length === text.length;
 
   if (isHeading) {
-    // Определяем, это ли заголовок "Welcome, Lucky One!"
+    // Определяем, это ли заголовок "Welcome, Lucky One!" или новый заголовок
     const isWelcomeHeading = text.includes("Welcome, Lucky One!");
+    const isGiftHeading = text.includes("Every ticket you mint helps someone thrive");
     
     return (
       <h2 
         ref={paragraphRef}
-        className={`${isSmallText ? 'text-lg' : 'text-xl'} font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading ? 'font-display' : 'font-sans'}`}
+        className={`${isSmallText ? 'text-lg' : 'text-xl'} font-bold text-foreground mb-3 mt-6 first:mt-0 transition-opacity duration-300 ${isWelcomeHeading || isGiftHeading ? 'font-display' : 'font-sans'}`}
         style={{ opacity }}
       >
         {displayedText}
@@ -362,7 +363,8 @@ export default function AboutScreen() {
                   {blockItems.map(({ item: blockItem, index: blockItemIndex }) => {
                     const blockItemDelay = shouldUseFastMode ? 0 : delays[blockItemIndex];
                     const isBlockWelcomeHeading = blockItem.text === WELCOME_HEADING_TEXT;
-                    const blockItemTypingSpeed = isBlockWelcomeHeading ? 18 : (blockItem.isHeading ? 12 : (blockItem.isList ? 2 : 2));
+                    const isBlockGiftHeading = blockItem.isHeading && blockItem.text.includes("Every ticket you mint helps someone thrive");
+                    const blockItemTypingSpeed = (isBlockWelcomeHeading || isBlockGiftHeading) ? 18 : (blockItem.isHeading ? 12 : (blockItem.isList ? 2 : 2));
                     return (
                       <Paragraph
                         key={blockItemIndex}
