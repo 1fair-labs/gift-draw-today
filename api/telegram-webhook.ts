@@ -146,7 +146,7 @@ export default async function handler(
         const userId = callback.from.id;
         const username = callback.from.username;
         const firstName = callback.from.first_name || 'User';
-        const lastName = callback.from.last_name;
+        const lastName = (callback.from as any).last_name;
         const chatId = callback.message?.chat.id;
         const callbackData = callback.data;
         
@@ -260,7 +260,7 @@ export default async function handler(
       const userId = message.from?.id;
       const username = message.from?.username;
       const firstName = message.from?.first_name || 'User';
-      const lastName = message.from?.last_name;
+      const lastName = (message.from as any)?.last_name;
       const chatId = message.chat.id;
 
       console.log('Processing message:', {
@@ -288,7 +288,7 @@ export default async function handler(
           const token = args[1]; // Токен идет напрямую
           
           // Получаем origin из хранилища на сервере
-          const { getOriginForToken } = await import('./auth/prepare');
+          const { getOriginForToken } = await import('./auth/prepare.js');
           const userOrigin = getOriginForToken(token);
           
           console.log('=== AUTH TOKEN PROCESSING ===');

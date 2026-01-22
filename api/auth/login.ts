@@ -101,8 +101,6 @@ export default async function handler(
       WEB_APP_URL_ENV: process.env.WEB_APP_URL,
       'x-forwarded-host': request.headers['x-forwarded-host'],
       host: request.headers.host,
-      isPreviewDeployment,
-      isProduction,
       finalWebAppUrl: webAppUrl
     });
     
