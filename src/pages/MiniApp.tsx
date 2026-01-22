@@ -1090,7 +1090,16 @@ export default function MiniApp() {
     const timestamp = Date.now().toString();
     const randomDigits = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
     const authId = timestamp + randomDigits;
-    
+    // Сохраняем origin на сервере перед переходом к боту
+try {
+  await fetch('/api/auth/prepare', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: authId, origin: window.location.origin }),
+  });
+} catch (error) {
+  console.error('Failed to save origin:', error);
+}
     // �� �-�-�-�-�� T���T�T¦��-�� �-T¦�T�T˦-�-���- �-�-T¦- T� ���-T��-�-��T�T��-�- auth, ���-�����- ��T��-�����-���+��T� ��T��� /start
     const botUrl = `https://t.me/giftdrawtoday_bot?start=${authId}`;
     
