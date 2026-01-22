@@ -287,6 +287,9 @@ export default async function handler(
         if (args.length > 1 && args[1]) {
           const token = args[1]; // Токен идет напрямую
           
+          console.log('=== VERSION CHECK: ORIGIN FROM STORAGE v2 ===');
+          console.log('=== IF YOU DON\'T SEE THIS, VERCEL IS USING OLD CODE ===');
+          
           // Получаем origin из Supabase Storage
           let userOrigin: string | null = null;
           try {
@@ -295,9 +298,10 @@ export default async function handler(
             const { getOriginForToken } = await import('./auth/prepare.js');
             console.log('Import successful, calling getOriginForToken...');
             userOrigin = await getOriginForToken(token);
-            console.log('Origin from Storage:', userOrigin || 'NOT FOUND');
+            console.log('Origin from Storage result:', userOrigin || 'NOT FOUND');
           } catch (importError: any) {
-            console.error('Error importing or calling getOriginForToken:', importError);
+            console.error('❌ Error importing or calling getOriginForToken:', importError);
+            console.error('Error message:', importError?.message);
             console.error('Error stack:', importError?.stack);
             // Продолжаем без origin, используем WEB_APP_URL
           }
