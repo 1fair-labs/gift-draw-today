@@ -287,12 +287,13 @@ export default function AboutScreen() {
     
     const item = content[i];
     const isWelcomeHeading = item.text === WELCOME_HEADING_TEXT;
-    const typingSpeed = isWelcomeHeading ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
+    const isGiftHeading = item.isHeading && item.text.includes("Every ticket you mint helps someone thrive");
+    const typingSpeed = (isWelcomeHeading || isGiftHeading) ? 18 : (item.isHeading ? 12 : (item.isList ? 2 : 2));
     const textLength = item.text.length;
     const baseTime = textLength * typingSpeed;
     const punctuationCount = (item.text.match(/[.!?]/g) || []).length;
-    const punctuationPause = punctuationCount * (isWelcomeHeading ? 50 : (item.isHeading ? 40 : 30));
-    const afterPause = isWelcomeHeading ? 800 : (item.isHeading ? 200 : 100);
+    const punctuationPause = punctuationCount * ((isWelcomeHeading || isGiftHeading) ? 50 : (item.isHeading ? 40 : 30));
+    const afterPause = (isWelcomeHeading || isGiftHeading) ? 800 : (item.isHeading ? 200 : 100);
     
     currentDelay += baseTime + punctuationPause + afterPause;
   }
