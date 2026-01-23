@@ -1386,7 +1386,7 @@ try {
 
           {/* Bottom Navigation �+��T� �+��T���T¦-���- */}
           <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl h-[60px] flex-shrink-0" style={{ marginBottom: '16px' }}>
-            <div className="flex items-center justify-around px-4 py-4 h-full">
+            <div className="flex items-center justify-around px-4 pt-6 pb-2 h-full">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
