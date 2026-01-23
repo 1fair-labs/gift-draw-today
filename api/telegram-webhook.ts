@@ -70,40 +70,20 @@ export default async function handler(
   // Логируем первые и последние символы токена для отладки (безопасно)
   console.log('BOT_TOKEN configured:', BOT_TOKEN ? `${BOT_TOKEN.substring(0, 10)}...${BOT_TOKEN.substring(BOT_TOKEN.length - 5)}` : 'NOT SET');
 
-  // Определяем URL - ВСЕГДА используем vercel.app URL, игнорируя WEB_APP_URL
-  let WEB_APP_URL: string;
-
-  const host = request.headers['x-forwarded-host'] || 
-               request.headers.host || 
-               '';
-
-  // ВСЕГДА используем vercel.app URL из заголовков или VERCEL_URL
-  // Игнорируем WEB_APP_URL для определения окружения
-  if (host && host.includes('vercel.app')) {
-    // Используем host из заголовков, если это vercel.app
-    const protocol = request.headers['x-forwarded-proto'] || 'https';
-    WEB_APP_URL = `${protocol}://${host}`;
-    console.log('Using URL from host header:', WEB_APP_URL);
-  } else if (process.env.VERCEL_URL) {
-    // Используем VERCEL_URL
-    WEB_APP_URL = `https://${process.env.VERCEL_URL}`;
-    console.log('Using URL from VERCEL_URL:', WEB_APP_URL);
-  } else {
-    // Fallback (не должен использоваться в Vercel)
-    WEB_APP_URL = 'https://www.giftdraw.today';
-    console.log('Using fallback URL:', WEB_APP_URL);
-  }
+  // Определяем fallback URL - всегда используем production домен
+  // Реальный origin будет взят из Supabase Storage (если есть)
+  let WEB_APP_URL = 'https://www.giftdraw.today';
 
   // Убираем trailing slash
   WEB_APP_URL = WEB_APP_URL.replace(/\/$/, '');
-  
-  console.log('Environment detection:', {
+
+  console.log('WEB_APP_URL fallback (will be overridden by origin from Storage if available):', WEB_APP_URL);
+  console.log('Environment detection (for debug only):', {
     VERCEL_ENV: process.env.VERCEL_ENV,
     VERCEL_URL: process.env.VERCEL_URL,
     WEB_APP_URL_ENV: process.env.WEB_APP_URL,
     'x-forwarded-host': request.headers['x-forwarded-host'],
     host: request.headers.host,
-    finalWEB_APP_URL: WEB_APP_URL
   });
 
     try {

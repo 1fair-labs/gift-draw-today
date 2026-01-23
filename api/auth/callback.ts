@@ -69,34 +69,14 @@ export default async function handler(
     console.log('Cookie set for telegramId:', userData.telegramId);
 
     // Перенаправляем на главную страницу
-    // Определяем URL - ВСЕГДА используем vercel.app URL, игнорируя WEB_APP_URL
-    let redirectUrl: string;
-
-    const host = request.headers['x-forwarded-host'] || 
-                 request.headers.host || 
-                 '';
-
-    // ВСЕГДА используем vercel.app URL из заголовков или VERCEL_URL
-    // Игнорируем WEB_APP_URL для определения окружения
-    if (host && host.includes('vercel.app')) {
-      // Используем host из заголовков, если это vercel.app
-      const protocol = request.headers['x-forwarded-proto'] || 'https';
-      redirectUrl = `${protocol}://${host}`;
-      console.log('Using URL from host header:', redirectUrl);
-    } else if (process.env.VERCEL_URL) {
-      // Используем VERCEL_URL
-      redirectUrl = `https://${process.env.VERCEL_URL}`;
-      console.log('Using URL from VERCEL_URL:', redirectUrl);
-    } else {
-      // Fallback (не должен использоваться в Vercel)
-      redirectUrl = 'https://www.giftdraw.today';
-      console.log('Using fallback URL:', redirectUrl);
-    }
+    // Используем production домен по умолчанию
+    let redirectUrl = 'https://www.giftdraw.today';
 
     // Убираем trailing slash
     redirectUrl = redirectUrl.replace(/\/$/, '');
-    
-    console.log('Environment detection (callback):', {
+
+    console.log('Redirect URL (production):', redirectUrl);
+    console.log('Environment detection (callback, for debug only):', {
       VERCEL_ENV: process.env.VERCEL_ENV,
       VERCEL_URL: process.env.VERCEL_URL,
       WEB_APP_URL_ENV: process.env.WEB_APP_URL,
