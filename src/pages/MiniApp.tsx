@@ -1386,7 +1386,7 @@ try {
 
           {/* Bottom Navigation �+��T� �+��T���T¦-���- */}
           <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl h-[60px] flex-shrink-0" style={{ marginBottom: '16px' }}>
-            <div className="flex items-center justify-around px-4 pt-6 pb-2 h-full">
+            <div className="flex items-center justify-between px-8 pt-6 pb-2 h-full">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
@@ -1593,7 +1593,7 @@ try {
               <Button
                 variant="ghost"
                 size="lg"
-                className={`flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-start ${isIOS ? 'pt-1' : ''}`}
+                className={`flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-center ml-4 ${isIOS ? 'pt-1' : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1629,7 +1629,7 @@ try {
               <Button
                 variant="ghost"
                 size="lg"
-                className={`flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-end ${isIOS ? 'pt-1' : ''}`}
+                className={`flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-center mr-4 ${isIOS ? 'pt-1' : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
