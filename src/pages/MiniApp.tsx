@@ -1247,7 +1247,7 @@ try {
     >
       {!isMobile ? (
         <div 
-          className="relative bg-background overflow-hidden"
+          className="relative bg-background overflow-hidden flex flex-col"
           style={{
             width: '428px',
             height: '926px',
@@ -1258,8 +1258,8 @@ try {
           }}
         >
           {/* Header - T¦-��Ț��- �-�- �+��T���T¦-���� */}
-          <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0">
-            <div className="px-4 py-4 min-h-[60px] flex justify-between items-center gap-3">
+          <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0 h-[60px] flex-shrink-0">
+            <div className="px-4 py-4 h-full flex justify-between items-center gap-3 overflow-hidden">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 {telegramUser ? (
                   <div
@@ -1320,10 +1320,9 @@ try {
 
           {/* Screens Container �+��T� �+��T���T¦-���- */}
           <div 
-            className="relative w-full overflow-hidden"
+            className="relative w-full overflow-hidden flex-1"
             style={{
-              height: 'calc(100% - 60px - 80px)', // ��T�T��-T¦- �-���-T�T� header �� footer
-              marginTop: '0',
+              minHeight: 0, // ��T�T��-T¦- �-���-T�T� header �� footer
             }}
           >
             <div className="relative w-full h-full overflow-hidden">
@@ -1386,8 +1385,8 @@ try {
           </div>
 
           {/* Bottom Navigation �+��T� �+��T���T¦-���- */}
-          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '16px' }}>
-            <div className="flex items-center justify-around px-4 py-4 h-20">
+          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl h-[80px] flex-shrink-0" style={{ marginBottom: '16px' }}>
+            <div className="flex items-center justify-around px-4 py-4 h-full">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
