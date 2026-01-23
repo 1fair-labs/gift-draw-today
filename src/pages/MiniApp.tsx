@@ -1319,7 +1319,7 @@ try {
           <div 
             className="relative w-full overflow-hidden"
             style={{
-              height: 'calc(100% - 60px - 66px)', // ��T�T��-T¦- �-���-T�T� header �� footer
+              height: 'calc(100% - 60px - 80px)', // ��T�T��-T¦- �-���-T�T� header �� footer
               marginTop: '0',
             }}
           >
@@ -1383,13 +1383,13 @@ try {
           </div>
 
           {/* Bottom Navigation �+��T� �+��T���T¦-���- */}
-          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl">
-            <div className="grid grid-cols-3 items-start px-4 h-[66px]">
+          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: '16px' }}>
+            <div className="flex items-center justify-around px-4 py-4 h-20">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 pt-2 md:pt-3 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-start"
+                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1407,7 +1407,7 @@ try {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 pt-2 md:pt-3 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-center"
+                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1425,7 +1425,7 @@ try {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 pt-2 md:pt-3 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-end"
+                className="flex flex-col items-center gap-1 h-auto py-2 pb-4 hover:bg-transparent hover:text-inherit active:bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1586,12 +1586,12 @@ try {
 
           {/* Bottom Navigation �+��T� �-�-�-����Ț-T�T� */}
           <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
-            <div className="grid grid-cols-3 items-start px-4 h-[66px]">
+            <div className="grid grid-cols-3 items-center px-4 h-[66px]">
               {/* About Button (Left) */}
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 pt-2 md:pt-3 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-start"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-start"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1605,11 +1605,11 @@ try {
                 </span>
               </Button>
 
-              {/* Draw Button (Center) - Fixed position on mobile */}
+              {/* Draw Button (Center) - Fixed position */}
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 pt-2 md:pt-3 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-center"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-center"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1627,7 +1627,7 @@ try {
               <Button
                 variant="ghost"
                 size="lg"
-                className="flex flex-col items-center gap-1 pt-2 md:pt-3 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-end"
+                className="flex flex-col items-center justify-center gap-1 h-full hover:bg-transparent hover:text-inherit active:bg-transparent justify-self-end"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
