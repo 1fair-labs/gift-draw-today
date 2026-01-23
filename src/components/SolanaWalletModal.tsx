@@ -18,9 +18,66 @@ interface SolanaWalletModalProps {
 export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps) {
   const { wallets, select, connect, connecting, publicKey, connected, wallet } = useWallet();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [walletState, setWalletState] = useState<'checking' | 'installed' | 'not-installed'>('checking');
 
   // Filter to only show Phantom
   const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom');
+
+  // Check wallet installation status
+  const checkWalletStatus = useCallback(() => {
+    if (!phantomWallet) {
+      setWalletState('not-installed');
+      return;
+    }
+
+    const readyState = phantomWallet.readyState;
+    console.log('🔍 Checking Phantom wallet status:', readyState);
+
+    if (readyState === 'Installed' || readyState === 'Loadable') {
+      setWalletState('installed');
+    } else if (readyState === 'NotDetected') {
+      setWalletState('not-installed');
+    } else {
+      // Still checking or undefined
+      setWalletState('checking');
+    }
+  }, [phantomWallet]);
+
+  // Check wallet status when modal opens
+  useEffect(() => {
+    if (open) {
+      checkWalletStatus();
+    }
+  }, [open, checkWalletStatus]);
+
+  // Check wallet status when window gains focus (user returns from installing)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (open) {
+        console.log('🔄 Window focused - checking wallet status...');
+        // Small delay to allow wallet adapter to detect changes
+        setTimeout(() => {
+          checkWalletStatus();
+        }, 500);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [open, checkWalletStatus]);
+
+  // Periodically check wallet status while modal is open (in case user installs in background)
+  useEffect(() => {
+    if (!open) return;
+
+    const interval = setInterval(() => {
+      checkWalletStatus();
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [open, checkWalletStatus]);
 
   const handleSelectWallet = async (walletName: string) => {
     try {
@@ -105,11 +162,11 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
     }
   }, [connected, publicKey, open, connecting, onOpenChange]);
 
-  // Check wallet installation status
-  // readyState can be: 'Installed', 'Loadable', 'NotDetected', or undefined
-  const isInstalled = phantomWallet?.readyState === 'Installed' || phantomWallet?.readyState === 'Loadable';
-  const isNotDetected = phantomWallet?.readyState === 'NotDetected';
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // Use walletState instead of direct readyState check
+  const isInstalled = walletState === 'installed';
+  const isChecking = walletState === 'checking';
   
   // Log wallet state for debugging
   useEffect(() => {
@@ -117,14 +174,15 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
       console.log('🔍 Phantom wallet state:', {
         name: phantomWallet.adapter.name,
         readyState: phantomWallet.readyState,
+        walletState,
         isInstalled,
-        isNotDetected,
+        isChecking,
         isMobile,
         connected,
         hasPublicKey: !!publicKey
       });
     }
-  }, [open, phantomWallet, isInstalled, isNotDetected, isMobile, connected, publicKey]);
+  }, [open, phantomWallet, walletState, isInstalled, isChecking, isMobile, connected, publicKey]);
   
   // Get installation URL based on platform
   const getInstallUrl = () => {
@@ -178,11 +236,11 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {isInstalled 
+                      {isChecking 
+                        ? 'Checking installation...' 
+                        : isInstalled 
                         ? 'Ready to connect' 
-                        : isNotDetected 
-                        ? 'Not installed' 
-                        : 'Checking...'}
+                        : 'Not installed'}
                     </p>
                   </div>
                 </div>
@@ -201,7 +259,15 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
                 </div>
 
                 {/* Action Button */}
-                {isInstalled ? (
+                {isChecking ? (
+                  <Button
+                    disabled
+                    className="w-full"
+                  >
+                    <Wallet className="w-4 h-4 mr-2 animate-pulse" />
+                    Checking installation...
+                  </Button>
+                ) : isInstalled ? (
                   <Button
                     onClick={() => handleSelectWallet('Phantom')}
                     disabled={connecting || isConnecting}
@@ -225,12 +291,21 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
                       Phantom wallet is not installed. Install it to continue.
                     </p>
                     <Button
-                      onClick={() => window.open(getInstallUrl(), '_blank')}
+                      onClick={() => {
+                        window.open(getInstallUrl(), '_blank');
+                        // Check again after a delay (user might install and come back)
+                        setTimeout(() => {
+                          checkWalletStatus();
+                        }, 2000);
+                      }}
                       className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-primary-foreground font-display font-bold"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Install Phantom Wallet
                     </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      After installing, return to this page and the button will update automatically.
+                    </p>
                   </div>
                 )}
               </div>
