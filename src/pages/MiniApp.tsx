@@ -442,7 +442,7 @@ export default function MiniApp() {
 
   // Connect wallet (Phantom)
   const handleConnectWallet = useCallback(async () => {
-    // If wallet is already connected, do nothing
+    // If wallet is already connected, refresh balances
     if (connected && publicKey) {
       setWalletAddress(publicKey.toString());
       await loadWalletBalances();
@@ -450,16 +450,12 @@ export default function MiniApp() {
     }
 
     try {
-      setLoading(true);
-      
-      // Open wallet selection modal (only Phantom)
+      // Always open wallet selection modal
+      // This allows reconnection even if wallet was previously connected
       setWalletModalOpen(true);
     } catch (error: any) {
       console.error('Error connecting wallet:', error);
-      setLoading(false);
       alert('Failed to connect wallet. Please try again.');
-    } finally {
-      setLoading(false);
     }
   }, [connected, publicKey, loadWalletBalances]);
 

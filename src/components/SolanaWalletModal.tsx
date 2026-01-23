@@ -1,5 +1,5 @@
 // src/components/SolanaWalletModal.tsx
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,8 @@ interface SolanaWalletModalProps {
 }
 
 export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps) {
-  const { wallets, select, connecting, publicKey } = useWallet();
+  const { wallets, select, connect, connecting, publicKey, connected, wallet } = useWallet();
+  const [isConnecting, setIsConnecting] = useState(false);
 
   // Filter to only show Phantom, Solflare, and Backpack
   const allowedWallets = wallets.filter(
@@ -23,25 +24,43 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
 
   const handleSelectWallet = async (walletName: string) => {
     try {
+      setIsConnecting(true);
+      
+      // If wallet is already selected, just connect
+      if (wallet && wallet.adapter.name === walletName && connected) {
+        // Already connected, just close modal
+        setIsConnecting(false);
+        onOpenChange(false);
+        return;
+      }
+      
+      // Select the wallet first
       await select(walletName);
-      // Modal will close automatically when wallet connects
-      // Close modal after a short delay to allow connection
-      setTimeout(() => {
-        if (publicKey) {
-          onOpenChange(false);
-        }
-      }, 500);
+      
+      // Small delay to ensure wallet adapter is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Then connect to it (this will trigger the wallet popup)
+      await connect();
+      
+      // Modal will close automatically when connected becomes true
     } catch (error) {
-      console.error('Error selecting wallet:', error);
+      console.error('Error selecting/connecting wallet:', error);
+      setIsConnecting(false);
+      // Don't close modal on error, let user try again
     }
   };
 
-  // Close modal when wallet is connected
+  // Close modal when wallet is successfully connected
   useEffect(() => {
-    if (publicKey && open) {
-      onOpenChange(false);
+    if (connected && publicKey && open && !connecting) {
+      setIsConnecting(false);
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 300);
     }
-  }, [publicKey, open, onOpenChange]);
+  }, [connected, publicKey, open, connecting, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,7 +84,7 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
                   variant="outline"
                   className="w-full justify-start h-auto py-3"
                   onClick={() => handleSelectWallet(wallet.adapter.name)}
-                  disabled={!isInstalled || connecting}
+                  disabled={!isInstalled || connecting || isConnecting}
                 >
                   <div className="flex items-center gap-3 w-full">
                     {wallet.adapter.icon && (
