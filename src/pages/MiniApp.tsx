@@ -675,8 +675,8 @@ export default function MiniApp() {
       if (isPhantomStored && !connected && !publicKey && wallet?.adapter.name !== 'Phantom') {
         console.log('🔄 Attempting to restore Phantom connection...');
         try {
-          // Select Phantom wallet
-          await select('Phantom');
+          // Select Phantom wallet (cast to WalletName type)
+          await select('Phantom' as any);
           // Small delay for initialization
           await new Promise(resolve => setTimeout(resolve, 500));
           // Try to connect (if wallet was previously connected, this should work)
