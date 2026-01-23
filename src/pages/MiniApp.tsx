@@ -461,6 +461,13 @@ export default function MiniApp() {
 
   // Sync publicKey with walletAddress
   useEffect(() => {
+    console.log('🔍 Wallet state check:', {
+      publicKey: publicKey?.toString(),
+      connected,
+      walletAddress,
+      walletName: wallet?.adapter.name
+    });
+    
     if (publicKey) {
       setWalletAddress(publicKey.toString());
       loadWalletBalances();
@@ -470,7 +477,7 @@ export default function MiniApp() {
       setUsdtBalance(0);
       setGiftBalance(0);
     }
-  }, [publicKey, loadWalletBalances]);
+  }, [publicKey, loadWalletBalances, connected, wallet, walletAddress]);
 
   // Initialize Telegram WebApp
   useEffect(() => {
