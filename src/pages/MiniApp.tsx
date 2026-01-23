@@ -1258,7 +1258,7 @@ try {
           }}
         >
           {/* Header - T¦-��Ț��- �-�- �+��T���T¦-���� */}
-          <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0 h-[60px] flex-shrink-0">
+          <header className="backdrop-blur-xl bg-background/50 z-50 sticky top-0 h-[72px] flex-shrink-0">
             <div className="px-4 py-4 h-full flex justify-between items-center gap-3 overflow-hidden">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 {telegramUser ? (
@@ -1385,7 +1385,7 @@ try {
           </div>
 
           {/* Bottom Navigation �+��T� �+��T���T¦-���- */}
-          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl h-[80px] flex-shrink-0" style={{ marginBottom: '16px' }}>
+          <footer className="border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl h-[70px] flex-shrink-0" style={{ marginBottom: '16px' }}>
             <div className="flex items-center justify-around px-4 py-4 h-full">
               {/* About Button (Left) */}
               <Button
