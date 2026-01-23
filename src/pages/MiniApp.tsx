@@ -1585,7 +1585,7 @@ try {
           </div>
 
           {/* Bottom Navigation �+��T� �-�-�-����Ț-T�T� */}
-          <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${16 + Math.max(safeAreaBottom, 0)}px` }}>
+          <footer className="fixed bottom-0 left-0 right-0 border-t border-white/20 backdrop-blur-xl bg-background/50 z-50 rounded-t-2xl" style={{ marginBottom: `${24 + Math.max(safeAreaBottom, 0)}px` }}>
             <div className="grid grid-cols-3 items-center px-4 h-[66px]">
               {/* About Button (Left) */}
               <Button
