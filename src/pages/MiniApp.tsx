@@ -24,6 +24,7 @@ import { PublicKey } from '@solana/web3.js';
 import { supabase, type User, type Ticket as TicketType, type Draw } from '@/lib/supabase';
 import { isInTelegramWebApp } from '@/lib/telegram';
 import { getAllBalances } from '@/lib/solana-config';
+import { parsePhantomRedirectParams, getStoredPhantomPublicKey, clearPhantomDeeplinkStorage } from '@/lib/phantom-deeplink';
 import { SolanaWalletModal } from '@/components/SolanaWalletModal';
 import { LogoutConfirmModal } from '@/components/LogoutConfirmModal';
 import HomeScreen from './miniapp/HomeScreen';
@@ -192,9 +193,10 @@ export default function MiniApp() {
     console.log(logMessage);
   }, []);
 
-  // Load wallet balances
+  // Load wallet balances (supports adapter publicKey or Phantom deeplink walletAddress)
   const loadWalletBalances = useCallback(async () => {
-    if (!publicKey) {
+    const address = publicKey ?? (walletAddress ? new PublicKey(walletAddress) : null);
+    if (!address) {
       addDebugLog('No wallet connected');
       setSolBalance(0);
       setUsdtBalance(0);
@@ -203,9 +205,9 @@ export default function MiniApp() {
     }
 
     try {
-      addDebugLog(`Loading Solana balances for: ${publicKey.toString()}`);
+      addDebugLog(`Loading Solana balances for: ${address.toString()}`);
       
-      const balances = await getAllBalances(publicKey);
+      const balances = await getAllBalances(address);
       
       setSolBalance(balances.sol);
       setUsdtBalance(balances.usdt);
@@ -218,7 +220,7 @@ export default function MiniApp() {
       addDebugLog(`Error loading wallet balances`);
       console.error('Error loading wallet balances:', error);
     }
-  }, [publicKey, addDebugLog]);
+  }, [publicKey, walletAddress, addDebugLog]);
 
   // Update ticket draw_id in Supabase
   const updateTicketDrawId = async (ticketId: number, drawId: string) => {
@@ -273,11 +275,9 @@ export default function MiniApp() {
       return;
     }
 
-    // If wallet is not connected, connect it first
-    if (!walletAddress || !connected || !publicKey) {
-      // Open wallet selection modal
+    // If wallet is not connected (adapter or Phantom deeplink), open modal
+    if (!walletAddress) {
       setWalletModalOpen(true);
-      
       setLoading(false);
       return;
     }
@@ -463,7 +463,26 @@ export default function MiniApp() {
     }
   }, [connected, publicKey, loadWalletBalances]);
 
-  // Sync publicKey with walletAddress
+  // On load: handle Phantom deep link return (redirect with ?public_key=...&session=...)
+  useEffect(() => {
+    const phantom = parsePhantomRedirectParams();
+    if (phantom) setWalletAddress(phantom.publicKey);
+  }, []);
+
+  // On load: restore Phantom deeplink wallet from sessionStorage if adapter not connected
+  useEffect(() => {
+    const stored = getStoredPhantomPublicKey();
+    if (stored && !publicKey) setWalletAddress(stored);
+  }, [publicKey]);
+
+  // Load balances when walletAddress is from Phantom deeplink (no adapter publicKey)
+  useEffect(() => {
+    if (walletAddress && !publicKey && getStoredPhantomPublicKey() === walletAddress) {
+      loadWalletBalances();
+    }
+  }, [walletAddress, publicKey, loadWalletBalances]);
+
+  // Sync publicKey with walletAddress; don't clear when Phantom deeplink is stored
   useEffect(() => {
     console.log('🔍 Wallet state check:', {
       publicKey: publicKey?.toString(),
@@ -475,7 +494,7 @@ export default function MiniApp() {
     if (publicKey) {
       setWalletAddress(publicKey.toString());
       loadWalletBalances();
-    } else {
+    } else if (!getStoredPhantomPublicKey()) {
       setWalletAddress(null);
       setSolBalance(0);
       setUsdtBalance(0);
@@ -825,21 +844,20 @@ export default function MiniApp() {
     }
   }, []);
 
-  // Handle disconnect wallet
+  // Handle disconnect wallet (adapter or Phantom deeplink)
   const handleDisconnectWallet = useCallback(async () => {
     try {
       triggerHaptic();
-      if (connected && publicKey) {
-        await disconnect();
-        setWalletAddress(null);
-        setGiftBalance(0);
-        setUsdtBalance(0);
-        setSolBalance(0);
-        toast({
-          title: 'Wallet disconnected',
-          description: 'Your Phantom wallet has been disconnected.',
-        });
-      }
+      if (connected && publicKey) await disconnect();
+      clearPhantomDeeplinkStorage();
+      setWalletAddress(null);
+      setGiftBalance(0);
+      setUsdtBalance(0);
+      setSolBalance(0);
+      toast({
+        title: 'Wallet disconnected',
+        description: 'Your Phantom wallet has been disconnected.',
+      });
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
       toast({
@@ -853,7 +871,6 @@ export default function MiniApp() {
   // Perform actual logout
   const performLogout = useCallback(async () => {
     try {
-      // Disconnect wallet if connected
       if (connected && publicKey) {
         try {
           await disconnect();
@@ -861,6 +878,7 @@ export default function MiniApp() {
           console.error('Error disconnecting wallet:', error);
         }
       }
+      clearPhantomDeeplinkStorage();
       
       // Clear session cookie via API
       try {
@@ -886,17 +904,15 @@ export default function MiniApp() {
     }
   }, [connected, publicKey, disconnect]);
 
-  // Handle logout - show modal if wallet is connected
+  // Handle logout - show modal if wallet is connected (adapter or Phantom deeplink)
   const handleLogout = useCallback(() => {
     triggerHaptic();
-    // Show confirmation modal if wallet is connected
-    if (connected && publicKey) {
+    if ((connected && publicKey) || walletAddress) {
       setLogoutModalOpen(true);
     } else {
-      // Direct logout if no wallet
       performLogout();
     }
-  }, [connected, publicKey, performLogout]);
+  }, [connected, publicKey, walletAddress, performLogout]);
 
   // Handle authorization through bot
   const handleConnectViaBot = useCallback(async () => {
@@ -1464,7 +1480,7 @@ try {
         open={logoutModalOpen} 
         onOpenChange={setLogoutModalOpen}
         onConfirm={performLogout}
-        hasWallet={connected && !!publicKey}
+        hasWallet={(connected && !!publicKey) || !!walletAddress}
       />
     </div>
   );

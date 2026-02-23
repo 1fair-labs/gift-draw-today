@@ -4,6 +4,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Wallet, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { buildPhantomConnectUrl } from '@/lib/phantom-deeplink';
 
 // Helper to detect if we're in Telegram WebView
 const isInTelegramWebView = () => {
@@ -100,32 +101,21 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isInTelegram = !!(window as any).Telegram?.WebApp;
       
-      // On mobile in Telegram, we need to handle connection differently
-      // Phantom will open in external app, so we need to ensure proper callback
+      // On mobile in Telegram: use Phantom deep link so Phantom app shows "Connect?" dialog
       if (isMobile && isInTelegram) {
-        console.log('📱 Mobile Telegram detected - using special handling');
-        
-        // Store current origin for callback
-        const currentOrigin = window.location.origin;
-        sessionStorage.setItem('phantom_callback_origin', currentOrigin);
-        
-        // Select the wallet first
-        console.log('1️⃣ Selecting wallet:', walletName);
-        await select(walletName as any);
-        
-        // Small delay to ensure wallet adapter is ready
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Connect - this will open Phantom app
-        console.log('2️⃣ Connecting to wallet (will open Phantom app)...');
-        await connect();
-        console.log('3️⃣ Connect call completed - user should be in Phantom app now');
-        
-        // Close modal immediately as user is redirected to Phantom
-        setTimeout(() => {
-          setIsConnecting(false);
-          onOpenChange(false);
-        }, 500);
+        console.log('📱 Mobile Telegram detected - using Phantom deep link');
+        const redirectLink = window.location.origin + window.location.pathname + (window.location.hash || '');
+        const appUrl = window.location.origin;
+        const url = buildPhantomConnectUrl({ redirectLink, appUrl, cluster: 'mainnet-beta' });
+        const WebApp = (window as any).Telegram?.WebApp;
+        if (WebApp?.openLink) {
+          WebApp.openLink(url);
+        } else {
+          window.open(url, '_blank');
+        }
+        setIsConnecting(false);
+        onOpenChange(false);
+        return;
       } else {
         // Desktop or non-Telegram mobile - standard flow
         console.log('🖥️ Desktop or non-Telegram detected - using standard flow');
