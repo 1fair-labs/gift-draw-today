@@ -508,6 +508,9 @@ export default function MiniApp() {
     if (publicKey) {
       setWalletAddress(publicKey.toString());
       loadWalletBalances();
+      // Повторная подгрузка балансов через 800 ms (десктоп: RPC или адаптер могут отвечать с задержкой)
+      const t = setTimeout(() => loadWalletBalances(), 800);
+      return () => clearTimeout(t);
     } else if (!getStoredPhantomPublicKey()) {
       setWalletAddress(null);
       setSolBalance(0);
@@ -754,6 +757,13 @@ export default function MiniApp() {
 
     return () => clearInterval(interval);
   }, [walletAddress, telegramId, loadWalletBalances]);
+
+  // При открытии вкладки «Профиль» подгружаем балансы (чтобы SOL и др. отображались сразу)
+  useEffect(() => {
+    if (currentScreen === 'profile' && walletAddress) {
+      loadWalletBalances();
+    }
+  }, [currentScreen, walletAddress, loadWalletBalances]);
 
   // Update balances when app becomes visible (user returns from wallet)
   useEffect(() => {
