@@ -346,7 +346,7 @@ export default async function handler(
             // Формируем ссылку на промежуточную страницу авторизации с refresh token
             const callbackUrl = `${finalWebAppUrl}/auth?refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
             
-            // Отправляем подтверждение со ссылкой для перехода на сайт
+            // Перед отправкой sendMessage удалит предыдущее сообщение об авторизации (если в БД есть last_bot_message_id), затем отправит новое и сохранит его message_id
             console.log('Sending success message with callback URL...');
             const fullName = ((firstName || '') + (lastName ? ' ' + lastName : '')).trim();
             const sentMessage = await sendMessage(

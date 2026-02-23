@@ -498,56 +498,54 @@ class UserAuthStore {
     }
   }
 
-  // Сохранение last_bot_message_id для пользователя
+  // Сохранение last_bot_message_id для пользователя (с retry при сбоях)
   async saveLastBotMessageId(telegramId: number, messageId: number): Promise<boolean> {
+    const maxAttempts = 3;
+    const delayMs = 400;
+
     console.log('UserAuthStore.saveLastBotMessageId called:', { telegramId, messageId });
     
     if (!this.supabase) {
       console.error('❌ Supabase not available, cannot save message ID');
-      console.error('Supabase client is null');
       return false;
     }
 
-    try {
-      console.log('Updating users table with last_bot_message_id:', {
-        telegramId,
-        messageId,
-        updateData: { last_bot_message_id: messageId }
-      });
-      
-      const { data, error } = await this.supabase
-        .from('users')
-        .update({ last_bot_message_id: messageId })
-        .eq('telegram_id', telegramId)
-        .select();
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        if (attempt > 1) {
+          console.log(`saveLastBotMessageId retry attempt ${attempt}/${maxAttempts}`);
+        }
+        const { data, error } = await this.supabase
+          .from('users')
+          .update({ last_bot_message_id: messageId })
+          .eq('telegram_id', telegramId)
+          .select();
 
-      if (error) {
-        console.error('❌ Error saving last bot message ID:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.details);
-        console.error('Error hint:', error.hint);
-        
-        // Если колонка не существует, просто логируем предупреждение
-        if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-          console.error('❌ Column last_bot_message_id does not exist in users table. Please run migration:');
-          console.error('Run this SQL in Supabase: ALTER TABLE users ADD COLUMN IF NOT EXISTS last_bot_message_id INTEGER;');
+        if (error) {
+          console.error(`❌ Error saving last bot message ID (attempt ${attempt}):`, error.message);
+          if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+            console.error('❌ Column last_bot_message_id does not exist. Run: ALTER TABLE users ADD COLUMN IF NOT EXISTS last_bot_message_id INTEGER;');
+            return false;
+          }
+          if (attempt < maxAttempts) {
+            await new Promise((r) => setTimeout(r, delayMs));
+            continue;
+          }
+          return false;
+        }
+
+        console.log('✅ Last bot message ID saved successfully:', { messageId, telegramId, attempt });
+        return true;
+      } catch (error: any) {
+        console.error(`❌ Exception saving last bot message ID (attempt ${attempt}):`, error.message);
+        if (attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, delayMs));
+          continue;
         }
         return false;
       }
-
-      console.log('✅ Last bot message ID saved successfully:', {
-        messageId,
-        telegramId,
-        updatedRows: data?.length || 0,
-        updatedData: data
-      });
-      return true;
-    } catch (error: any) {
-      console.error('❌ Exception saving last bot message ID:', error);
-      console.error('Exception stack:', error.stack);
-      return false;
     }
+    return false;
   }
 
   // Проверка валидности URL аватара
