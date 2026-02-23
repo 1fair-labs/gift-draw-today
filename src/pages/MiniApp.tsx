@@ -61,7 +61,6 @@ export default function MiniApp() {
   const [safeAreaTop, setSafeAreaTop] = useState(0);
   const [safeAreaBottom, setSafeAreaBottom] = useState(0);
   const [currentDraw, setCurrentDraw] = useState<Draw | null>(null);
-  const [redirectingToTelegram, setRedirectingToTelegram] = useState(false);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -464,20 +463,7 @@ export default function MiniApp() {
     }
   }, [connected, publicKey, loadWalletBalances]);
 
-  // When we're in browser (not Telegram) with Phantom return params → redirect to Telegram with start_param so Mini App gets the wallet
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const pk = params.get('public_key');
-    const session = params.get('session');
-    const inTelegram = !!(window as any).Telegram?.WebApp;
-    if (pk && session && !inTelegram) {
-      setRedirectingToTelegram(true);
-      const startParam = 'phantom_' + pk;
-      window.location.href = `https://t.me/giftdrawtoday_bot?startapp=${encodeURIComponent(startParam)}`;
-    }
-  }, []);
-
-  // On load in Telegram: handle Phantom deep link return (URL params) or start_param (after redirect from browser)
+  // On load: handle Phantom return (URL params) or start_param — без перехода по ссылке, только сохраняем кошелёк
   useEffect(() => {
     const phantom = parsePhantomRedirectParams();
     if (phantom) {
@@ -1086,15 +1072,6 @@ try {
   };
 
   const screenHeight = viewport?.height || window.innerHeight;
-
-  if (redirectingToTelegram) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background p-4 text-center">
-        <p className="text-lg font-medium text-foreground">Connection successful!</p>
-        <p className="text-muted-foreground">Opening Telegram...</p>
-      </div>
-    );
-  }
 
   return (
     <div 
