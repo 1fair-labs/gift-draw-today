@@ -671,11 +671,7 @@ async function sendMessage(
     telegramId
   });
 
-  // Удаляем предыдущее сообщение бота, если есть telegramId
-  if (telegramId) {
-    await deletePreviousBotMessage(botToken, chatId, telegramId);
-  }
-
+  // Сначала отправляем сообщение, чтобы пользователь быстрее увидел ссылку; удаление старого — после, без ожидания
   const replyMarkup = buttons && buttons.length > 0
     ? {
         inline_keyboard: buttons.map((row: any[]) =>
@@ -744,7 +740,14 @@ async function sendMessage(
       responseData: responseData
     });
   }
-  
+
+  // Удаляем предыдущее сообщение об авторизации в фоне (не ждём — пользователь уже видит новое)
+  if (telegramId) {
+    void deletePreviousBotMessage(botToken, chatId, telegramId).catch((err) =>
+      console.warn('Background delete previous auth message failed:', err)
+    );
+  }
+
   return responseData;
 }
 
