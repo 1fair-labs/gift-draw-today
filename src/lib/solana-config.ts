@@ -4,8 +4,11 @@ import { getAssociatedTokenAddress, getAccount, createTransferInstruction } from
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 // Solana network configuration
-export const SOLANA_NETWORK = WalletAdapterNetwork.Mainnet; // Change to Devnet for testing
-export const SOLANA_RPC_URL = 'https://api.mainnet-beta.solana.com'; // Or use custom RPC
+export const SOLANA_NETWORK = WalletAdapterNetwork.Mainnet;
+// RPC: set VITE_SOLANA_RPC_URL in .env for custom (Helius/QuickNode). Default uses a public endpoint that works better from browser.
+export const SOLANA_RPC_URL = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SOLANA_RPC_URL
+  ? (import.meta as any).env.VITE_SOLANA_RPC_URL
+  : 'https://rpc.ankr.com/solana';
 
 // Token mint addresses (SPL tokens)
 // TODO: Replace with actual mint addresses for USDT and GIFT tokens
@@ -21,11 +24,17 @@ export const getSolanaConnection = () => {
   return new Connection(SOLANA_RPC_URL, 'confirmed');
 };
 
-// Get SOL balance
+// Get SOL balance (with one retry on failure — public RPC can be flaky)
 export const getSolBalance = async (publicKey: PublicKey): Promise<number> => {
   const connection = getSolanaConnection();
-  const balance = await connection.getBalance(publicKey);
-  return balance / 1e9; // Convert lamports to SOL
+  try {
+    const balance = await connection.getBalance(publicKey);
+    return balance / 1e9; // Convert lamports to SOL
+  } catch (err) {
+    console.warn('getSolBalance failed, retrying once:', err);
+    const balance = await connection.getBalance(publicKey);
+    return balance / 1e9;
+  }
 };
 
 // Get SPL token balance
