@@ -741,11 +741,9 @@ async function sendMessage(
     });
   }
 
-  // Удаляем предыдущее сообщение об авторизации в фоне (не ждём — пользователь уже видит новое)
+  // Удаляем предыдущее сообщение об авторизации (после отправки нового, но с await — иначе в serverless удаление не успевает и в чате остаются две ссылки)
   if (telegramId) {
-    void deletePreviousBotMessage(botToken, chatId, telegramId).catch((err) =>
-      console.warn('Background delete previous auth message failed:', err)
-    );
+    await deletePreviousBotMessage(botToken, chatId, telegramId);
   }
 
   return responseData;
