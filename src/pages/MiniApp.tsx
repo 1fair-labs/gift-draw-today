@@ -1100,7 +1100,10 @@ try {
                     </div>
                   </div>
                 ) : (
-                  <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
+                  <div className="flex items-center gap-2">
+                    <Wand2 className="w-6 h-6 text-white" />
+                    <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
+                  </div>
                 )}
               </div>
               
@@ -1292,7 +1295,10 @@ try {
                     </div>
                   </div>
                   ) : (
-                    <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="w-5 h-5 text-white" />
+                      <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
+                    </div>
                   )}
                 </div>
                 
