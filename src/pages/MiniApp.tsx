@@ -61,6 +61,7 @@ export default function MiniApp() {
   const [safeAreaTop, setSafeAreaTop] = useState(0);
   const [safeAreaBottom, setSafeAreaBottom] = useState(0);
   const [currentDraw, setCurrentDraw] = useState<Draw | null>(null);
+  const [redirectingToTelegram, setRedirectingToTelegram] = useState(false);
 
   // Get or create user by Telegram ID
   const getOrCreateUserByTelegramId = async (telegramId: number): Promise<User | null> => {
@@ -463,10 +464,37 @@ export default function MiniApp() {
     }
   }, [connected, publicKey, loadWalletBalances]);
 
-  // On load: handle Phantom deep link return (redirect with ?public_key=...&session=...)
+  // When we're in browser (not Telegram) with Phantom return params → redirect to Telegram with start_param so Mini App gets the wallet
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pk = params.get('public_key');
+    const session = params.get('session');
+    const inTelegram = !!(window as any).Telegram?.WebApp;
+    if (pk && session && !inTelegram) {
+      setRedirectingToTelegram(true);
+      const startParam = 'phantom_' + pk;
+      window.location.href = `https://t.me/giftdrawtoday_bot?startapp=${encodeURIComponent(startParam)}`;
+    }
+  }, []);
+
+  // On load in Telegram: handle Phantom deep link return (URL params) or start_param (after redirect from browser)
   useEffect(() => {
     const phantom = parsePhantomRedirectParams();
-    if (phantom) setWalletAddress(phantom.publicKey);
+    if (phantom) {
+      setWalletAddress(phantom.publicKey);
+      return;
+    }
+    const WebApp = (window as any).Telegram?.WebApp;
+    const startParam = WebApp?.initDataUnsafe?.start_param;
+    if (startParam?.startsWith('phantom_')) {
+      const publicKey = startParam.slice(7);
+      try {
+        sessionStorage.setItem('phantom_deeplink_public_key', publicKey);
+      } catch {
+        // ignore
+      }
+      setWalletAddress(publicKey);
+    }
   }, []);
 
   // On load: restore Phantom deeplink wallet from sessionStorage if adapter not connected
@@ -1058,6 +1086,15 @@ try {
   };
 
   const screenHeight = viewport?.height || window.innerHeight;
+
+  if (redirectingToTelegram) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background p-4 text-center">
+        <p className="text-lg font-medium text-foreground">Connection successful!</p>
+        <p className="text-muted-foreground">Opening Telegram...</p>
+      </div>
+    );
+  }
 
   return (
     <div 
