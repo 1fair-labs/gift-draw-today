@@ -40,6 +40,9 @@ Create a `.env` file (see `.env.example` if present):
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Опционально: тестнет Solana (в Phantom переключи на Devnet)
+# VITE_SOLANA_NETWORK=devnet
+# Свой RPC: VITE_SOLANA_RPC_URL=https://...
 ```
 
 ### Database

@@ -12,10 +12,6 @@ interface SolanaWalletProviderProps {
 }
 
 export function SolanaWalletProvider({ children }: SolanaWalletProviderProps) {
-  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
-  const network = WalletAdapterNetwork.Mainnet;
-
-  // You can also provide a custom RPC endpoint.
   const endpoint = useMemo(() => SOLANA_RPC_URL, []);
 
   // Only include Phantom wallet

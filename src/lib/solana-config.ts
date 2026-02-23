@@ -3,12 +3,18 @@ import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.
 import { getAssociatedTokenAddress, getAccount, createTransferInstruction } from '@solana/spl-token';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
-// Solana network configuration
-export const SOLANA_NETWORK = WalletAdapterNetwork.Mainnet;
-// RPC: set VITE_SOLANA_RPC_URL in .env for custom (Helius/QuickNode). Default uses a public endpoint that works better from browser.
-export const SOLANA_RPC_URL = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SOLANA_RPC_URL
-  ? (import.meta as any).env.VITE_SOLANA_RPC_URL
-  : 'https://rpc.ankr.com/solana';
+// Solana network: VITE_SOLANA_NETWORK=devnet для тестнета, иначе mainnet
+const _env = typeof import.meta !== 'undefined' ? (import.meta as any).env : {};
+const _networkEnv = _env?.VITE_SOLANA_NETWORK?.toLowerCase();
+export const SOLANA_NETWORK = _networkEnv === 'devnet' || _networkEnv === 'testnet'
+  ? WalletAdapterNetwork.Devnet
+  : WalletAdapterNetwork.Mainnet;
+// RPC: VITE_SOLANA_RPC_URL задаёт свой URL. Иначе для mainnet — Ankr, для devnet — public devnet.
+export const SOLANA_RPC_URL = _env?.VITE_SOLANA_RPC_URL
+  ? _env.VITE_SOLANA_RPC_URL
+  : SOLANA_NETWORK === WalletAdapterNetwork.Devnet
+    ? 'https://api.devnet.solana.com'
+    : 'https://rpc.ankr.com/solana';
 
 // Token mint addresses (SPL tokens)
 // TODO: Replace with actual mint addresses for USDT and GIFT tokens
