@@ -1,4 +1,4 @@
-﻿// src/pages/MiniApp.tsx - New Mini App architecture
+// src/pages/MiniApp.tsx - New Mini App architecture
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Info, Sparkles, Ticket, X, Wand2, LogOut } from 'lucide-react';
 
@@ -1100,10 +1100,7 @@ try {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Wand2 className="w-6 h-6 text-primary" />
-                    <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
-                  </div>
+                  <h2 className="text-base font-display font-bold">GiftDraw.today</h2>
                 )}
               </div>
               
@@ -1295,10 +1292,7 @@ try {
                     </div>
                   </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <Wand2 className="w-5 h-5 text-primary" />
-                      <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
-                    </div>
+                    <h2 className="text-sm font-display font-bold">GiftDraw.today</h2>
                   )}
                 </div>
                 
