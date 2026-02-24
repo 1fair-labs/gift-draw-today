@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "create-gift-token": "tsx scripts/create-gift-token.ts",
     "phantom-keypair": "tsx scripts/phantom-keypair-from-phrase.ts",
-    "add-gift-metadata": "tsx scripts/add-gift-metadata.ts"
+    "add-gift-metadata": "tsx scripts/add-gift-metadata.ts",
+    "update-gift-metadata": "tsx scripts/update-gift-metadata.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

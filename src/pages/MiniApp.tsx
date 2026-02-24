@@ -156,6 +156,46 @@ export default function MiniApp() {
     }
   };
 
+  // Save linked wallet to profile (telegram_id -> wallet_address in DB)
+  const saveLinkedWallet = useCallback(async (tgId: number, address: string) => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ wallet_address: address })
+        .eq('telegram_id', tgId);
+      if (error) console.error('Error saving linked wallet:', error);
+    } catch (e) {
+      console.error('Error saving linked wallet:', e);
+    }
+  }, []);
+
+  // Unlink wallet from profile (clear wallet_address in DB and local state)
+  const handleUnlinkWallet = useCallback(async () => {
+    if (!telegramId || !supabase) return;
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ wallet_address: null })
+        .eq('telegram_id', telegramId);
+      if (error) {
+        console.error('Error unlinking wallet:', error);
+        toast({ title: 'Error', description: 'Failed to unlink wallet.', variant: 'destructive' });
+        return;
+      }
+      setUser((prev) => (prev ? { ...prev, wallet_address: undefined } : null));
+      clearPhantomDeeplinkStorage();
+      setWalletAddress(null);
+      setGiftBalance(0);
+      setUsdtBalance(0);
+      setSolBalance(0);
+      toast({ title: 'Wallet unlinked', description: 'Wallet has been removed from your profile.' });
+    } catch (e) {
+      console.error('Error unlinking wallet:', e);
+      toast({ title: 'Error', description: 'Failed to unlink wallet.', variant: 'destructive' });
+    }
+  }, [telegramId, toast]);
+
   // Load active draw from Supabase
   const loadActiveDraw = async () => {
     if (!supabase) {
@@ -483,11 +523,26 @@ export default function MiniApp() {
     }
   }, []);
 
+  // Save linked wallet when address comes from Phantom session (so profile has it on other devices)
+  useEffect(() => {
+    const fromPhantom = getStoredPhantomPublicKey();
+    if (telegramId && walletAddress && fromPhantom === walletAddress) {
+      saveLinkedWallet(telegramId, walletAddress);
+    }
+  }, [telegramId, walletAddress, saveLinkedWallet]);
+
   // On load: restore Phantom deeplink wallet from sessionStorage if adapter not connected
   useEffect(() => {
     const stored = getStoredPhantomPublicKey();
     if (stored && !publicKey) setWalletAddress(stored);
   }, [publicKey]);
+
+  // Restore linked wallet from profile when no session (e.g. opened from another device)
+  useEffect(() => {
+    if (!user?.wallet_address || publicKey || getStoredPhantomPublicKey()) return;
+    setWalletAddress(user.wallet_address);
+    loadWalletBalances();
+  }, [user?.wallet_address, user?.id, publicKey, loadWalletBalances]);
 
   // Load balances when walletAddress is from Phantom deeplink (no adapter publicKey)
   useEffect(() => {
@@ -496,7 +551,7 @@ export default function MiniApp() {
     }
   }, [walletAddress, publicKey, loadWalletBalances]);
 
-  // Sync publicKey with walletAddress; don't clear when Phantom deeplink is stored
+  // Sync publicKey with walletAddress; don't clear when Phantom deeplink or linked wallet is stored
   useEffect(() => {
     console.log('🔍 Wallet state check:', {
       publicKey: publicKey?.toString(),
@@ -506,18 +561,25 @@ export default function MiniApp() {
     });
     
     if (publicKey) {
-      setWalletAddress(publicKey.toString());
+      const addr = publicKey.toString();
+      setWalletAddress(addr);
+      if (telegramId) saveLinkedWallet(telegramId, addr);
       loadWalletBalances();
-      // Повторная подгрузка балансов через 800 ms (десктоп: RPC или адаптер могут отвечать с задержкой)
       const t = setTimeout(() => loadWalletBalances(), 800);
       return () => clearTimeout(t);
-    } else if (!getStoredPhantomPublicKey()) {
+    }
+    if (getStoredPhantomPublicKey()) return;
+    // No adapter and no Phantom session: show linked wallet from profile or clear
+    if (user?.wallet_address) {
+      setWalletAddress(user.wallet_address);
+      loadWalletBalances();
+    } else {
       setWalletAddress(null);
       setSolBalance(0);
       setUsdtBalance(0);
       setGiftBalance(0);
     }
-  }, [publicKey, loadWalletBalances, connected, wallet, walletAddress]);
+  }, [publicKey, loadWalletBalances, connected, wallet, walletAddress, user?.wallet_address, user?.id, telegramId, saveLinkedWallet]);
 
   // Initialize Telegram WebApp
   useEffect(() => {
@@ -1223,6 +1285,7 @@ try {
                     }}
                     onConnectWallet={handleConnectWallet}
                     onDisconnectWallet={handleDisconnectWallet}
+                    onUnlinkWallet={handleUnlinkWallet}
                     onBuyTicket={handleBuyTicket}
                     loading={loading}
                   />
@@ -1426,6 +1489,7 @@ try {
                     }}
                     onConnectWallet={handleConnectWallet}
                     onDisconnectWallet={handleDisconnectWallet}
+                    onUnlinkWallet={handleUnlinkWallet}
                     onBuyTicket={handleBuyTicket}
                     loading={loading}
                   />

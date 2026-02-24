@@ -18,6 +18,7 @@ interface ProfileScreenProps {
   onToggleBalanceVisibility: () => void;
   onConnectWallet: () => void;
   onDisconnectWallet?: () => void;
+  onUnlinkWallet?: () => void;
   onBuyTicket: () => void;
   loading?: boolean;
 }
@@ -33,6 +34,7 @@ export default function ProfileScreen({
   onToggleBalanceVisibility,
   onConnectWallet,
   onDisconnectWallet,
+  onUnlinkWallet,
   onBuyTicket,
   loading,
 }: ProfileScreenProps) {
@@ -171,7 +173,9 @@ export default function ProfileScreen({
 
               <div className="space-y-2 mt-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Wallet</span>
+                  <span className="text-sm text-muted-foreground">
+                    {user?.wallet_address === walletAddress ? 'Linked wallet' : 'Wallet'}
+                  </span>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
@@ -194,6 +198,16 @@ export default function ProfileScreen({
                   </div>
                 </div>
                 <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
+                {onUnlinkWallet && user?.wallet_address && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onUnlinkWallet}
+                    className="mt-2 text-muted-foreground border-white/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                  >
+                    Unlink wallet from profile
+                  </Button>
+                )}
               </div>
             </>
           )}
