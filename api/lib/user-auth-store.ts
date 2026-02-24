@@ -31,6 +31,9 @@ class UserAuthStore {
       this.supabase = createClient(supabaseUrl, supabaseKey);
       const keyType = process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Service Role' : 'Anon';
       console.log(`UserAuthStore initialized with ${keyType} key, URL:`, supabaseUrl.substring(0, 30) + '...');
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is not set. With Anon key, RLS will block updates to users (current_message_id, last_bot_message_ids will stay empty). Set it in your server env (e.g. Vercel).');
+      }
     } else {
       console.error('⚠️ Supabase credentials not found!');
       console.error('VITE_SUPABASE_URL:', supabaseUrl ? 'SET' : 'NOT SET');
@@ -539,7 +542,7 @@ class UserAuthStore {
         }
 
         if (!data || data.length === 0) {
-          console.error(`❌ saveLastBotMessageId: 0 rows updated (telegram_id=${telegramId}). Check RLS or that user exists.`);
+          console.error(`❌ saveLastBotMessageId: 0 rows updated (telegram_id=${telegramId}). Check: user exists, column current_message_id exists.`);
           if (attempt < maxAttempts) {
             await new Promise((r) => setTimeout(r, delayMs));
             continue;
@@ -572,6 +575,8 @@ class UserAuthStore {
     const delayMs = 400;
 
     const newIds = [previousCurrentId, ...(previousIds || [])].filter((id): id is number => id != null).slice(0, 10);
+    const payload = { current_message_id: newMessageId, last_bot_message_ids: newIds };
+    console.log('saveAuthMessageIds payload:', { telegramId, payload });
 
     if (!this.supabase) {
       console.error('❌ Supabase not available, cannot save auth message IDs');
@@ -585,12 +590,11 @@ class UserAuthStore {
         }
         const { data, error } = await this.supabase
           .from('users')
-          .update({
-            current_message_id: newMessageId,
-            last_bot_message_ids: newIds,
-          })
+          .update(payload)
           .eq('telegram_id', telegramId)
           .select('current_message_id, last_bot_message_ids');
+
+        console.log('saveAuthMessageIds Supabase response:', { error: error ? { message: error.message, code: error.code, details: error.details } : null, rowCount: data?.length ?? 0, firstRow: data?.[0] });
 
         if (error) {
           console.error(`❌ Error saving auth message IDs (attempt ${attempt}):`, error.message, error.code, error.details);
@@ -606,7 +610,7 @@ class UserAuthStore {
         }
 
         if (!data || data.length === 0) {
-          console.error(`❌ saveAuthMessageIds: 0 rows updated (telegram_id=${telegramId}). Check RLS or that user exists.`);
+          console.error(`❌ saveAuthMessageIds: 0 rows updated (telegram_id=${telegramId}). Check: user exists, columns current_message_id and last_bot_message_ids exist.`);
           if (attempt < maxAttempts) {
             await new Promise((r) => setTimeout(r, delayMs));
             continue;
