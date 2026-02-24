@@ -486,11 +486,14 @@ class UserAuthStore {
         isRevoked: user.is_revoked,
       };
       
-      // Добавляем last_bot_message_id если он есть
+      // Добавляем last_bot_message_id и last_bot_message_ids если есть
       if (user.last_bot_message_id !== undefined) {
         userData.last_bot_message_id = user.last_bot_message_id;
       }
-      
+      if (user.last_bot_message_ids !== undefined && Array.isArray(user.last_bot_message_ids)) {
+        userData.last_bot_message_ids = user.last_bot_message_ids as number[];
+      }
+
       return userData;
     } catch (error: any) {
       console.error('Exception getting user by telegram_id:', error);
@@ -538,6 +541,63 @@ class UserAuthStore {
         return true;
       } catch (error: any) {
         console.error(`❌ Exception saving last bot message ID (attempt ${attempt}):`, error.message);
+        if (attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, delayMs));
+          continue;
+        }
+        return false;
+      }
+    }
+    return false;
+  }
+
+  // Сохранение ID текущего сообщения авторизации и массива до 10 предыдущих (старый текущий уходит в массив)
+  async saveAuthMessageIds(
+    telegramId: number,
+    newMessageId: number,
+    previousCurrentId: number | null,
+    previousIds: number[] | null
+  ): Promise<boolean> {
+    const maxAttempts = 3;
+    const delayMs = 400;
+
+    const newIds = [previousCurrentId, ...(previousIds || [])].filter((id): id is number => id != null).slice(0, 10);
+
+    if (!this.supabase) {
+      console.error('❌ Supabase not available, cannot save auth message IDs');
+      return false;
+    }
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        if (attempt > 1) {
+          console.log(`saveAuthMessageIds retry attempt ${attempt}/${maxAttempts}`);
+        }
+        const { error } = await this.supabase
+          .from('users')
+          .update({
+            last_bot_message_id: newMessageId,
+            last_bot_message_ids: newIds,
+          })
+          .eq('telegram_id', telegramId);
+
+        if (error) {
+          console.error(`❌ Error saving auth message IDs (attempt ${attempt}):`, error.message);
+          if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+            console.error('❌ Column last_bot_message_ids may not exist. Run migration database_add_last_bot_message_ids.sql');
+            return false;
+          }
+          if (attempt < maxAttempts) {
+            await new Promise((r) => setTimeout(r, delayMs));
+            continue;
+          }
+          return false;
+        }
+
+        console.log('✅ Auth message IDs saved:', { newMessageId, telegramId, newIdsLength: newIds.length });
+        return true;
+      } catch (error: any) {
+        console.error(`❌ Exception saving auth message IDs (attempt ${attempt}):`, error.message);
         if (attempt < maxAttempts) {
           await new Promise((r) => setTimeout(r, delayMs));
           continue;

@@ -346,7 +346,7 @@ export default async function handler(
             // Формируем ссылку на промежуточную страницу авторизации с refresh token
             const callbackUrl = `${finalWebAppUrl}/auth?refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
             
-            // Перед отправкой sendMessage удалит предыдущее сообщение об авторизации (если в БД есть last_bot_message_id), затем отправит новое и сохранит его message_id
+            // sendMessage отправит новое сообщение, удалит только старые по last_bot_message_ids, сохранит новый ID и сдвинет старый текущий в массив
             console.log('Sending success message with callback URL...');
             const fullName = ((firstName || '') + (lastName ? ' ' + lastName : '')).trim();
             const sentMessage = await sendMessage(
@@ -616,23 +616,25 @@ async function deleteMessage(
   }
 }
 
-// Вспомогательная функция для получения и удаления предыдущего сообщения бота
-async function deletePreviousBotMessage(
+// Удаляем только сообщения из массива last_bot_message_ids (текущее last_bot_message_id не трогаем)
+async function deletePreviousAuthMessages(
   botToken: string,
   chatId: number,
   telegramId: number
 ): Promise<void> {
   try {
-    // Получаем последний message_id из базы данных
     const userData = await userAuthStore.getUserByTelegramId(telegramId);
-    if (userData && (userData as any).last_bot_message_id) {
-      const lastMessageId = (userData as any).last_bot_message_id;
-      console.log('Deleting previous bot message:', lastMessageId);
-      await deleteMessage(botToken, chatId, lastMessageId);
+    const ids = (userData as any)?.last_bot_message_ids as number[] | undefined;
+    if (!ids || ids.length === 0) return;
+    for (const messageId of ids) {
+      try {
+        await deleteMessage(botToken, chatId, messageId);
+      } catch (err: any) {
+        console.warn('Failed to delete auth message:', messageId, err?.message);
+      }
     }
   } catch (error: any) {
-    console.error('Error deleting previous bot message:', error);
-    // Не прерываем выполнение, если не удалось удалить предыдущее сообщение
+    console.error('Error deleting previous auth messages:', error);
   }
 }
 
@@ -726,24 +728,18 @@ async function sendMessage(
     willSave: !!(telegramId && responseData.result?.message_id)
   });
 
-  // Сначала удаляем предыдущее сообщение (пока в БД ещё старый last_bot_message_id)
-  if (telegramId) {
-    await deletePreviousBotMessage(botToken, chatId, telegramId);
-  }
-
-  // Затем сохраняем message_id нового сообщения в БД
   if (telegramId && responseData.result?.message_id) {
-    console.log('Attempting to save last_bot_message_id:', {
+    const userData = await userAuthStore.getUserByTelegramId(telegramId);
+    await deletePreviousAuthMessages(botToken, chatId, telegramId);
+    const success = await userAuthStore.saveAuthMessageIds(
       telegramId,
-      messageId: responseData.result.message_id
-    });
-    await saveLastBotMessageId(telegramId, responseData.result.message_id);
-  } else {
-    console.warn('Cannot save last_bot_message_id:', {
-      hasTelegramId: !!telegramId,
-      hasMessageId: !!responseData.result?.message_id,
-      responseData: responseData
-    });
+      responseData.result.message_id,
+      (userData as any)?.last_bot_message_id ?? null,
+      (userData as any)?.last_bot_message_ids ?? null
+    );
+    if (!success) {
+      console.warn('Failed to save auth message IDs:', { telegramId, messageId: responseData.result.message_id });
+    }
   }
 
   return responseData;
