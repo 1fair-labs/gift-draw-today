@@ -523,14 +523,23 @@ class UserAuthStore {
           .from('users')
           .update({ current_message_id: messageId })
           .eq('telegram_id', telegramId)
-          .select();
+          .select('current_message_id');
 
         if (error) {
-          console.error(`❌ Error saving current message ID (attempt ${attempt}):`, error.message);
+          console.error(`❌ Error saving current message ID (attempt ${attempt}):`, error.message, error.code, error.details);
           if (error.message?.includes('column') && error.message?.includes('does not exist')) {
             console.error('❌ Column current_message_id does not exist. Add it: ALTER TABLE users ADD COLUMN IF NOT EXISTS current_message_id INTEGER;');
             return false;
           }
+          if (attempt < maxAttempts) {
+            await new Promise((r) => setTimeout(r, delayMs));
+            continue;
+          }
+          return false;
+        }
+
+        if (!data || data.length === 0) {
+          console.error(`❌ saveLastBotMessageId: 0 rows updated (telegram_id=${telegramId}). Check RLS or that user exists.`);
           if (attempt < maxAttempts) {
             await new Promise((r) => setTimeout(r, delayMs));
             continue;
@@ -574,20 +583,30 @@ class UserAuthStore {
         if (attempt > 1) {
           console.log(`saveAuthMessageIds retry attempt ${attempt}/${maxAttempts}`);
         }
-        const { error } = await this.supabase
+        const { data, error } = await this.supabase
           .from('users')
           .update({
             current_message_id: newMessageId,
             last_bot_message_ids: newIds,
           })
-          .eq('telegram_id', telegramId);
+          .eq('telegram_id', telegramId)
+          .select('current_message_id, last_bot_message_ids');
 
         if (error) {
-          console.error(`❌ Error saving auth message IDs (attempt ${attempt}):`, error.message);
+          console.error(`❌ Error saving auth message IDs (attempt ${attempt}):`, error.message, error.code, error.details);
           if (error.message?.includes('column') && error.message?.includes('does not exist')) {
             console.error('❌ Column current_message_id or last_bot_message_ids may not exist. Run migrations.');
             return false;
           }
+          if (attempt < maxAttempts) {
+            await new Promise((r) => setTimeout(r, delayMs));
+            continue;
+          }
+          return false;
+        }
+
+        if (!data || data.length === 0) {
+          console.error(`❌ saveAuthMessageIds: 0 rows updated (telegram_id=${telegramId}). Check RLS or that user exists.`);
           if (attempt < maxAttempts) {
             await new Promise((r) => setTimeout(r, delayMs));
             continue;
