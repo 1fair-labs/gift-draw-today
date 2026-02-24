@@ -598,27 +598,22 @@ async function deleteMessage(
   }
 }
 
-// Удаляем только сообщения из массива last_bot_message_ids. Не удаляем currentNewMessageId (только что отправленное).
+// Удаляем только сообщения с ID из переданного массива ids. Не удаляем currentNewMessageId.
+// ids берём из уже полученного userData в sendMessage, чтобы не удалить только что отправленное из-за гонки.
 async function deletePreviousAuthMessages(
   botToken: string,
   chatId: number,
-  telegramId: number,
+  ids: number[],
   currentNewMessageId?: number
 ): Promise<void> {
-  try {
-    const userData = await userAuthStore.getUserByTelegramId(telegramId);
-    const ids = (userData as any)?.last_bot_message_ids as number[] | undefined;
-    if (!ids || ids.length === 0) return;
-    for (const messageId of ids) {
-      if (currentNewMessageId !== undefined && messageId === currentNewMessageId) continue;
-      try {
-        await deleteMessage(botToken, chatId, messageId);
-      } catch (err: any) {
-        console.warn('Failed to delete auth message:', messageId, err?.message);
-      }
+  if (!ids || ids.length === 0) return;
+  for (const messageId of ids) {
+    if (currentNewMessageId !== undefined && messageId === currentNewMessageId) continue;
+    try {
+      await deleteMessage(botToken, chatId, messageId);
+    } catch (err: any) {
+      console.warn('Failed to delete auth message:', messageId, err?.message);
     }
-  } catch (error: any) {
-    console.error('Error deleting previous auth messages:', error);
   }
 }
 
@@ -717,7 +712,8 @@ async function sendMessage(
 
   if (isAuthSuccessMessage && telegramId && responseData.result?.message_id) {
     const userData = await userAuthStore.getUserByTelegramId(telegramId);
-    await deletePreviousAuthMessages(botToken, chatId, telegramId, responseData.result.message_id);
+    const idsToDelete = ((userData as any)?.last_bot_message_ids as number[] | undefined) ?? [];
+    await deletePreviousAuthMessages(botToken, chatId, idsToDelete, responseData.result.message_id);
     const success = await userAuthStore.saveAuthMessageIds(
       telegramId,
       responseData.result.message_id,
