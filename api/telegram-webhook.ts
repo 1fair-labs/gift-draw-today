@@ -617,25 +617,6 @@ async function deletePreviousAuthMessages(
   }
 }
 
-// Вспомогательная функция для сохранения message_id в базе данных
-async function saveLastBotMessageId(
-  telegramId: number,
-  messageId: number
-): Promise<void> {
-  console.log('saveLastBotMessageId called:', { telegramId, messageId });
-  try {
-    const success = await userAuthStore.saveLastBotMessageId(telegramId, messageId);
-    if (success) {
-      console.log('✅ Successfully saved last_bot_message_id:', messageId, 'for user:', telegramId);
-    } else {
-      console.error('❌ Failed to save last bot message ID:', { telegramId, messageId });
-    }
-  } catch (error: any) {
-    console.error('❌ Exception in saveLastBotMessageId wrapper:', error);
-    console.error('Error stack:', error.stack);
-  }
-}
-
 // Вспомогательная функция для отправки сообщений.
 // Удаление старых сообщений и сохранение ID делаем только для сообщения "Authorization successful!" (isAuthSuccessMessage),
 // чтобы не удалять "Welcome back" и другие сообщения бота.

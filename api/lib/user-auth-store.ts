@@ -468,7 +468,7 @@ class UserAuthStore {
     try {
       const { data: user, error } = await this.supabase
         .from('users')
-        .select('*')
+        .select('telegram_id, username, first_name, last_name, avatar_url, refresh_token, refresh_expires_at, last_used_at, last_login_at, is_revoked, current_message_id, last_bot_message_ids')
         .eq('telegram_id', telegramId)
         .single();
 
@@ -488,11 +488,9 @@ class UserAuthStore {
         lastLoginAt: user.last_login_at ? new Date(user.last_login_at) : undefined,
         isRevoked: user.is_revoked,
       };
-      
-      // Текущий ID сообщения (колонка в БД: current_message_id или last_bot_message_id)
-      const currentMsgId = (user as any).current_message_id ?? user.last_bot_message_id;
-      if (currentMsgId !== undefined) {
-        userData.last_bot_message_id = currentMsgId;
+      // Только current_message_id и last_bot_message_ids (старой колонки last_bot_message_id в схеме нет)
+      if (user.current_message_id !== undefined && user.current_message_id !== null) {
+        userData.last_bot_message_id = user.current_message_id;
       }
       if (user.last_bot_message_ids !== undefined && Array.isArray(user.last_bot_message_ids)) {
         userData.last_bot_message_ids = user.last_bot_message_ids as number[];
@@ -505,66 +503,7 @@ class UserAuthStore {
     }
   }
 
-  // Сохранение last_bot_message_id для пользователя (с retry при сбоях)
-  async saveLastBotMessageId(telegramId: number, messageId: number): Promise<boolean> {
-    const maxAttempts = 3;
-    const delayMs = 400;
-
-    console.log('UserAuthStore.saveLastBotMessageId called:', { telegramId, messageId });
-    
-    if (!this.supabase) {
-      console.error('❌ Supabase not available, cannot save message ID');
-      return false;
-    }
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        if (attempt > 1) {
-          console.log(`saveLastBotMessageId retry attempt ${attempt}/${maxAttempts}`);
-        }
-        const { data, error } = await this.supabase
-          .from('users')
-          .update({ current_message_id: messageId })
-          .eq('telegram_id', telegramId)
-          .select('current_message_id');
-
-        if (error) {
-          console.error(`❌ Error saving current message ID (attempt ${attempt}):`, error.message, error.code, error.details);
-          if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-            console.error('❌ Column current_message_id does not exist. Add it: ALTER TABLE users ADD COLUMN IF NOT EXISTS current_message_id INTEGER;');
-            return false;
-          }
-          if (attempt < maxAttempts) {
-            await new Promise((r) => setTimeout(r, delayMs));
-            continue;
-          }
-          return false;
-        }
-
-        if (!data || data.length === 0) {
-          console.error(`❌ saveLastBotMessageId: 0 rows updated (telegram_id=${telegramId}). Check: user exists, column current_message_id exists.`);
-          if (attempt < maxAttempts) {
-            await new Promise((r) => setTimeout(r, delayMs));
-            continue;
-          }
-          return false;
-        }
-
-        console.log('✅ Last bot message ID saved successfully:', { messageId, telegramId, attempt });
-        return true;
-      } catch (error: any) {
-        console.error(`❌ Exception saving last bot message ID (attempt ${attempt}):`, error.message);
-        if (attempt < maxAttempts) {
-          await new Promise((r) => setTimeout(r, delayMs));
-          continue;
-        }
-        return false;
-      }
-    }
-    return false;
-  }
-
-  // Сохранение ID текущего сообщения авторизации и массива до 10 предыдущих (старый текущий уходит в массив)
+  // При авторизации: current_message_id = новый ID; бывший current_message_id добавляется в last_bot_message_ids (до 10). В боте удаляем только сообщения с ID из last_bot_message_ids.
   async saveAuthMessageIds(
     telegramId: number,
     newMessageId: number,
