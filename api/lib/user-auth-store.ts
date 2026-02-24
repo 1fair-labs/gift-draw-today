@@ -486,9 +486,10 @@ class UserAuthStore {
         isRevoked: user.is_revoked,
       };
       
-      // Добавляем last_bot_message_id и last_bot_message_ids если есть
-      if (user.last_bot_message_id !== undefined) {
-        userData.last_bot_message_id = user.last_bot_message_id;
+      // Текущий ID сообщения (колонка в БД: current_message_id или last_bot_message_id)
+      const currentMsgId = (user as any).current_message_id ?? user.last_bot_message_id;
+      if (currentMsgId !== undefined) {
+        userData.last_bot_message_id = currentMsgId;
       }
       if (user.last_bot_message_ids !== undefined && Array.isArray(user.last_bot_message_ids)) {
         userData.last_bot_message_ids = user.last_bot_message_ids as number[];
@@ -520,14 +521,14 @@ class UserAuthStore {
         }
         const { data, error } = await this.supabase
           .from('users')
-          .update({ last_bot_message_id: messageId })
+          .update({ current_message_id: messageId })
           .eq('telegram_id', telegramId)
           .select();
 
         if (error) {
-          console.error(`❌ Error saving last bot message ID (attempt ${attempt}):`, error.message);
+          console.error(`❌ Error saving current message ID (attempt ${attempt}):`, error.message);
           if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-            console.error('❌ Column last_bot_message_id does not exist. Run: ALTER TABLE users ADD COLUMN IF NOT EXISTS last_bot_message_id INTEGER;');
+            console.error('❌ Column current_message_id does not exist. Add it: ALTER TABLE users ADD COLUMN IF NOT EXISTS current_message_id INTEGER;');
             return false;
           }
           if (attempt < maxAttempts) {
@@ -576,7 +577,7 @@ class UserAuthStore {
         const { error } = await this.supabase
           .from('users')
           .update({
-            last_bot_message_id: newMessageId,
+            current_message_id: newMessageId,
             last_bot_message_ids: newIds,
           })
           .eq('telegram_id', telegramId);
@@ -584,7 +585,7 @@ class UserAuthStore {
         if (error) {
           console.error(`❌ Error saving auth message IDs (attempt ${attempt}):`, error.message);
           if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-            console.error('❌ Column last_bot_message_ids may not exist. Run migration database_add_last_bot_message_ids.sql');
+            console.error('❌ Column current_message_id or last_bot_message_ids may not exist. Run migrations.');
             return false;
           }
           if (attempt < maxAttempts) {
