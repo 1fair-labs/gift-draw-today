@@ -19,12 +19,8 @@ import {
   TokenStandard,
 } from '@metaplex-foundation/mpl-token-metadata';
 import { mplToolbox } from '@metaplex-foundation/mpl-toolbox';
-import {
-  createUmi,
-  keypairIdentity,
-  percentAmount,
-  publicKey,
-} from '@metaplex-foundation/umi-bundle-defaults';
+import { keypairIdentity, percentAmount, publicKey } from '@metaplex-foundation/umi';
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const DEFAULT_METADATA_URI = 'https://giftdraw.today/gift-token-metadata.json';
