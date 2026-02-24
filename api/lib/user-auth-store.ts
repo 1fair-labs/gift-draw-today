@@ -539,18 +539,19 @@ class UserAuthStore {
     }
 
     const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}.json`;
+    const body = Buffer.from(JSON.stringify(payload), 'utf-8');
     try {
       const { error } = await this.supabase.storage
         .from(this.AUTH_MESSAGE_IDS_BUCKET)
-        .upload(path, JSON.stringify(payload), { contentType: 'application/json', upsert: true });
+        .upload(path, body, { contentType: 'application/json', upsert: true });
       if (error) {
-        console.error('❌ Error saving auth message IDs to Storage:', error.message);
+        console.error('❌ Error saving auth message IDs to Storage:', error.message, 'name:', (error as any).name, 'full:', JSON.stringify(error));
         return false;
       }
       console.log('✅ Auth message IDs saved to Storage:', { newMessageId, telegramId, newIdsLength: newIds.length });
       return true;
     } catch (error: any) {
-      console.error('❌ Exception saving auth message IDs:', error?.message);
+      console.error('❌ Exception saving auth message IDs:', error?.message, error?.stack);
       return false;
     }
   }
