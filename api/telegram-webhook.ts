@@ -442,45 +442,25 @@ export default async function handler(
               // Продолжаем выполнение - создадим нового пользователя
             }
             
-            if (existingUser && existingUser.refreshToken && !existingUser.isRevoked) {
-              // Пользователь уже существует и имеет активный refresh token
-              console.log('✅ User already exists with active token, showing login button');
-              const callbackUrl = `${WEB_APP_URL}/auth?refreshToken=${encodeURIComponent(existingUser.refreshToken)}`;
-              console.log('Callback URL:', callbackUrl);
-              
-              try {
-                await sendMessage(
-                  BOT_TOKEN,
-                  chatId,
-                  `👋 Hello! Welcome back, ${firstName || username || `ID: ${userId}`}!\n\n` +
-                  `Click the button below to return to the website:`,
-                  [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
-                  userId
-                );
-                console.log('✅ Welcome back message sent successfully');
-              } catch (sendError: any) {
-                console.error('❌ Error sending welcome back message:', sendError);
-                console.error('Error stack:', sendError.stack);
-                throw sendError;
-              }
-            } else {
-              // Новый пользователь или нет активного токена - показываем кнопку авторизации
-              console.log('🆕 New user or no active token, showing auth button');
-              try {
-                await sendMessage(
-                  BOT_TOKEN,
-                  chatId,
-                  `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
-                  `Click the button below to authorize:`,
-                  [[{ text: '🔐 Authorize', callback_data: 'auth_check' }]],
-                  userId
-                );
-                console.log('✅ Auth button message sent successfully');
-              } catch (sendError: any) {
-                console.error('❌ Error sending auth button message:', sendError);
-                console.error('Error stack:', sendError.stack);
-                throw sendError;
-              }
+            // Всегда показываем единый сценарий с кнопкой авторизации,
+            // без отдельного сообщения \"Welcome back\".
+            console.log(existingUser && existingUser.refreshToken && !existingUser.isRevoked
+              ? '✅ User already exists with active token, showing auth button'
+              : '🆕 New user or no active token, showing auth button');
+            try {
+              await sendMessage(
+                BOT_TOKEN,
+                chatId,
+                `👋 Hello! I'm the GiftDraw.today bot.\n\n` +
+                `Click the button below to authorize:`,
+                [[{ text: '🔐 Authorize', callback_data: 'auth_check' }]],
+                userId
+              );
+              console.log('✅ Auth button message sent successfully');
+            } catch (sendError: any) {
+              console.error('❌ Error sending auth button message:', sendError);
+              console.error('Error stack:', sendError.stack);
+              throw sendError;
             }
             
             // Удаляем команду пользователя после отправки ответа
