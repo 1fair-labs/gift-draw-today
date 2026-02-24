@@ -48,8 +48,20 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
   useEffect(() => {
     if (open) {
       checkWalletStatus();
+    } else {
+      // При закрытии окна сбрасываем состояние кнопки
+      setIsConnecting(false);
     }
   }, [open, checkWalletStatus]);
+
+  // Возврат кнопки в обычный вид через 5 секунд, если пользователь не закрыл окно
+  useEffect(() => {
+    if (!isConnecting && !connecting) return;
+    const t = setTimeout(() => {
+      setIsConnecting(false);
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [isConnecting, connecting]);
 
   // Check wallet status when window gains focus (user returns from installing)
   useEffect(() => {
