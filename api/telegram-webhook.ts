@@ -196,7 +196,8 @@ export default async function handler(
               `Click the link below to return to the website.\n` +
               `(Tap and hold, then select "Open in browser" if needed)`,
               [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
-              userId
+              userId,
+              true
             );
             console.log('Authorization successful for user:', userId);
             
@@ -357,7 +358,8 @@ export default async function handler(
               `Click the link below to return to the website.\n` +
               `(Tap and hold, then select "Open in browser" if needed)`,
               [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
-              userId
+              userId,
+              true
             );
             console.log('Success message sent with callback URL');
             
@@ -616,17 +618,19 @@ async function deleteMessage(
   }
 }
 
-// Удаляем только сообщения из массива last_bot_message_ids (текущее last_bot_message_id не трогаем)
+// Удаляем только сообщения из массива last_bot_message_ids. Не удаляем currentNewMessageId (только что отправленное).
 async function deletePreviousAuthMessages(
   botToken: string,
   chatId: number,
-  telegramId: number
+  telegramId: number,
+  currentNewMessageId?: number
 ): Promise<void> {
   try {
     const userData = await userAuthStore.getUserByTelegramId(telegramId);
     const ids = (userData as any)?.last_bot_message_ids as number[] | undefined;
     if (!ids || ids.length === 0) return;
     for (const messageId of ids) {
+      if (currentNewMessageId !== undefined && messageId === currentNewMessageId) continue;
       try {
         await deleteMessage(botToken, chatId, messageId);
       } catch (err: any) {
@@ -657,13 +661,16 @@ async function saveLastBotMessageId(
   }
 }
 
-// Вспомогательная функция для отправки сообщений
+// Вспомогательная функция для отправки сообщений.
+// Удаление старых сообщений и сохранение ID делаем только для сообщения "Authorization successful!" (isAuthSuccessMessage),
+// чтобы не удалять "Welcome back" и другие сообщения бота.
 async function sendMessage(
   botToken: string,
   chatId: number,
   text: string,
   buttons?: any[][],
-  telegramId?: number // Добавляем telegramId для удаления предыдущих сообщений
+  telegramId?: number,
+  isAuthSuccessMessage?: boolean
 ) {
   console.log('sendMessage called:', {
     botTokenPrefix: botToken ? `${botToken.substring(0, 10)}...` : 'NOT SET',
@@ -728,9 +735,9 @@ async function sendMessage(
     willSave: !!(telegramId && responseData.result?.message_id)
   });
 
-  if (telegramId && responseData.result?.message_id) {
+  if (isAuthSuccessMessage && telegramId && responseData.result?.message_id) {
     const userData = await userAuthStore.getUserByTelegramId(telegramId);
-    await deletePreviousAuthMessages(botToken, chatId, telegramId);
+    await deletePreviousAuthMessages(botToken, chatId, telegramId, responseData.result.message_id);
     const success = await userAuthStore.saveAuthMessageIds(
       telegramId,
       responseData.result.message_id,
