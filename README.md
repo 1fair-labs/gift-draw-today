@@ -43,7 +43,25 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Опционально: тестнет Solana (в Phantom переключи на Devnet)
 # VITE_SOLANA_NETWORK=devnet
 # Свой RPC: VITE_SOLANA_RPC_URL=https://...
+# GIFT token mint (после запуска npm run create-gift-token):
+# VITE_GIFT_MINT_ADDRESS=<mint_address>
 ```
+
+### Creating the GIFT token (devnet)
+
+To create the GIFT SPL token on Solana devnet and use it in the app:
+
+1. Install dependencies: `npm install`
+2. **Keypair with devnet SOL** — choose one:
+   - **Option A (Solana CLI):** `solana config set --url devnet`, `solana-keygen new`, `solana airdrop 2`. Then run step 3 (script uses `~/.config/solana/id.json` by default).
+   - **Option B (use existing Phantom wallet):** Derive keypair from your Phantom recovery phrase **once, locally**. Phrase is read only from env (never logged or stored). Output file is in `.gitignore` — do not commit it.
+     - PowerShell: `$env:PHANTOM_RECOVERY_PHRASE="word1 word2 ... word12"; npm run phantom-keypair`
+     - Then: `$env:SOLANA_KEYPAIR_PATH="phantom-keypair.json"; npm run create-gift-token`
+3. Run: `npm run create-gift-token` (with `SOLANA_KEYPAIR_PATH` set if using Option B).
+4. Add the printed mint address to `.env`: `VITE_GIFT_MINT_ADDRESS=<mint_address>`
+5. Restart the dev server or rebuild the app.
+
+**Security:** Never commit `phantom-keypair.json`, recovery phrase, or `.env` with secrets. The phrase is only read from `PHANTOM_RECOVERY_PHRASE` env var.
 
 ### Database
 

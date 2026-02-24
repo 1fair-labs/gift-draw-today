@@ -29,9 +29,9 @@ function getFallbackConnection(): Connection {
 }
 
 // Token mint addresses (SPL tokens)
-// TODO: Replace with actual mint addresses for USDT and GIFT tokens
 export const USDT_MINT_ADDRESS = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'; // USDT on Solana
-export const GIFT_MINT_ADDRESS = ''; // TODO: Add GIFT token mint address
+// GIFT: set VITE_GIFT_MINT_ADDRESS in .env (e.g. after running npm run create-gift-token)
+export const GIFT_MINT_ADDRESS = (_env?.VITE_GIFT_MINT_ADDRESS ?? '').trim() || '';
 
 // Lottery wallet address (where payments go)
 // TODO: Replace with actual lottery wallet address

@@ -15,6 +15,11 @@ dist-ssr
 .env.local
 .env.production
 
+# Keypair files (never commit)
+phantom-keypair.json
+*-keypair.json
+*.id.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
