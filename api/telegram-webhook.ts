@@ -725,8 +725,13 @@ async function sendMessage(
     telegramId: telegramId,
     willSave: !!(telegramId && responseData.result?.message_id)
   });
-  
-  // Сохраняем message_id нового сообщения в базе данных
+
+  // Сначала удаляем предыдущее сообщение (пока в БД ещё старый last_bot_message_id)
+  if (telegramId) {
+    await deletePreviousBotMessage(botToken, chatId, telegramId);
+  }
+
+  // Затем сохраняем message_id нового сообщения в БД
   if (telegramId && responseData.result?.message_id) {
     console.log('Attempting to save last_bot_message_id:', {
       telegramId,
@@ -739,11 +744,6 @@ async function sendMessage(
       hasMessageId: !!responseData.result?.message_id,
       responseData: responseData
     });
-  }
-
-  // Удаляем предыдущее сообщение об авторизации (после отправки нового, но с await — иначе в serverless удаление не успевает и в чате остаются две ссылки)
-  if (telegramId) {
-    await deletePreviousBotMessage(botToken, chatId, telegramId);
   }
 
   return responseData;
