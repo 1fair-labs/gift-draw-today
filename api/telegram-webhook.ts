@@ -692,18 +692,18 @@ async function sendMessage(
   });
 
   if (isAuthSuccessMessage && telegramId && responseData.result?.message_id) {
-    console.log('sendMessage: saving auth message IDs (isAuthSuccessMessage=true)', { telegramId, messageId: responseData.result.message_id });
-    const userData = await userAuthStore.getUserByTelegramId(telegramId);
-    const idsToDelete = ((userData as any)?.last_bot_message_ids as number[] | undefined) ?? [];
+    console.log('sendMessage: auth message IDs via Storage (isAuthSuccessMessage=true)', { telegramId, messageId: responseData.result.message_id });
+    const authIds = await userAuthStore.getAuthMessageIdsFromStorage(telegramId);
+    const idsToDelete = authIds?.last_bot_message_ids ?? [];
     await deletePreviousAuthMessages(botToken, chatId, idsToDelete, responseData.result.message_id);
     const success = await userAuthStore.saveAuthMessageIds(
       telegramId,
       responseData.result.message_id,
-      (userData as any)?.last_bot_message_id ?? null,
-      (userData as any)?.last_bot_message_ids ?? null
+      authIds?.current_message_id ?? null,
+      authIds?.last_bot_message_ids ?? null
     );
     if (!success) {
-      console.warn('Failed to save auth message IDs:', { telegramId, messageId: responseData.result.message_id });
+      console.warn('Failed to save auth message IDs to Storage:', { telegramId, messageId: responseData.result.message_id });
     }
   }
 

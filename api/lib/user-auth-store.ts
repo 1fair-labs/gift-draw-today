@@ -468,7 +468,7 @@ class UserAuthStore {
     try {
       const { data: user, error } = await this.supabase
         .from('users')
-        .select('telegram_id, username, first_name, last_name, avatar_url, refresh_token, refresh_expires_at, last_used_at, last_login_at, is_revoked, current_message_id, last_bot_message_ids')
+        .select('telegram_id, username, first_name, last_name, avatar_url, refresh_token, refresh_expires_at, last_used_at, last_login_at, is_revoked')
         .eq('telegram_id', telegramId)
         .single();
 
@@ -476,7 +476,7 @@ class UserAuthStore {
         return null;
       }
 
-      const userData: any = {
+      return {
         telegramId: user.telegram_id,
         username: user.username,
         firstName: user.first_name,
@@ -488,87 +488,71 @@ class UserAuthStore {
         lastLoginAt: user.last_login_at ? new Date(user.last_login_at) : undefined,
         isRevoked: user.is_revoked,
       };
-      // Только current_message_id и last_bot_message_ids (старой колонки last_bot_message_id в схеме нет)
-      if (user.current_message_id !== undefined && user.current_message_id !== null) {
-        userData.last_bot_message_id = user.current_message_id;
-      }
-      if (user.last_bot_message_ids !== undefined && Array.isArray(user.last_bot_message_ids)) {
-        userData.last_bot_message_ids = user.last_bot_message_ids as number[];
-      }
-
-      return userData;
     } catch (error: any) {
       console.error('Exception getting user by telegram_id:', error);
       return null;
     }
   }
 
-  // При авторизации: current_message_id = новый ID; бывший current_message_id добавляется в last_bot_message_ids (до 10). В боте удаляем только сообщения с ID из last_bot_message_ids.
+  // Бакет Supabase Storage для ID сообщений авторизации (JSON на пользователя). Создайте приватный бакет "auth-data" в Supabase при необходимости.
+  private readonly AUTH_MESSAGE_IDS_BUCKET = 'auth-data';
+  private readonly AUTH_MESSAGE_IDS_PREFIX = 'auth-message-ids/';
+
+  /** Читает из Storage текущий и массив предыдущих ID сообщений авторизации. При отсутствии файла или ошибке — null. */
+  async getAuthMessageIdsFromStorage(telegramId: number): Promise<{ current_message_id: number | null; last_bot_message_ids: number[] } | null> {
+    if (!this.supabase) return null;
+    const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}.json`;
+    try {
+      const { data, error } = await this.supabase.storage.from(this.AUTH_MESSAGE_IDS_BUCKET).download(path);
+      if (error) {
+        if (error.message?.includes('404') || error.message?.includes('not found')) return null;
+        console.warn('getAuthMessageIdsFromStorage download error:', error.message);
+        return null;
+      }
+      if (!data) return null;
+      const text = await data.text();
+      const parsed = JSON.parse(text) as { current_message_id?: number | null; last_bot_message_ids?: number[] };
+      const current_message_id = parsed.current_message_id ?? null;
+      const last_bot_message_ids = Array.isArray(parsed.last_bot_message_ids) ? parsed.last_bot_message_ids : [];
+      return { current_message_id, last_bot_message_ids };
+    } catch (e: any) {
+      if (e?.message?.includes('JSON') || e?.message?.includes('Unexpected')) return null;
+      console.warn('getAuthMessageIdsFromStorage:', e?.message);
+      return null;
+    }
+  }
+
+  /** Сохраняет в Storage: current_message_id = новый ID; бывший текущий добавляется в last_bot_message_ids (до 10). В боте удаляем только ID из last_bot_message_ids. */
   async saveAuthMessageIds(
     telegramId: number,
     newMessageId: number,
     previousCurrentId: number | null,
     previousIds: number[] | null
   ): Promise<boolean> {
-    const maxAttempts = 3;
-    const delayMs = 400;
-
     const newIds = [previousCurrentId, ...(previousIds || [])].filter((id): id is number => id != null).slice(0, 10);
     const payload = { current_message_id: newMessageId, last_bot_message_ids: newIds };
-    console.log('saveAuthMessageIds payload:', { telegramId, payload });
+    console.log('saveAuthMessageIds (Storage) payload:', { telegramId, payload });
 
     if (!this.supabase) {
       console.error('❌ Supabase not available, cannot save auth message IDs');
       return false;
     }
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        if (attempt > 1) {
-          console.log(`saveAuthMessageIds retry attempt ${attempt}/${maxAttempts}`);
-        }
-        const { data, error } = await this.supabase
-          .from('users')
-          .update(payload)
-          .eq('telegram_id', telegramId)
-          .select('current_message_id, last_bot_message_ids');
-
-        console.log('saveAuthMessageIds Supabase response:', { error: error ? { message: error.message, code: error.code, details: error.details } : null, rowCount: data?.length ?? 0, firstRow: data?.[0] });
-
-        if (error) {
-          console.error(`❌ Error saving auth message IDs (attempt ${attempt}):`, error.message, error.code, error.details);
-          if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-            console.error('❌ Column current_message_id or last_bot_message_ids may not exist. Run migrations.');
-            return false;
-          }
-          if (attempt < maxAttempts) {
-            await new Promise((r) => setTimeout(r, delayMs));
-            continue;
-          }
-          return false;
-        }
-
-        if (!data || data.length === 0) {
-          console.error(`❌ saveAuthMessageIds: 0 rows updated (telegram_id=${telegramId}). Check: user exists, columns current_message_id and last_bot_message_ids exist.`);
-          if (attempt < maxAttempts) {
-            await new Promise((r) => setTimeout(r, delayMs));
-            continue;
-          }
-          return false;
-        }
-
-        console.log('✅ Auth message IDs saved:', { newMessageId, telegramId, newIdsLength: newIds.length });
-        return true;
-      } catch (error: any) {
-        console.error(`❌ Exception saving auth message IDs (attempt ${attempt}):`, error.message);
-        if (attempt < maxAttempts) {
-          await new Promise((r) => setTimeout(r, delayMs));
-          continue;
-        }
+    const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}.json`;
+    try {
+      const { error } = await this.supabase.storage
+        .from(this.AUTH_MESSAGE_IDS_BUCKET)
+        .upload(path, JSON.stringify(payload), { contentType: 'application/json', upsert: true });
+      if (error) {
+        console.error('❌ Error saving auth message IDs to Storage:', error.message);
         return false;
       }
+      console.log('✅ Auth message IDs saved to Storage:', { newMessageId, telegramId, newIdsLength: newIds.length });
+      return true;
+    } catch (error: any) {
+      console.error('❌ Exception saving auth message IDs:', error?.message);
+      return false;
     }
-    return false;
   }
 
   // Проверка валидности URL аватара
