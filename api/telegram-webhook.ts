@@ -694,7 +694,10 @@ async function sendMessage(
   if (isAuthSuccessMessage && telegramId && responseData.result?.message_id) {
     console.log('sendMessage: auth message IDs via Storage (isAuthSuccessMessage=true)', { telegramId, messageId: responseData.result.message_id });
     const authIds = await userAuthStore.getAuthMessageIdsFromStorage(telegramId);
-    const idsToDelete = authIds?.last_bot_message_ids ?? [];
+    const idsToDelete = [
+      ...(authIds?.current_message_id != null ? [authIds.current_message_id] : []),
+      ...(authIds?.last_bot_message_ids ?? []),
+    ];
     await deletePreviousAuthMessages(botToken, chatId, idsToDelete, responseData.result.message_id);
     const success = await userAuthStore.saveAuthMessageIds(
       telegramId,

@@ -522,15 +522,14 @@ class UserAuthStore {
     }
   }
 
-  /** Сохраняет в Storage: current_message_id = новый ID; бывший текущий добавляется в last_bot_message_ids (до 10). В боте удаляем только ID из last_bot_message_ids. */
+  /** Сохраняет в Storage: current_message_id = новый ID. last_bot_message_ids не используются (очищаем при каждом обновлении). */
   async saveAuthMessageIds(
     telegramId: number,
     newMessageId: number,
     previousCurrentId: number | null,
     previousIds: number[] | null
   ): Promise<boolean> {
-    const newIds = [previousCurrentId, ...(previousIds || [])].filter((id): id is number => id != null).slice(0, 10);
-    const payload = { current_message_id: newMessageId, last_bot_message_ids: newIds };
+    const payload = { current_message_id: newMessageId, last_bot_message_ids: [] as number[] };
     console.log('saveAuthMessageIds (Storage) payload:', { telegramId, payload });
 
     if (!this.supabase) {
