@@ -972,7 +972,23 @@ export default function MiniApp() {
           console.error('Error disconnecting wallet:', error);
         }
       }
+
+      // Fully unlink wallet on logout: clear Phantom session, local state and DB wallet_address
       clearPhantomDeeplinkStorage();
+      if (telegramId && supabase) {
+        try {
+          await supabase
+            .from('users')
+            .update({ wallet_address: null })
+            .eq('telegram_id', telegramId);
+        } catch (e) {
+          console.error('Error unlinking wallet on logout:', e);
+        }
+      }
+      setWalletAddress(null);
+      setGiftBalance(0);
+      setUsdtBalance(0);
+      setSolBalance(0);
       
       // Clear session cookie via API
       try {
@@ -996,7 +1012,7 @@ export default function MiniApp() {
       console.error('Error during logout:', error);
       window.location.replace('/');
     }
-  }, [connected, publicKey, disconnect]);
+  }, [connected, publicKey, disconnect, telegramId, supabase]);
 
   // Handle logout - show modal if wallet is connected (adapter or Phantom deeplink)
   const handleLogout = useCallback(() => {
