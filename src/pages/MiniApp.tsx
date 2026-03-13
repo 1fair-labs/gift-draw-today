@@ -147,8 +147,6 @@ export default function MiniApp() {
       const userData = await getOrCreateUserByTelegramId(telegramId);
       if (userData) {
         setUser(userData);
-        // Balance column removed, set to 0
-        setGiftBalance(0);
       }
       await loadUserTickets(telegramId);
     } catch (error) {
