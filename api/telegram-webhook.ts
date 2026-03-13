@@ -359,20 +359,10 @@ export default async function handler(
               `(Tap and hold, then select "Open in browser" if needed)`,
               [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
               userId,
-              true
+              true,
+              userMessageId
             );
             console.log('Success message sent with callback URL');
-            
-            // Удаляем команду пользователя после успешной отправки ответа
-            // Небольшая задержка, чтобы пользователь увидел ответ
-            setTimeout(async () => {
-              try {
-                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
-                console.log('User /start message deleted after successful response:', userMessageId);
-              } catch (error: any) {
-                console.warn('Failed to delete user message:', error);
-              }
-            }, 1000); // 1 секунда задержки
           } catch (error: any) {
             console.error('Error verifying token:', error);
             console.error('Error name:', error.name);
@@ -395,16 +385,6 @@ export default async function handler(
               undefined,
               userId
             );
-            
-            // Удаляем команду пользователя даже при ошибке
-            setTimeout(async () => {
-              try {
-                await deleteMessage(BOT_TOKEN, chatId, userMessageId);
-                console.log('User /start message deleted after error response:', userMessageId);
-              } catch (deleteError: any) {
-                console.warn('Failed to delete user message after error:', deleteError);
-              }
-            }, 1000);
           }
         } else {
           // Обычная команда /start без токена
@@ -626,7 +606,8 @@ async function sendMessage(
   text: string,
   buttons?: any[][],
   telegramId?: number,
-  isAuthSuccessMessage?: boolean
+  isAuthSuccessMessage?: boolean,
+  userCommandMessageId?: number
 ) {
   console.log('sendMessage called:', {
     botTokenPrefix: botToken ? `${botToken.substring(0, 10)}...` : 'NOT SET',
@@ -692,20 +673,33 @@ async function sendMessage(
   });
 
   if (isAuthSuccessMessage && telegramId && responseData.result?.message_id) {
-    console.log('sendMessage: auth message IDs via Storage (isAuthSuccessMessage=true)', { telegramId, messageId: responseData.result.message_id });
+    console.log('sendMessage: auth message IDs via Storage (isAuthSuccessMessage=true)', {
+      telegramId,
+      messageId: responseData.result.message_id,
+      userCommandMessageId,
+    });
     const authIds = await userAuthStore.getAuthMessageIdsFromStorage(telegramId);
-    // Логика: новый ID пишем в current_message_id, старый current_message_id добавляем в last_bot_message_ids.
-    // Удаляем только сообщения из last_bot_message_ids (уже с добавленным прошлым current), новый current не трогаем.
+
+    // Логика:
+    // - новый ID пишем в current_message_id;
+    // - старый current_message_id и ID команды пользователя добавляем в last_bot_message_ids;
+    // - удаляем сообщения только по last_bot_message_ids (предыдущий current + история + команды).
     const idsToDelete = [
       ...(authIds?.current_message_id != null ? [authIds.current_message_id] : []),
       ...(authIds?.last_bot_message_ids ?? []),
     ];
     await deletePreviousAuthMessages(botToken, chatId, idsToDelete, responseData.result.message_id);
+
+    const historyWithCommand = [
+      ...(userCommandMessageId != null ? [userCommandMessageId] : []),
+      ...(authIds?.last_bot_message_ids ?? []),
+    ];
+
     const success = await userAuthStore.saveAuthMessageIds(
       telegramId,
       responseData.result.message_id,
       authIds?.current_message_id ?? null,
-      authIds?.last_bot_message_ids ?? null
+      historyWithCommand
     );
     if (!success) {
       console.warn('Failed to save auth message IDs to Storage:', { telegramId, messageId: responseData.result.message_id });
