@@ -598,7 +598,7 @@ class UserAuthStore {
       console.log('✅ Auth message IDs saved to Storage:', {
         newMessageId,
         telegramId,
-        lastIdsLength: payload.last_bot_message_ids.length,
+        historyLength: history_ids.length,
       });
       return true;
     } catch (error: any) {
