@@ -1,6 +1,6 @@
 // src/pages/miniapp/ProfileScreen.tsx
 import { useState, useEffect } from 'react';
-import { Copy, Eye, EyeOff, Wallet, Gift, ExternalLink, Loader2, Send, LogOut } from 'lucide-react';
+import { Copy, Eye, EyeOff, Wallet, Gift, ExternalLink, Loader2, Send } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -174,40 +174,30 @@ export default function ProfileScreen({
               <div className="space-y-2 mt-6">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    {user?.wallet_address === walletAddress ? 'Linked wallet' : 'Wallet'}
+                    Wallet
+                    {onUnlinkWallet && user?.wallet_address && (
+                      <button
+                        type="button"
+                        onClick={onUnlinkWallet}
+                        className="ml-1 text-xs underline decoration-dotted text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        (unlink)
+                      </button>
+                    )}
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => copyToClipboard(walletAddress, 'Wallet address')}
+                      className="h-8 w-8 p-0 hover:bg-transparent hover:text-inherit active:bg-transparent"
+                      title="Copy wallet address"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
-                    {onDisconnectWallet && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onDisconnectWallet}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        title="Disconnect wallet"
-                      >
-                        <LogOut className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
                 <p className="text-xs font-mono break-all text-muted-foreground">{walletAddress}</p>
-                {onUnlinkWallet && user?.wallet_address && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onUnlinkWallet}
-                    className="mt-2 text-muted-foreground border-white/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                  >
-                    Unlink wallet from profile
-                  </Button>
-                )}
               </div>
             </>
           )}
