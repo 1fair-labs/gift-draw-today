@@ -231,8 +231,13 @@ export default function MiniApp() {
     console.log(logMessage);
   }, []);
 
-  // Load wallet balances (supports adapter publicKey or Phantom deeplink walletAddress)
+  // Load wallet balances (supports adapter publicKey or Phantom deeplink walletAddress).
+  // Выполняем только когда пользователь авторизован (есть telegramId), чтобы не дёргать кошелёк для неавторизованных.
   const loadWalletBalances = useCallback(async () => {
+    if (!telegramId) {
+      addDebugLog('Skip wallet balance check: no telegramId (user not authorized)');
+      return;
+    }
     const address = publicKey ?? (walletAddress ? new PublicKey(walletAddress) : null);
     if (!address) {
       addDebugLog('No wallet connected');
@@ -258,7 +263,7 @@ export default function MiniApp() {
       addDebugLog(`Error loading wallet balances`);
       console.error('Error loading wallet balances:', error);
     }
-  }, [publicKey, walletAddress, addDebugLog]);
+  }, [publicKey, walletAddress, telegramId, addDebugLog]);
 
   // Update ticket draw_id in Supabase
   const updateTicketDrawId = async (ticketId: number, drawId: string) => {
@@ -549,8 +554,11 @@ export default function MiniApp() {
     }
   }, [walletAddress, publicKey, loadWalletBalances]);
 
-  // Sync publicKey with walletAddress; don't clear when Phantom deeplink or linked wallet is stored
+  // Sync publicKey with walletAddress; don't clear when Phantom deeplink or linked wallet is stored.
+  // Выполняем только для авторизованных пользователей (telegramId), чтобы не трогать кошелёк гость-пользователя.
   useEffect(() => {
+    if (!telegramId) return;
+
     console.log('🔍 Wallet state check:', {
       publicKey: publicKey?.toString(),
       connected,
@@ -753,8 +761,10 @@ export default function MiniApp() {
 
   // Sync wallet connection state is handled by useEffect that syncs publicKey above
 
-  // Restore Phantom connection when returning to app
+  // Restore Phantom connection when returning to app (только для авторизованных пользователей)
   useEffect(() => {
+    if (!telegramId) return;
+
     const checkPhantomConnection = async () => {
       const WebApp = (window as any).Telegram?.WebApp;
       if (!WebApp) return;
@@ -795,9 +805,9 @@ export default function MiniApp() {
     return () => {
       window.removeEventListener('focus', checkPhantomConnection);
     };
-  }, [connected, publicKey, select, connect, wallet]);
+  }, [connected, publicKey, select, connect, wallet, telegramId]);
 
-  // Update balances automatically every 10 seconds
+  // Update balances automatically every 10 seconds (только когда есть walletAddress; loadWalletBalances сам проверяет telegramId)
   useEffect(() => {
     if (!walletAddress) return;
 
