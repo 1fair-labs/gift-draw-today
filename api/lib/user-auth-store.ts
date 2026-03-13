@@ -547,7 +547,11 @@ class UserAuthStore {
         console.error('❌ Error saving auth message IDs to Storage:', error.message, 'name:', (error as any).name, 'full:', JSON.stringify(error));
         return false;
       }
-      console.log('✅ Auth message IDs saved to Storage:', { newMessageId, telegramId, newIdsLength: newIds.length });
+      console.log('✅ Auth message IDs saved to Storage:', {
+        newMessageId,
+        telegramId,
+        lastIdsLength: payload.last_bot_message_ids.length,
+      });
       return true;
     } catch (error: any) {
       console.error('❌ Exception saving auth message IDs:', error?.message, error?.stack);
