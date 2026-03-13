@@ -49,7 +49,7 @@ export default function ProfileScreen({
   }, []);
 
   const giftPrice = 0.0002; // GIFT/USDT
-  const usdBalance = (giftBalance * giftPrice).toFixed(2);
+  const usdBalance = (giftBalance * giftPrice).toFixed(5);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -133,7 +133,7 @@ export default function ProfileScreen({
                   <div>
                     <div className="text-xl font-display font-bold text-neon-gold min-h-[2.5rem] flex items-center">
                       {isBalanceVisible 
-                        ? `${giftBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} GIFT`
+                        ? `${giftBalance.toLocaleString('en-US', { minimumFractionDigits: 5, maximumFractionDigits: 5 })} GIFT`
                         : '•••••• GIFT'}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 min-h-[1rem]">
@@ -149,8 +149,8 @@ export default function ProfileScreen({
                     <div className="text-lg font-display font-bold min-h-[1.75rem] flex items-center">
                       {isBalanceVisible 
                         ? (usdtBalance > 0 
-                            ? `${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })} USDT`
-                            : `0.00 USDT`)
+                            ? `${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 5, maximumFractionDigits: 5 })} USDT`
+                            : `0.00000 USDT`)
                         : '•••••• USDT'}
                     </div>
                   </div>
@@ -163,8 +163,8 @@ export default function ProfileScreen({
                     <div className="text-lg font-display font-bold min-h-[1.75rem] flex items-center">
                       {isBalanceVisible 
                         ? (solBalance > 0 
-                            ? `${solBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} SOL`
-                            : `0.0000 SOL`)
+                            ? `${solBalance.toLocaleString('en-US', { minimumFractionDigits: 5, maximumFractionDigits: 5 })} SOL`
+                            : `0.00000 SOL`)
                         : '•••••• SOL'}
                     </div>
                   </div>
@@ -179,7 +179,7 @@ export default function ProfileScreen({
                       <button
                         type="button"
                         onClick={onUnlinkWallet}
-                        className="ml-1 text-xs underline decoration-dotted text-muted-foreground hover:text-destructive transition-colors"
+                        className="ml-1 text-sm underline decoration-dotted text-muted-foreground hover:text-destructive transition-colors"
                       >
                         (unlink)
                       </button>
