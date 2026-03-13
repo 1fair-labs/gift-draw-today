@@ -498,7 +498,7 @@ class UserAuthStore {
   private readonly AUTH_MESSAGE_IDS_BUCKET = 'auth-data';
   private readonly AUTH_MESSAGE_IDS_PREFIX = 'auth-message-ids/';
 
-  /** Читает из Storage текущий и массив предыдущих ID сообщений авторизации. При отсутствии файла или ошибке — null. */
+  /** Читает из Storage текущие ID сообщений авторизации и команд + историю (до 25 ID). Поддерживает старый и новый формат. При отсутствии файла или ошибке — null. */
   async getAuthMessageIdsFromStorage(telegramId: number): Promise<{ current_message_id: number | null; last_bot_message_ids: number[] } | null> {
     if (!this.supabase) return null;
     const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}.json`;
@@ -511,7 +511,32 @@ class UserAuthStore {
       }
       if (!data) return null;
       const text = await data.text();
-      const parsed = JSON.parse(text) as { current_message_id?: number | null; last_bot_message_ids?: number[] };
+      const parsed = JSON.parse(text) as {
+        // legacy fields
+        current_message_id?: number | null;
+        last_bot_message_ids?: number[];
+        // new schema fields
+        current_auth_message_id?: number | null;
+        current_command_message_id?: number | null;
+        history_ids?: number[];
+      };
+
+      // Новый формат: current_auth_message_id + current_command_message_id + history_ids
+      if (
+        parsed.current_auth_message_id !== undefined ||
+        parsed.current_command_message_id !== undefined ||
+        parsed.history_ids !== undefined
+      ) {
+        const current_message_id = parsed.current_auth_message_id ?? null;
+        const history = Array.isArray(parsed.history_ids) ? parsed.history_ids : [];
+        const last_bot_message_ids = [
+          ...(parsed.current_command_message_id != null ? [parsed.current_command_message_id] : []),
+          ...history,
+        ];
+        return { current_message_id, last_bot_message_ids };
+      }
+
+      // Старый формат: current_message_id + last_bot_message_ids
       const current_message_id = parsed.current_message_id ?? null;
       const last_bot_message_ids = Array.isArray(parsed.last_bot_message_ids) ? parsed.last_bot_message_ids : [];
       return { current_message_id, last_bot_message_ids };
@@ -522,17 +547,37 @@ class UserAuthStore {
     }
   }
 
-  /** Сохраняет в Storage: current_message_id = новый ID; previousCurrentId добавляется в last_bot_message_ids вместе с уже сохранёнными (до 10 штук). */
+  /**
+   * Сохраняет в Storage в НОВОМ формате:
+   * - current_auth_message_id = новый ID сообщения авторизации
+   * - current_command_message_id = первый ID из previousIds (если есть, обычно команда /start)
+   * - history_ids = остальные previousIds (до 25 штук) без дубликатов и null
+   *
+   * previousCurrentId + previousIds сюда приходят уже собранными в webhook, где:
+   * - previousCurrentId = прошлый current_auth_message_id
+   * - previousIds = [ID команды, ...старая history]
+   */
   async saveAuthMessageIds(
     telegramId: number,
     newMessageId: number,
     previousCurrentId: number | null,
     previousIds: number[] | null
   ): Promise<boolean> {
-    const newIds = [previousCurrentId, ...(previousIds || [])]
-      .filter((id): id is number => id != null)
-      .slice(0, 10);
-    const payload = { current_message_id: newMessageId, last_bot_message_ids: newIds };
+    const cleanedIds = (previousIds || []).filter((id): id is number => id != null);
+    const current_command_message_id = cleanedIds.length > 0 ? cleanedIds[0] : null;
+
+    // История: прошлый current + остальные ID из previousIds (без первого, который команда), максимум 25
+    const historySource = [
+      ...(previousCurrentId != null ? [previousCurrentId] : []),
+      ...cleanedIds.slice(1),
+    ];
+    const history_ids = Array.from(new Set(historySource)).slice(0, 25);
+
+    const payload = {
+      current_auth_message_id: newMessageId,
+      current_command_message_id,
+      history_ids,
+    };
     console.log('saveAuthMessageIds (Storage) payload:', { telegramId, payload });
 
     if (!this.supabase) {
