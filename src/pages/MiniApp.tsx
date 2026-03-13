@@ -172,6 +172,15 @@ export default function MiniApp() {
   const handleUnlinkWallet = useCallback(async () => {
     if (!telegramId || !supabase) return;
     try {
+      // Also disconnect adapter wallet so it doesn't immediately resync walletAddress from publicKey
+      if (connected && publicKey) {
+        try {
+          await disconnect();
+        } catch (e) {
+          console.error('Error disconnecting wallet during unlink:', e);
+        }
+      }
+
       const { error } = await supabase
         .from('users')
         .update({ wallet_address: null })
@@ -192,7 +201,7 @@ export default function MiniApp() {
       console.error('Error unlinking wallet:', e);
       toast({ title: 'Error', description: 'Failed to unlink wallet.', variant: 'destructive' });
     }
-  }, [telegramId, toast]);
+  }, [telegramId, supabase, connected, publicKey, disconnect, toast]);
 
   // Load active draw from Supabase
   const loadActiveDraw = async () => {
