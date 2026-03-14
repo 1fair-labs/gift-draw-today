@@ -172,12 +172,17 @@ export default function MiniApp() {
   const handleUnlinkWallet = useCallback(async () => {
     if (!telegramId || !supabase) return;
     try {
-      // Also disconnect adapter wallet so it doesn't immediately resync walletAddress from publicKey
+      // Disconnect adapter and deselect wallet so next Connect shows Phantom account picker again
       if (connected && publicKey) {
         try {
           await disconnect();
         } catch (e) {
           console.error('Error disconnecting wallet during unlink:', e);
+        }
+        try {
+          select(null);
+        } catch (e) {
+          console.error('Error deselecting wallet during unlink:', e);
         }
       }
 
@@ -201,7 +206,7 @@ export default function MiniApp() {
       console.error('Error unlinking wallet:', e);
       toast({ title: 'Error', description: 'Failed to unlink wallet.', variant: 'destructive' });
     }
-  }, [telegramId, supabase, connected, publicKey, disconnect, toast]);
+  }, [telegramId, supabase, connected, publicKey, disconnect, select, toast]);
 
   // Load active draw from Supabase
   const loadActiveDraw = async () => {
@@ -985,6 +990,9 @@ export default function MiniApp() {
         } catch (error) {
           console.error('Error disconnecting wallet:', error);
         }
+        try {
+          select(null);
+        } catch (_) {}
       }
 
       // Fully unlink wallet on logout: clear Phantom session, local state and DB wallet_address
@@ -1026,7 +1034,7 @@ export default function MiniApp() {
       console.error('Error during logout:', error);
       window.location.replace('/');
     }
-  }, [connected, publicKey, disconnect, telegramId, supabase]);
+  }, [connected, publicKey, disconnect, select, telegramId, supabase]);
 
   // Handle logout - show modal if wallet is connected (adapter or Phantom deeplink)
   const handleLogout = useCallback(() => {
