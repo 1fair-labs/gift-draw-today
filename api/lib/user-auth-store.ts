@@ -494,115 +494,88 @@ class UserAuthStore {
     }
   }
 
-  // Бакет Supabase Storage для ID сообщений авторизации (JSON на пользователя). Создайте приватный бакет "auth-data" в Supabase при необходимости.
+  // Бакет Supabase Storage для ID сообщений авторизации. Append-only: один файл на событие (пара command + bot).
   private readonly AUTH_MESSAGE_IDS_BUCKET = 'auth-data';
   private readonly AUTH_MESSAGE_IDS_PREFIX = 'auth-message-ids/';
 
-  /** Читает из Storage текущие ID сообщений авторизации и команд + историю (до 25 ID). Поддерживает старый и новый формат. При отсутствии файла или ошибке — null. */
-  async getAuthMessageIdsFromStorage(telegramId: number): Promise<{ current_message_id: number | null; last_bot_message_ids: number[] } | null> {
-    if (!this.supabase) return null;
-    const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}.json`;
+  /**
+   * Списывает все файлы-события пользователя, собирает ID сообщений на удаление и пути файлов.
+   * После удаления сообщений в TG вызывайте deleteAuthEventFiles(filePaths), затем saveAuthEvent для текущего события.
+   */
+  async getAuthMessageIdsToDelete(telegramId: number): Promise<{ idsToDelete: number[]; filePaths: string[] }> {
+    const idsToDelete: number[] = [];
+    const filePaths: string[] = [];
+    if (!this.supabase) return { idsToDelete, filePaths };
+    const folder = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}`;
     try {
-      const { data, error } = await this.supabase.storage.from(this.AUTH_MESSAGE_IDS_BUCKET).download(path);
-      if (error) {
-        if (error.message?.includes('404') || error.message?.includes('not found')) return null;
-        console.warn('getAuthMessageIdsFromStorage download error:', error.message);
-        return null;
+      const { data: listData, error: listError } = await this.supabase.storage
+        .from(this.AUTH_MESSAGE_IDS_BUCKET)
+        .list(folder);
+      if (listError) {
+        if (listError.message?.includes('404') || listError.message?.includes('not found')) return { idsToDelete, filePaths };
+        console.warn('getAuthMessageIdsToDelete list error:', listError.message);
+        return { idsToDelete, filePaths };
       }
-      if (!data) return null;
-      const text = await data.text();
-      const parsed = JSON.parse(text) as {
-        // legacy fields
-        current_message_id?: number | null;
-        last_bot_message_ids?: number[];
-        // new schema fields
-        current_auth_message_id?: number | null;
-        current_command_message_id?: number | null;
-        history_ids?: number[];
-      };
-
-      // Новый формат: current_auth_message_id + current_command_message_id + history_ids
-      if (
-        parsed.current_auth_message_id !== undefined ||
-        parsed.current_command_message_id !== undefined ||
-        parsed.history_ids !== undefined
-      ) {
-        const current_message_id = parsed.current_auth_message_id ?? null;
-        const history = Array.isArray(parsed.history_ids) ? parsed.history_ids : [];
-        const last_bot_message_ids = [
-          ...(parsed.current_command_message_id != null ? [parsed.current_command_message_id] : []),
-          ...history,
-        ];
-        return { current_message_id, last_bot_message_ids };
+      const files = (listData || []).filter((f: any) => f.name && String(f.name).endsWith('.json'));
+      for (const file of files) {
+        const filePath = `${folder}/${file.name}`;
+        const { data: blob, error: downloadError } = await this.supabase.storage
+          .from(this.AUTH_MESSAGE_IDS_BUCKET)
+          .download(filePath);
+        if (downloadError || !blob) continue;
+        try {
+          const text = await blob.text();
+          const parsed = JSON.parse(text) as { command_id?: number; bot_id?: number };
+          if (parsed.command_id != null) idsToDelete.push(parsed.command_id);
+          if (parsed.bot_id != null) idsToDelete.push(parsed.bot_id);
+          filePaths.push(filePath);
+        } catch (_) {
+          // skip invalid JSON
+        }
       }
-
-      // Старый формат: current_message_id + last_bot_message_ids
-      const current_message_id = parsed.current_message_id ?? null;
-      const last_bot_message_ids = Array.isArray(parsed.last_bot_message_ids) ? parsed.last_bot_message_ids : [];
-      return { current_message_id, last_bot_message_ids };
+      return { idsToDelete, filePaths };
     } catch (e: any) {
-      if (e?.message?.includes('JSON') || e?.message?.includes('Unexpected')) return null;
-      console.warn('getAuthMessageIdsFromStorage:', e?.message);
-      return null;
+      console.warn('getAuthMessageIdsToDelete:', e?.message);
+      return { idsToDelete, filePaths };
+    }
+  }
+
+  /** Удаляет файлы-события из Storage (вызывать после удаления сообщений в Telegram). */
+  async deleteAuthEventFiles(filePaths: string[]): Promise<void> {
+    if (!this.supabase || filePaths.length === 0) return;
+    try {
+      const { error } = await this.supabase.storage
+        .from(this.AUTH_MESSAGE_IDS_BUCKET)
+        .remove(filePaths);
+      if (error) console.warn('deleteAuthEventFiles error:', error.message);
+    } catch (e: any) {
+      console.warn('deleteAuthEventFiles:', e?.message);
     }
   }
 
   /**
-   * Сохраняет в Storage в НОВОМ формате:
-   * - current_auth_message_id = новый ID сообщения авторизации
-   * - current_command_message_id = первый ID из previousIds (если есть, обычно команда /start)
-   * - history_ids = остальные previousIds (до 25 штук) без дубликатов и null
-   *
-   * previousCurrentId + previousIds сюда приходят уже собранными в webhook, где:
-   * - previousCurrentId = прошлый current_auth_message_id
-   * - previousIds = [ID команды, ...старая history]
+   * Сохраняет одно событие авторизации (append-only): один файл auth-message-ids/{telegramId}/{botId}.json
+   * с полями command_id и bot_id. После следующей авторизации этот файл будет прочитан, сообщения удалены, файл удалён.
    */
-  async saveAuthMessageIds(
-    telegramId: number,
-    newMessageId: number,
-    previousCurrentId: number | null,
-    previousIds: number[] | null
-  ): Promise<boolean> {
-    const cleanedIds = (previousIds || []).filter((id): id is number => id != null);
-    const current_command_message_id = cleanedIds.length > 0 ? cleanedIds[0] : null;
-
-    // История: прошлый current + остальные ID из previousIds (без первого, который команда), максимум 25
-    const historySource = [
-      ...(previousCurrentId != null ? [previousCurrentId] : []),
-      ...cleanedIds.slice(1),
-    ];
-    const history_ids = Array.from(new Set(historySource)).slice(0, 25);
-
-    const payload = {
-      current_auth_message_id: newMessageId,
-      current_command_message_id,
-      history_ids,
-    };
-    console.log('saveAuthMessageIds (Storage) payload:', { telegramId, payload });
-
+  async saveAuthEvent(telegramId: number, commandId: number | null, botId: number): Promise<boolean> {
     if (!this.supabase) {
-      console.error('❌ Supabase not available, cannot save auth message IDs');
+      console.error('❌ Supabase not available, cannot save auth event');
       return false;
     }
-
-    const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}.json`;
-    const body = Buffer.from(JSON.stringify(payload), 'utf-8');
+    const path = `${this.AUTH_MESSAGE_IDS_PREFIX}${telegramId}/${botId}.json`;
+    const payload = { command_id: commandId, bot_id: botId };
     try {
       const { error } = await this.supabase.storage
         .from(this.AUTH_MESSAGE_IDS_BUCKET)
-        .upload(path, body, { contentType: 'application/json', upsert: true });
+        .upload(path, Buffer.from(JSON.stringify(payload), 'utf-8'), { contentType: 'application/json', upsert: true });
       if (error) {
-        console.error('❌ Error saving auth message IDs to Storage:', error.message, 'name:', (error as any).name, 'full:', JSON.stringify(error));
+        console.error('❌ Error saving auth event to Storage:', error.message);
         return false;
       }
-      console.log('✅ Auth message IDs saved to Storage:', {
-        newMessageId,
-        telegramId,
-        historyLength: history_ids.length,
-      });
+      console.log('✅ Auth event saved:', { telegramId, commandId, botId });
       return true;
     } catch (error: any) {
-      console.error('❌ Exception saving auth message IDs:', error?.message, error?.stack);
+      console.error('❌ Exception saving auth event:', error?.message);
       return false;
     }
   }

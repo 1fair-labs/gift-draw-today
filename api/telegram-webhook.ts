@@ -3,27 +3,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // @ts-ignore - ESM import works in Vercel runtime
 import { userAuthStore } from './lib/user-auth-store.js';
 
-// Блокировка по telegramId: сериализуем чтение Storage → удаление старых сообщений → сохранение,
-// чтобы при быстрых повторных логинах второй запрос дожидался первого и удалял его сообщение.
-const authMessageLockByUser = new Map<number, Promise<unknown>>();
-async function withAuthMessageLock<T>(telegramId: number, fn: () => Promise<T>): Promise<T> {
-  const prev = authMessageLockByUser.get(telegramId) ?? Promise.resolve();
-  let current: Promise<T>;
-  const run = async (): Promise<T> => {
-    await prev;
-    try {
-      return await fn();
-    } finally {
-      if (authMessageLockByUser.get(telegramId) === current) {
-        authMessageLockByUser.delete(telegramId);
-      }
-    }
-  };
-  current = run();
-  authMessageLockByUser.set(telegramId, current);
-  return current;
-}
-
 interface TelegramUpdate {
   update_id: number;
   message?: {
@@ -218,7 +197,8 @@ export default async function handler(
               `(Tap and hold, then select "Open in browser" if needed)`,
               [[{ text: '🌐 Open GiftDraw.today', url: callbackUrl }]],
               userId,
-              true
+              true,
+              callback.message?.message_id
             );
             console.log('Authorization successful for user:', userId);
             
@@ -694,43 +674,23 @@ async function sendMessage(
   });
 
   if (isAuthSuccessMessage && telegramId && responseData.result?.message_id) {
-    console.log('sendMessage: auth message IDs via Storage (isAuthSuccessMessage=true)', {
+    const newBotMessageId = responseData.result.message_id;
+    console.log('sendMessage: auth event (append-only Storage)', {
       telegramId,
-      messageId: responseData.result.message_id,
+      newBotMessageId,
       userCommandMessageId,
     });
-    await withAuthMessageLock(telegramId, async () => {
-      let authIds = await userAuthStore.getAuthMessageIdsFromStorage(telegramId);
-      if (authIds == null) {
-        await new Promise((r) => setTimeout(r, 150));
-        authIds = await userAuthStore.getAuthMessageIdsFromStorage(telegramId);
-      }
-
-      // Логика:
-      // - новый ID пишем в current_message_id;
-      // - старый current_message_id и ID команды пользователя добавляем в last_bot_message_ids;
-      // - удаляем сообщения только по last_bot_message_ids (предыдущий current + история + команды).
-      const idsToDelete = [
-        ...(authIds?.current_message_id != null ? [authIds.current_message_id] : []),
-        ...(authIds?.last_bot_message_ids ?? []),
-      ];
-      await deletePreviousAuthMessages(botToken, chatId, idsToDelete, responseData.result.message_id);
-
-      const historyWithCommand = [
-        ...(userCommandMessageId != null ? [userCommandMessageId] : []),
-        ...(authIds?.last_bot_message_ids ?? []),
-      ];
-
-      const success = await userAuthStore.saveAuthMessageIds(
-        telegramId,
-        responseData.result.message_id,
-        authIds?.current_message_id ?? null,
-        historyWithCommand
-      );
-      if (!success) {
-        console.warn('Failed to save auth message IDs to Storage:', { telegramId, messageId: responseData.result.message_id });
-      }
-    });
+    const { idsToDelete, filePaths } = await userAuthStore.getAuthMessageIdsToDelete(telegramId);
+    await deletePreviousAuthMessages(botToken, chatId, idsToDelete, newBotMessageId);
+    await userAuthStore.deleteAuthEventFiles(filePaths);
+    const success = await userAuthStore.saveAuthEvent(
+      telegramId,
+      userCommandMessageId ?? null,
+      newBotMessageId
+    );
+    if (!success) {
+      console.warn('Failed to save auth event to Storage:', { telegramId, messageId: newBotMessageId });
+    }
   }
 
   return responseData;

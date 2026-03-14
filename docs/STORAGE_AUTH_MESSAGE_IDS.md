@@ -1,56 +1,44 @@
-# Supabase Storage: ID сообщений авторизации бота
+# Supabase Storage: ID сообщений авторизации бота (append-only)
 
-ID сообщений авторизации («Authorization successful!») хранятся в **Supabase Storage**, а не в таблице `users`.
+ID сообщений авторизации («Authorization successful!») хранятся в **Supabase Storage**, а не в таблице `users`. Используется **append-only** схема: одно событие авторизации = один файл; после удаления сообщений в Telegram файлы удаляются.
 
 ## Бакет
 
 - **Имя бакета:** `auth-data`
 - **Тип:** приватный (Private)
-- **Путь к файлам:** `auth-message-ids/{telegram_id}.json`
+- **Путь:** `auth-message-ids/{telegram_id}/{bot_message_id}.json`
 
 ## Создание бакета
 
 1. Supabase Dashboard → **Storage** → **New bucket**
 2. Name: `auth-data`
-3. **Private bucket** — включить (файлы не должны быть доступны по публичной ссылке)
+3. **Private bucket** — включить
 4. Создать
 
-Права: при использовании **Service Role Key** на сервере (webhook) запись и чтение работают без дополнительных RLS-политик для Storage.
+Права: при использовании **Service Role Key** на сервере (webhook) запись и чтение работают без дополнительных RLS-политик.
 
 ### Если ничего не сохраняется
 
-1. **Проверьте ключ на сервере (Vercel и т.д.):** в переменных окружения должен быть **SUPABASE_SERVICE_ROLE_KEY** (не только anon). В логах при старте должно быть: `UserAuthStore initialized with Service Role key`.
-2. **Политики Storage (RLS):** для приватного бакета с **anon** ключом загрузка по умолчанию запрещена. Либо задайте **Service Role Key** в окружении webhook, либо в Supabase: Storage → бакет `auth-data` → Policies → добавьте политику **Allow upload** для нужной роли (например, service_role или authenticated).
-3. **Логи:** при ошибке записи в логах будет строка `❌ Error saving auth message IDs to Storage:` и текст ошибки (например, "new row violates row-level security policy" или "Bucket not found").
+1. В окружении webhook должен быть **SUPABASE_SERVICE_ROLE_KEY**. В логах: `UserAuthStore initialized with Service Role key`.
+2. При ошибке в логах: `❌ Error saving auth event to Storage:` или `❌ Exception saving auth event:`.
 
-## Формат файла
+## Формат (append-only)
 
-Один JSON-файл на пользователя, например `auth-message-ids/507777197.json`:
+- **Один файл на одно событие авторизации:** `auth-message-ids/{telegram_id}/{bot_message_id}.json`
+- **Содержимое:** `{"command_id": 695, "bot_id": 696}`
+  - `command_id` — ID сообщения пользователя (команда `/start` или сообщение с кнопкой «🔐 Authorize»).
+  - `bot_id` — ID ответа бота «Authorization successful!».
 
-### Новый формат (актуальный)
+## Логика работы
 
-```json
-{
-  "current_auth_message_id": 606,
-  "current_command_message_id": 605,
-  "history_ids": [600, 596, 594, 595, 590]
-}
-```
+1. Пользователь вызывает авторизацию (ссылка с токеном или нажатие кнопки) → бот отправляет «Authorization successful!» и получает `message_id` ответа.
+2. **Читаем** все файлы в папке `auth-message-ids/{telegram_id}/`, собираем из них `command_id` и `bot_id` в список ID на удаление.
+3. **Удаляем** в Telegram все сообщения с этими ID (кроме только что отправленного ответа бота).
+4. **Удаляем** в Storage все прочитанные файлы.
+5. **Сохраняем** один новый файл для текущего события: `auth-message-ids/{telegram_id}/{new_bot_id}.json` с `command_id` и `bot_id`.
 
-- `current_auth_message_id` — ID последнего сообщения авторизации бота (`✅ Authorization successful!`).
-- `current_command_message_id` — ID последней команды пользователя (`/start` или нажатие кнопки), которая привела к успешной авторизации.
-- `history_ids` — до 25 предыдущих ID сообщений (старые `current_auth_message_id`, старые команды и т.п.), **только они удаляются при новой авторизации**.
+В итоге у пользователя в Storage хранится **не более одного файла** (текущее событие). Объём хранилища минимален; гонок при параллельных запросах нет (каждый запрос только дописывает свой файл и удаляет старые после удаления сообщений).
 
-### Старый формат (поддерживается для обратной совместимости)
+## Поддержка, новости и прочее
 
-```json
-{
-  "current_message_id": 502,
-  "last_bot_message_ids": [498, 495, 490]
-}
-```
-
-При чтении:
-
-- `current_message_id` используется как `current_auth_message_id`,
-- `last_bot_message_ids` интерпретируется как `history_ids`.
+Удаляются **только** сообщения, чьи ID записаны в этих файлах (команды авторизации и ответы «Authorization successful!»). Сообщения поддержки (ИИ), новости о розыгрышах и любые другие сообщения бота в Storage не попадают и не удаляются.
