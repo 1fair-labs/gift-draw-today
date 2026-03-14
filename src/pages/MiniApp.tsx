@@ -241,13 +241,15 @@ export default function MiniApp() {
   }, []);
 
   // Load wallet balances (supports adapter publicKey or Phantom deeplink walletAddress).
-  // Выполняем только когда пользователь авторизован (есть telegramId), чтобы не дёргать кошелёк для неавторизованных.
-  const loadWalletBalances = useCallback(async () => {
+  // overrideAddress: use when address was just set (e.g. after connect) to avoid stale closure.
+  const loadWalletBalances = useCallback(async (overrideAddress?: string) => {
     if (!telegramId) {
       addDebugLog('Skip wallet balance check: no telegramId (user not authorized)');
       return;
     }
-    const address = publicKey ?? (walletAddress ? new PublicKey(walletAddress) : null);
+    const address = overrideAddress
+      ? new PublicKey(overrideAddress)
+      : (publicKey ?? (walletAddress ? new PublicKey(walletAddress) : null));
     if (!address) {
       addDebugLog('No wallet connected');
       setSolBalance(0);
@@ -578,8 +580,11 @@ export default function MiniApp() {
     if (publicKey) {
       const addr = publicKey.toString();
       setWalletAddress(addr);
-      if (telegramId) saveLinkedWallet(telegramId, addr);
-      loadWalletBalances();
+      if (telegramId) {
+        saveLinkedWallet(telegramId, addr);
+        setUser((prev) => (prev ? { ...prev, wallet_address: addr } : null));
+      }
+      loadWalletBalances(addr);
       const t = setTimeout(() => loadWalletBalances(), 800);
       return () => clearTimeout(t);
     }
@@ -1596,7 +1601,14 @@ try {
           </footer>
         </>
       )}
-      <SolanaWalletModal open={walletModalOpen} onOpenChange={setWalletModalOpen} />
+      <SolanaWalletModal
+        open={walletModalOpen}
+        onOpenChange={setWalletModalOpen}
+        onConnectSuccess={() => {
+          loadWalletBalances();
+          if (telegramId) loadUserData(telegramId);
+        }}
+      />
       <LogoutConfirmModal 
         open={logoutModalOpen} 
         onOpenChange={setLogoutModalOpen}

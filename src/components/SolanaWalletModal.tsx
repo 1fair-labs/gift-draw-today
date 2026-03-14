@@ -14,9 +14,10 @@ const isInTelegramWebView = () => {
 interface SolanaWalletModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onConnectSuccess?: () => void;
 }
 
-export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps) {
+export function SolanaWalletModal({ open, onOpenChange, onConnectSuccess }: SolanaWalletModalProps) {
   const { wallets, select, connect, connecting, publicKey, connected, wallet } = useWallet();
   const [isConnecting, setIsConnecting] = useState(false);
   const [walletState, setWalletState] = useState<'checking' | 'installed' | 'not-installed'>('checking');
@@ -153,16 +154,16 @@ export function SolanaWalletModal({ open, onOpenChange }: SolanaWalletModalProps
     }
   };
 
-  // Close modal when wallet is successfully connected
+  // Close modal when wallet is successfully connected; notify parent to refresh balances/user
   useEffect(() => {
     if (connected && publicKey && open && !connecting) {
       setIsConnecting(false);
-      // Small delay to ensure state is updated
+      onConnectSuccess?.();
       setTimeout(() => {
         onOpenChange(false);
       }, 300);
     }
-  }, [connected, publicKey, open, connecting, onOpenChange]);
+  }, [connected, publicKey, open, connecting, onOpenChange, onConnectSuccess]);
 
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   

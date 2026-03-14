@@ -175,7 +175,7 @@ export default function ProfileScreen({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
                     Wallet
-                    {onUnlinkWallet && user?.wallet_address && (
+                    {onUnlinkWallet && (user?.wallet_address || walletAddress) && (
                       <button
                         type="button"
                         onClick={onUnlinkWallet}
